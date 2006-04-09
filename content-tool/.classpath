@@ -7,7 +7,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jdom/jars/jdom-1.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/component-api"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/webapp-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/tool-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/authz-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/velocity"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/event-api"/>
