@@ -8,7 +8,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/content-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/db-api"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tool-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/component-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/user-api"/>
@@ -23,5 +22,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/alias-api"/>
 	<classpathentry sourcepath="/JAVA_DIR/spring-framework-1.2.7" kind="var" path="MAVEN_REPO/springframework/jars/spring-1.2.6.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-2.1.8.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
