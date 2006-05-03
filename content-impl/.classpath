@@ -24,5 +24,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-2.1.8.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
+	<classpathentry kind="src" path="/velocity"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
