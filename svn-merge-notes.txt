@@ -1,6 +1,0 @@
-Skipped:
-11568 FCKeditor 2.3
-12093 SAK-5507 tool_base.css
-12175 SAK-5507 tool_base.css
-12446 add Turkish inquiry
-12460 OSP FCKeditor 2.3 fixes

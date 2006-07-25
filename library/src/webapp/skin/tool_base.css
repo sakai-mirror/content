@@ -586,7 +586,9 @@ hr.itemSeparator{
 	margin: .4em 1em;
 	border: 1px solid #fff;
 }
-
+.shorttext{
+	clear:both;
+}
 .shorttext label{
 	margin-right: 1em;
 	width: 14.5em;

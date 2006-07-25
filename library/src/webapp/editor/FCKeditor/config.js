@@ -32,9 +32,9 @@ FCKConfig.SkinPath = FCKConfig.BasePath + 'skins/default/' ;
 
 FCKConfig.PluginsPath = FCKConfig.BasePath + 'plugins/' ;
 
-// FCKConfig.Plugins.Add( 'placeholder', 'en,it' ) ;
-
 FCKConfig.Plugins.Add( 'attachments', 'en' ) ;
+
+// FCKConfig.Plugins.Add( 'placeholder', 'en,it' ) ;
 
 FCKConfig.AutoDetectLanguage	= true ;
 FCKConfig.DefaultLanguage		= 'en' ;
@@ -54,32 +54,31 @@ FCKConfig.FormatOutput		= true ;
 FCKConfig.FormatIndentator	= '    ' ;
 
 FCKConfig.ToolbarSets["Default"] = [
-        ['Source','DocProps','-','Templates'],
-        ['Cut','Copy','Paste','PasteText','PasteWord','-','SelectAll','RemoveFormat','-','SpellCheck'],
+        ['Source','DocProps','Templates'],
+        ['Cut','Copy','Paste','PasteText','PasteWord','SelectAll','RemoveFormat','SpellCheck'],
         ['Undo','Redo','-','Find','Replace'],
-        ['Bold','Italic','Underline','StrikeThrough','-','Subscript','Superscript'],
-        ['OrderedList','UnorderedList','-','Outdent','Indent'],
-        ['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull'],
+        ['Bold','Italic','Underline','StrikeThrough','Subscript','Superscript'],
+        ['OrderedList','UnorderedList','Outdent','Indent'],
+        ['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull','TextColor','BGColor'],
         ['Link','Unlink','Anchor'],
-        ['TextColor','BGColor'],
         ['Image','Flash','Table','Rule','Smiley','SpecialChar','UniversalKey'],['Style'],
         ['FontFormat','FontName','FontSize'],
         ['About']
 ] ;
 
 FCKConfig.ToolbarSets["Attachments"] = [
-        ['Source','DocProps','-','Templates'],
-        ['Cut','Copy','Paste','PasteText','PasteWord','-','SelectAll','RemoveFormat','-','SpellCheck'],
-        ['Undo','Redo','-','Find','Replace'],
-        ['Bold','Italic','Underline','StrikeThrough','-','Subscript','Superscript'],
-        ['OrderedList','UnorderedList','-','Outdent','Indent'],
-        ['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull'],
-        ['Link','Unlink','Anchor'],
-        ['TextColor','BGColor'],
-        ['Image','Flash','Table','Rule','Smiley','SpecialChar','UniversalKey'],['Style'],
-        ['FontFormat','FontName','FontSize'],['About'],
-        '/',
-        ['SelectAttachmentsCombo','SelectAttachmentsButton']
+   ['Source','DocProps','Templates'],
+   ['Cut','Copy','Paste','PasteText','PasteWord','SelectAll','RemoveFormat','SpellCheck'],
+   ['Undo','Redo','-','Find','Replace'],
+   ['Bold','Italic','Underline','StrikeThrough','Subscript','Superscript'],
+   ['OrderedList','UnorderedList','Outdent','Indent'],
+   ['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull','TextColor','BGColor'],
+   ['Link','Unlink','Anchor'],
+   ['Image','Flash','Table','Rule','Smiley','SpecialChar','UniversalKey'],['Style'],
+   ['FontFormat','FontName','FontSize'],
+   ['About'],
+   '/',
+   ['SelectAttachmentsCombo','SelectAttachmentsButton']
 ] ;
 
 FCKConfig.ToolbarSets["Basic"] = [
