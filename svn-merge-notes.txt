@@ -1,0 +1,3 @@
+Skipped:
+
+12747	SAK-5686	Make this sample skin JSR-168 capable
