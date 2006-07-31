@@ -1,0 +1,8 @@
+Skipped merges:
+Revision: 13042
+Author: jimeng@umich.edu
+Date: 9:21:21 PM, Thursday, July 27, 2006
+Message:
+SAK-5739 First baby steps toward release/retract dates
+Modified : /content/trunk/content-tool/tool/src/bundle/content.properties
+Modified : /content/trunk/content-tool/tool/src/webapp/vm/content/chef_resources_edit.vm
