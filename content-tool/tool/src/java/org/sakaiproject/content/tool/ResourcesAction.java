@@ -1022,19 +1022,16 @@ public class ResourcesAction
 		}
 		else if(MODE_ATTACHMENT_CREATE.equals(helper_mode))
 		{
-			setupStructuredObjects(state);
 			need_to_push = true;
 			helper_mode = MODE_ATTACHMENT_CREATE_INIT;
 		}
 		else if(MODE_ATTACHMENT_NEW_ITEM.equals(helper_mode))
 		{
-			setupStructuredObjects(state);
 			need_to_push = true;
 			helper_mode = MODE_ATTACHMENT_NEW_ITEM_INIT;
 		}
 		else if(MODE_ATTACHMENT_EDIT_ITEM.equals(helper_mode))
 		{
-			setupStructuredObjects(state);
 			need_to_push = true;
 			helper_mode = MODE_ATTACHMENT_EDIT_ITEM_INIT;
 		}
@@ -1166,14 +1163,17 @@ public class ResourcesAction
 		}
 		else if(MODE_ATTACHMENT_CREATE_INIT.equals(helper_mode))
 		{
+			setupStructuredObjects(state);
 			template = buildCreateContext(portlet, context, data, state);
 		}
 		else if(MODE_ATTACHMENT_NEW_ITEM_INIT.equals(helper_mode))
 		{
+			setupStructuredObjects(state);
 			template = buildItemTypeContext(portlet, context, data, state);
 		}
 		else if(MODE_ATTACHMENT_EDIT_ITEM_INIT.equals(helper_mode))
 		{
+			setupStructuredObjects(state);
 			template = buildEditContext(portlet, context, data, state);
 		}
 		return template;
@@ -2082,6 +2082,8 @@ public class ResourcesAction
 		context.put("homeCollectionId", homeCollectionId);
 		List cPath = getCollectionPath(state);
 		context.put ("collectionPath", cPath);
+		String navRoot = (String) state.getAttribute(STATE_NAVIGATION_ROOT);
+		context.put("navRoot", navRoot);
 		
 		EditItem item = getEditItem(id, collectionId, data);
 		context.put("item", item);
@@ -2565,17 +2567,17 @@ public class ResourcesAction
 		catch(PermissionException e)
 		{
 			//alerts.add(rb.getString("notpermis4"));
-			e.printStackTrace();
+			logger.warn("ResourcesAction.newEditItems() PermissionException ", e);
 		} 
 		catch (IdUnusedException e) 
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("ResourcesAction.newEditItems() IdUnusedException ", e);
 		} 
 		catch (TypeException e) 
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("ResourcesAction.newEditItems() TypeException ", e);
 		}
 
 		boolean pubviewset = ContentHostingService.isInheritingPubView(collectionId) || ContentHostingService.isPubView(collectionId);
@@ -9452,11 +9454,15 @@ public class ResourcesAction
 			previousCollectionId = currentCollectionId;
 			currentCollectionId = contentService.getContainingCollectionId(currentCollectionId);
 		}
-		pathitems.add(navRoot);
-
-		if(!navRoot.equals(homeCollectionId))
+		
+		if(navRoot != null)
 		{
-			pathitems.add(homeCollectionId);
+			pathitems.add(navRoot);
+
+			if(!navRoot.equals(homeCollectionId))
+			{
+				pathitems.add(homeCollectionId);
+			}
 		}
 
 		Iterator items = pathitems.iterator();
@@ -9571,7 +9577,8 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canDelete())
 			{
-				canDelete = contentService.allowRemoveResource(collectionId);
+				// canDelete = contentService.allowRemoveResource(collectionId);
+				canDelete = contentService.allowRemoveCollection(collectionId);
 			}
 			else
 			{
@@ -9579,7 +9586,8 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canRevise())
 			{
-				canRevise = contentService.allowUpdateResource(collectionId);
+				// canRevise = contentService.allowUpdateResource(collectionId);
+				canRevise = contentService.allowUpdateCollection(collectionId);
 			}
 			else
 			{
@@ -9818,6 +9826,8 @@ public class ResourcesAction
 						String itemType = ((ContentResource)resource).getContentType();
 						String itemName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 						BrowseItem newItem = new BrowseItem(itemId, itemName, itemType);
+						
+						boolean isLocked = contentService.isLocked(itemId);
 
 						newItem.setAccess(access_mode.toString());
 						newItem.setInheritedAccess(folder.getEffectiveAccess());
@@ -9842,7 +9852,7 @@ public class ResourcesAction
 						newItem.setContainer(collectionId);
 						newItem.setRoot(folder.getRoot());
 
-						newItem.setCanDelete(canDelete);
+						newItem.setCanDelete(canDelete && ! isLocked);
 						newItem.setCanRevise(canRevise);
 						newItem.setCanRead(canRead);
 						newItem.setCanCopy(canRead);
