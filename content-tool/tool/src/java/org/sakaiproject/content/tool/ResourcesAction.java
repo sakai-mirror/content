@@ -7399,17 +7399,17 @@ public class ResourcesAction
 		if(item.isFileUpload())
 		{
 			String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
-			int max_bytes = 1096 * 1096;
+			int max_bytes = 1024 * 1024;
 			try
 			{
-				max_bytes = Integer.parseInt(max_file_size_mb) * 1096 * 1096;
+				max_bytes = Integer.parseInt(max_file_size_mb) * 1024 * 1024;
 			}
 			catch(Exception e)
 			{
 				// if unable to parse an integer from the value
 				// in the properties file, use 1 MB as a default
 				max_file_size_mb = "1";
-				max_bytes = 1096 * 1096;
+				max_bytes = 1024 * 1024;
 			}
 			/*
 			 // params.getContentLength() returns m_req.getContentLength()
@@ -7958,17 +7958,17 @@ public class ResourcesAction
 		Set first_item_alerts = null;
 
 		String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
-		int max_bytes = 1096 * 1096;
+		int max_bytes = 1024 * 1024;
 		try
 		{
-			max_bytes = Integer.parseInt(max_file_size_mb) * 1096 * 1096;
+			max_bytes = Integer.parseInt(max_file_size_mb) * 1024 * 1024;
 		}
 		catch(Exception e)
 		{
 			// if unable to parse an integer from the value
 			// in the properties file, use 1 MB as a default
 			max_file_size_mb = "1";
-			max_bytes = 1096 * 1096;
+			max_bytes = 1024 * 1024;
 		}
 
 		/*
@@ -10112,6 +10112,8 @@ public class ResourcesAction
 			folder.setCanAddFolder(canAddFolder);
 			folder.setCanDelete(canDelete);
 			folder.setCanUpdate(canUpdate);
+			
+			folder.setAvailable(collection.isAvailable());
 
 			try
 			{
@@ -10186,6 +10188,11 @@ public class ResourcesAction
 					ResourceProperties props = resource.getProperties();
 
 					String itemId = resource.getId();
+					
+					if(contentService.isAvailabilityEnabled() && ! contentService.isAvailable(itemId))
+					{
+						continue;
+					}
 
 					if(resource.isCollection())
 					{
@@ -10220,6 +10227,12 @@ public class ResourcesAction
 						BrowseItem newItem = new BrowseItem(itemId, itemName, itemType);
 						
 						boolean isLocked = contentService.isLocked(itemId);
+						
+						boolean isAvailable = folder.isAvailable();
+						if(isAvailable)
+						{
+							isAvailable = resource.isAvailable();
+						}
 
 						newItem.setAccess(access_mode.toString());
 						newItem.setInheritedAccess(folder.getEffectiveAccess());

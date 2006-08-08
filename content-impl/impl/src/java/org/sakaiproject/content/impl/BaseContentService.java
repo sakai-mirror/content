@@ -940,6 +940,27 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		return available;
 		
 	}
+	
+	/**
+	 * Determine whether an entity is available to this user at this time, taking into account whether the item is hidden and the user's 
+	 * status with respect to viewing hidden entities in this context.
+	 * @param entityId
+	 * @return true if the item is not hidden or it's hidden but the user has permissions to view hidden items in this context (site? folder? group?), 
+	 * and false otherwise. 
+	 */
+	public boolean isAvailable(String entityId)
+	{
+		boolean available = true;
+		try
+		{
+			available = availabilityCheck(entityId);
+		}
+		catch(IdUnusedException e)
+		{
+			available = false;
+		}
+		return available;
+	}
 
 	/**
 	 * Check security permission.
@@ -9020,7 +9041,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				// add release-date 
 				resource.setAttribute(RELEASE_DATE, m_releaseDate.toString());
 			}
-			if(!m_hidden && m_releaseDate != null)
+			if(!m_hidden && m_retractDate != null)
 			{
 				// add retract-date
 				resource.setAttribute(RETRACT_DATE, m_retractDate.toString());

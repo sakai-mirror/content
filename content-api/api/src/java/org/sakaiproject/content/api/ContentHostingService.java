@@ -1399,4 +1399,13 @@ public interface ContentHostingService extends EntityProducer
 	 * @return true if the availability features are enabled, false otherwise.
 	 */
 	public boolean isAvailabilityEnabled();
+	
+	/**
+	 * Determine whether an entity is available to this user at this time, taking into account whether the item is hidden and the user's 
+	 * status with respect to viewing hidden entities in this context.
+	 * @param entityId
+	 * @return true if the item is not hidden or it's hidden but the user has permissions to view hidden items in this context (site? folder? group?), 
+	 * and false otherwise. 
+	 */
+	public boolean isAvailable(String entityId);
 }
