@@ -1,4 +1,4 @@
-availab<!-- chef_resources_itemtype.vm, use with org.sakaiproject.tool.content.ResourcesAction.java -->
+<!-- chef_resources_itemtype.vm, use with org.sakaiproject.tool.content.ResourcesAction.java -->
 #macro(timeSelectionWidget $prefix $current_value)
 			#set($time = $current_value.toStringLocalFull())
 			#set($hour = $current_value.breakdownLocal().hour)
