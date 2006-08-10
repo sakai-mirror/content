@@ -374,18 +374,19 @@
 						#else
 							#set($headerDepth =$member.depth + 3)
 						#end
+						<!-- member.isAvailable() = $member.isAvailable() -->
 						<tr
 							#set ($copy="false")
 							#set ($move="false")
 							#if($copyFlag && $member.isHighlighted())
-								class="selectedCopy#if(!$item.isAvailable()) inactive#end"
+								class="selectedCopy#if(!$member.isAvailable()) inactive#end"
 								title ="$tlang.getString("list.copied")"
 								#set ($copy="true")
 							#elseif($moveFlag && $member.isHighlighted())
-								class="selectedMove#if(!$item.isAvailable()) inactive#end" 
+								class="selectedMove#if(!$member.isAvailable()) inactive#end" 
 								title ="$tlang.getString("list.moved")"
 								#set ($move="true")
-							#elseif(!$item.isAvailable())
+							#elseif(!$member.isAvailable())
 								class="inactive"
 							#end
 							>
@@ -856,18 +857,19 @@
 								#else
 									#set($headerDepth =$member.depth + 3)
 								#end
+								<!-- member.isAvailable() = $member.isAvailable() -->
 								<tr
 									#set ($copy="false")
 									#set ($move="false")
 									#if($copyFlag && $member.isHighlighted())
-										class="selectedCopy#if(!$item.isAvailable()) inactive#end"
+										class="selectedCopy#if(!$member.isAvailable()) inactive#end"
 										title ="$tlang.getString("list.copied")"
 										#set ($copy="true")
 									#elseif($moveFlag && $member.isHighlighted())
-										class="selectedMove#if(!$item.isAvailable()) inactive#end" 
+										class="selectedMove#if(!$member.isAvailable()) inactive#end" 
 										title ="$tlang.getString("list.moved")"
 										#set ($move="true")
-									#elseif(!$item.isAvailable())
+									#elseif(!$member.isAvailable())
 										class="inactive"
 									#end
 									>
