@@ -13,11 +13,11 @@ email			-r13310	https://source.sakaiproject.org/svn/email/tags/sakai_2-2-1-003
 alias			-r13310	https://source.sakaiproject.org/svn/alias/tags/sakai_2-2-1-003
 site			-r13310	https://source.sakaiproject.org/svn/site/tags/sakai_2-2-1-003
 master			-r13310	https://source.sakaiproject.org/svn/master/tags/sakai_2-2-1-003
-reference		-r13310	https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1-003
+reference			https://source.sakaiproject.org/svn/content/branches/reference_2-2-1-availability
 login			-r13310	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1-003
 access			-r13310	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1-003
-content			-r13310	https://source.sakaiproject.org/svn/content/tags/sakai_2-2-1-003
-metaobj			-r13310	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1-003
+content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-availability
+metaobj				https://source.sakaiproject.org/svn/content/tags/metaobj_2-2-1-003
 presence		-r13310	https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1-003
 calendar		-r13310	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-2-1-003
 portal			-r13310	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1-003
