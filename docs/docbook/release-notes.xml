@@ -4,16 +4,20 @@
     version="5.0">
 
     <info>
-        <title>2.2.0 Release Notes</title>
-        <edition>14 July 2006 - version 2.2.0</edition>
+        <title>2.2.1 Release Notes</title>
+        <edition>15 August 2006 - version 2.2.1</edition>
     </info>
+    <sect1 xml:id="overview">
+        <title>Overview</title>
+        <para>2.2.1 is a maintenance release, meaning that its focused purpose is to distribute further fixes to issues that were present in the 2.2.0 release, and 2.2.1 does not include any new features which may introduce novel issues.  In short, 2.2.1 is the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to deploy 2.2.1 with confidence - its changes will not break your skins, providers, or other ordinary customizations.  Its feature notes are identical to the 2.2.0 release, and are included below.  Some of the fixes do involve database conversions, so be sure to examine that section below, along with the 2.2.1 fixes and open issues.</para>
+    </sect1>
     <sect1 xml:id="new">
         <title>What's New</title>
         <sect2 xml:id="new-enhance">
             <title>Enhancements</title>
             <sect3 xml:id="new-enhance-framework">
                 <title>Framework Refactoring</title>
-                <para>The 2.2.0 release marks the culmination of a significant effort to restructure
+                <para>The 2.2 codebase marks the culmination of a significant effort to restructure
                     the framework into more logical functional/architectural units, paving the way
                     for multiple, focused teams to work in parallel on moving the framework and
                     legacy code forward.</para>
@@ -34,19 +38,18 @@
                 <para>For the last few releases we've been working to introduce the concept of
                     "internal" and "external" identifiers in Sakai in the user records. We started
                     with a single identifier that had to play both of these roles, and have been
-                    tweaking the code to separate these out. For 2.2.0 we have completed this
-                    separation. It is now possible for an institution to, for example, alter the
+                    tweaking the code to separate these out. This separation was completed with 2.2.0. It is now possible for an institution to, for example, alter the
                     enterprise IDs of their users without losing access to their sites and materials
                     in Sakai. For a thorough discussion of these changes, see the doc
                         <filename>reference/docs/architecture/sakai_id_eid.doc</filename> (or in
                     subversion at: <link
-                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_id_eid.doc"
-                        >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_id_eid.doc</link>)</para>
+                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_id_eid.doc"
+                        >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_id_eid.doc</link>)</para>
             </sect3>
             <sect3 xml:id="new-enhance-fck">
                 <title>FCKeditor</title>
                 <para>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In
-                    2.2.0 it has become the default editor. HTMLArea is still included, however, and
+                    2.2 it has become the default editor. HTMLArea is still included, however, and
                     the default editor may be overridden in <filename>sakai.properties</filename> by
                     altering the following setting:</para>
                 <screen>
@@ -69,7 +72,7 @@ skin.default=default</screen>
             <sect3 xml:id="new-enhance-help">
                 <title>Updated Help Content</title>
                 <para>Help content in 2.1 was out of date, reflecting only version 2.0 of the
-                    software. The help content has been updated for 2.2.0, along with some style
+                    software. The help content has been updated for 2.2, along with some style
                     improvements. To see the ongoing work of the Help project, visit their space in
                     Confluence:</para>
                 <para>
@@ -79,57 +82,58 @@ skin.default=default</screen>
             </sect3>
             <sect3 xml:id="new-enhance-translate">
                 <title>New translations</title>
-                <para>New interface translations for French and Catalan, as well as updated Japanese translations, are
-                    available in this release. See
-                        <filename>reference/docs/readme_i18n.txt</filename> for more information.</para>
+                <para>New interface translations for French and Catalan, as well as updated Japanese
+                    translations, are available in this release. See
+                        <filename>reference/docs/readme_i18n.txt</filename> for more
+                information.</para>
             </sect3>
         </sect2>
         <sect2 xml:id="new-tools">
             <title>New Tools</title>
             <sect3 xml:id="new-tools-osp">
                 <title>Open Source Portfolio</title>
-                <para>2.2.0 marks closer integration with the Open Source Portfolio, an existing suite of tools supporting portfolio activities,
-                    and which are available in this release as
-                    <link
-                        xl:href="provisional.html">provisional tools</link>. Using OSP, individuals can collect
-                    items, reflect, design portfolios, and publish them to
-                    designated audiences. Instructors and program administrators
-                    are able to provide structure and guidance to an individual's
-                    work that include step-by-step (sequential) wizards, matrices
-                    of goals/standards, and hierarchies to organize related work.</para>
+                <para>2.2 marks closer integration with the Open Source Portfolio, an existing
+                    suite of tools supporting portfolio activities, and which are available in this
+                    release as <link xl:href="provisional.html">provisional tools</link>. Using OSP,
+                    individuals can collect items, reflect, design portfolios, and publish them to
+                    designated audiences. Instructors and program administrators are able to provide
+                    structure and guidance to an individual's work that include step-by-step
+                    (sequential) wizards, matrices of goals/standards, and hierarchies to organize
+                    related work.</para>
             </sect3>
             <sect3 xml:id="new-tools-provisional">
                 <title>Provisional Tools</title>
-            <para>Sakai 2.2.0 has added four new provisional tools</para>
-            <itemizedlist>
-                <listitem>
-                    <para><emphasis>Message Center:</emphasis> a tool combining a discussion forum
-                        with private messaging.</para>
-                </listitem>
+                <para>Sakai 2.2 has added four new provisional tools</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis>Message Center:</emphasis> a tool combining a discussion
+                            forum with private messaging.</para>
+                    </listitem>
 
-                <listitem>
-                    <para><emphasis>Search:</emphasis> a tool providing a Google-like search of all
-                        site content.</para>
-                </listitem>
+                    <listitem>
+                        <para><emphasis>Search:</emphasis> a tool providing a Google-like search of
+                            all site content.</para>
+                    </listitem>
 
-                <listitem>
-                    <para><emphasis>Summary Calendar:</emphasis> a synoptic calendar view that may
-                        be used in either the <emphasis>My Workspace</emphasis> or the Home page of
-                        course/project sites, including an event summary from either all the sites
-                        to which a user is a member (if in <emphasis>My Workspace</emphasis>) or the
-                        events of a particular site (if in that site).</para>
-                </listitem>
+                    <listitem>
+                        <para><emphasis>Summary Calendar:</emphasis> a synoptic calendar view that
+                            may be used in either the <emphasis>My Workspace</emphasis> or the Home
+                            page of course/project sites, including an event summary from either all
+                            the sites to which a user is a member (if in <emphasis>My
+                            Workspace</emphasis>) or the events of a particular site (if in that
+                            site).</para>
+                    </listitem>
 
-                <listitem>
-                    <para><emphasis>Post 'Em:</emphasis> an automated reporting system that enables
-                        faculty to post grades and comments without compromising student privacy.
-                        Post ‘Em accepts CSV files, empowering faculty to track student grades in a
-                        spreadsheet application of their choice.</para>
-                </listitem>
+                    <listitem>
+                        <para><emphasis>Post 'Em:</emphasis> an automated reporting system that
+                            enables faculty to post grades and comments without compromising student
+                            privacy. Post ‘Em accepts CSV files, empowering faculty to track student
+                            grades in a spreadsheet application of their choice.</para>
+                    </listitem>
 
-            </itemizedlist>
-            <para>You can find more details about these and all other provisional tools on the <link
-                    xl:href="provisional.html">provisional tools</link> page.</para>
+                </itemizedlist>
+                <para>You can find more details about these and all other provisional tools on the
+                        <link xl:href="provisional.html">provisional tools</link> page.</para>
             </sect3>
         </sect2>
     </sect1>
@@ -137,7 +141,7 @@ skin.default=default</screen>
         <title>Migration Issues</title>
         <sect2 xml:id="migration-conversion">
             <title>Database Conversion</title>
-            <para>There are database schema changes between 2.1.2 and 2.2.0, and the conversion
+            <para>There are database schema changes between 2.2.0 and 2.2.1, and the conversion
                 scripts to be applied - in distinct versions for MySQL and Oracle, respectively -
                 are found in the <filename>reference/docs/conversion</filename> folder of the
                 release or on subversion:</para>
@@ -147,8 +151,8 @@ skin.default=default</screen>
                     <listitem>
                         <para>
                             <link
-                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql"
-                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql</link>
+                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql"
+                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql</link>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -157,17 +161,17 @@ skin.default=default</screen>
                     <listitem>
                         <para>
                             <link
-                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql"
-                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql</link>
+                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql"
+                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql</link>
                         </para>
                     </listitem>
                 </varlistentry>
             </variablelist>
             <para>In the same directory you'll also find conversion scripts for earlier Sakai
                 versions. Migration from an earlier version will require the successive application
-                of all intermediate conversion scripts. You cannot, for example, move from 2.1.1 to
-                2.2.0 by applying a single DB script. You will need to move first from 2.1.1 to
-                2.1.2, and then to 2.2.0.</para>
+                of all intermediate conversion scripts. You cannot, for example, move from 2.1.2 to
+                2.2.1 by applying a single DB script. You will need to move first from 2.1.2 to
+                2.2.0, and then to 2.2.1.</para>
             <note>
                 <title>Examine before using</title>
                 <para>As a general rule, be sure to read through these conversion scripts before
@@ -175,13 +179,13 @@ skin.default=default</screen>
                     have made - such as new roles, or the deployment of additional tools - and they
                     may complicate your migration with unintended consequences if you execute the
                     script blindly.</para>
-                <para>For the 2.2.0 release, the <emphasis>Message Center</emphasis> tool offers one
-                    such particular example. A number of schools deployed <emphasis>Message
+                <para>The <emphasis>Message Center</emphasis> tool offers one
+                    such particular example for 2.2. A number of schools deployed <emphasis>Message
                     Center</emphasis> in 2.1.x production, before it was yet a provisional tool. Now
                     that it is a provisional tool, the conversion scripts were written to introduce
                     its tables, and thus assume that <emphasis>Message Center</emphasis> is a new
                     tool for your deployment. If it isn't, you'll want to comment out the portions
-                    of the conversion script that treat it, and instead perform the following
+                    of the 2.1.2 - 2.2.0 conversion script that treat it, and instead perform the following
                     conversions:</para>
                 <variablelist>
                     <varlistentry>
@@ -219,7 +223,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
         </sect2>
         <sect2 xml:id="migration-providers">
             <title>Provider Changes</title>
-            <para>As mentioned above, 2.2.0 introduces a separation of external user identifiers
+            <para>As mentioned above, 2.2.0 introduced a separation of external user identifiers
                 from Sakai's internal user ids. Any custom
                 <filename>UserDirectoryProvider</filename> will need some alteration to account for
                 this, along with changes to its import statements and declarations that stem from
@@ -249,19 +253,19 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
                 compare it against the sample for previous releases:</para>
             <para>
                 <link
-                    xl:href="https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-0/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java"
-                    >https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-0/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java</link>
+                    xl:href="https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java"
+                    >https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java</link>
             </para>
         </sect2>
         <sect2>
             <title>Skin Changes</title>
-            <para>A number of CSS changes will need to be made to any 2.1 skins in order to adapt
-                them to 2.2.0. These changes - including conversion steps - are thoroughly
+            <para>Skins prepared for 2.2.0 will also work for 2.2.1.  However, a number of CSS changes will need to be made to any 2.1 skins in order to adapt
+                them to 2.2 versions. These changes - including conversion steps - are thoroughly
                 documented in the appendices of the skin document available in
                     <filename>reference/docs/architecture/sakai_skin.doc</filename>, or in
                 subversion at: <link
-                    xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_skin.doc"
-                    >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_skin.doc</link></para>
+                    xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc"
+                    >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc</link></para>
         </sect2>
     </sect1>
     <sect1 xml:id="maintenance">
@@ -283,18 +287,18 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
     </sect1>
     <sect1 xml:id="resolved">
         <title>Fixes Included in this Release</title>
-        <para>Sakai 2.2.0 fixes the following issues from previous releases:</para>
+        <para>Sakai 2.2.1 fixes the following issues from 2.2.0:</para>
         <para>
             <link xl:href="fixed-issues.html"
-                >http://source.sakaiproject.org/release/2.2.0/fixed-issues.html</link>
+                >http://source.sakaiproject.org/release/2.2.1/fixed-issues.html</link>
         </para>
     </sect1>
     <sect1 xml:id="open-issues">
         <title>Open Issues</title>
-        <para>The list of known issues with Sakai 2.2.0 at the time of release is found at:</para>
+        <para>The list of known issues with Sakai 2.2.1 at the time of release is found at:</para>
         <para>
             <link xl:href="open-issues.html"
-                >http://source.sakaiproject.org/release/2.2.0/open-issues.html</link>
+                >http://source.sakaiproject.org/release/2.2.1/open-issues.html</link>
         </para>
         <para>See in particular the "Important Issues" noted at the top of the list.</para>
     </sect1>
