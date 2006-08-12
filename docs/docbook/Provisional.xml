@@ -5,7 +5,7 @@
 
     <info>
         <title>Provisional Tools</title>
-        <edition>14 July 2006 - Document version 2.2</edition>
+        <edition>15 August 2006 - Document version 2.2</edition>
     </info>
 
     <sect1 xml:id="provisional">
@@ -55,7 +55,7 @@ osp.presLayout,osp.style</screen>
             the available tools through their admin site functions.</para>
     </sect1>
     <sect1 xml:id="tool-list">
-        <title>Provisional Tools in 2.2.0</title>
+        <title>Provisional Tools in 2.2</title>
         <para>A brief overview of each provisional tool is provided below. For more detailed
             information visit the Confluence links provided, or send your questions to the listed
             contact.</para>
@@ -202,15 +202,15 @@ mc.default.Teaching\ Assisant=Contributor</screen>
             <sect3>
                 <title>Overview</title>
                 <para>The Open Source Portfolio (OSP) has been a significant standalone product in
-                    its own right, and it is bundled in Sakai 2.2 as a suite of tools
-                    designed to work in concert for portfolio-based assessment. Using OSP, individuals can collect
-                    items, reflect, design portfolios, and publish them to
-                    designated audiences. Instructors and program administrators
-                    are able to provide structure and guidance to an individual's
-                    work that include step-by-step (sequential) wizards, matrices
-                    of goals/standards, and hierarchies to organize related work.  Please visit <link
-                        xl:href="http://www.osportfolio.org">http://www.osportfolio.org</link> for
-                    more information on the Open Source Portfolio (OSP).</para>
+                    its own right, and it is bundled in Sakai 2.2 as a suite of tools designed to
+                    work in concert for portfolio-based assessment. Using OSP, individuals can
+                    collect items, reflect, design portfolios, and publish them to designated
+                    audiences. Instructors and program administrators are able to provide structure
+                    and guidance to an individual's work that include step-by-step (sequential)
+                    wizards, matrices of goals/standards, and hierarchies to organize related work.
+                    Please visit <link xl:href="http://www.osportfolio.org"
+                        >http://www.osportfolio.org</link> for more information on the Open Source
+                    Portfolio (OSP).</para>
             </sect3>
         </sect2>
         <sect2 xml:id="search">
