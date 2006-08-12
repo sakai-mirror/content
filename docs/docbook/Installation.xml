@@ -12,7 +12,7 @@
         <title>Overview</title>
         <sect2 xml:id="install-overview-choose">
             <title>Choose an Install Type</title>
-            <para>Sakai 2.2.0 downloads are available for three different installation methods: <variablelist>
+            <para>Sakai 2.2.1 downloads are available for three different installation methods: <variablelist>
                     <varlistentry>
                         <term>Demo:</term>
                         <listitem>
@@ -63,7 +63,7 @@
                             <listitem>
                                 <para>
                                     <link
-                                        xl:href="http://source.sakaiproject.org/release/2.2.0/sakai_2-2-0/sakai-demo_2-2-0.zip"
+                                        xl:href="http://source.sakaiproject.org/release/2.2.1/sakai_2-2-1/sakai-demo_2-2-1.zip"
                                         >demo archive</link>
                                 </para>
                             </listitem>
@@ -73,7 +73,7 @@
                             <listitem>
                                 <para>
                                     <link
-                                        xl:href="http://source.sakaiproject.org/release/2.2.0/sakai_2-2-0/sakai-demo_2-2-0.tar.gz"
+                                        xl:href="http://source.sakaiproject.org/release/2.2.1/sakai_2-2-1/sakai-demo_2-2-1.tar.gz"
                                         >demo archive</link>
                                 </para>
                             </listitem>
@@ -192,8 +192,9 @@
         </sect2>
         <sect2 xml:id="install-overview-migrating">
             <title>Migrating from a Previous Release</title>
-            <para>Since there have been a number of changes in tools, DB schema, and APIs, migrating
-                to 2.2 from a previous release requires close attention to detail. Be sure to go
+            <para>2.2.1 adds only bug fixes to 2.2.0, and so a transition between the two should be simple and trouble-free.  If you have been running 2.2.0 already, you should be able to deploy 2.2.1 with confidence: it will not break your skins, providers, or other customizations.</para>
+            <para>If you are moving from an earlier 2.1 or 2.0 codebase, however, 2.2 involves some significant changes: in tools, DB schema, and APIs.  Migrating
+                to 2.2 from a previous release therefore requires close attention to detail. Be sure to go
                 over the <link xl:href="release-notes.html">release notes</link> carefully, and a
                 few key hurdles are identified below:</para>
             <variablelist>
@@ -212,7 +213,7 @@
                 <varlistentry>
                     <term>DB conversion scripts:</term>
                     <listitem>
-                        <para>Every release has DB conversion scripts, and 2.2 is no exception. Be
+                        <para>Every release has DB conversion scripts, and 2.2.1 is no exception. Be
                             sure, however, to read these scripts over carefully before executing
                             them on your production data. They do not take into account any special
                             customizations you may have done, and you may need to alter them for
@@ -224,7 +225,7 @@
                     <term>Provisional tools:</term>
                     <listitem>
                         <para>A few contrib tools that schools may have already put into production
-                            are now provisional with the 2.2 release. The DB conversion scripts in
+                            are now provisional with 2.2 releases. The DB conversion scripts in
                             particular assume that these new provisional tools are not represented
                             in your schema, and attempt to introduce them. If you have already
                             deployed <emphasis>Message Center</emphasis>, <emphasis>Post
@@ -387,7 +388,7 @@ Java HotSpot(TM) Server VM (build 1.5.0_06-b05, mixed mode)</screen>
         </sect2>
         <sect2 xml:id="install-env-tinstall">
             <title>Install Tomcat</title>
-            <para>Sakai 2.2.0 was QA'ed with Tomcat 5.5.17, and so that's the version we recommend,
+            <para>Sakai 2.2.1 was QA'ed with Tomcat 5.5.17, and so that's the version we recommend,
                 although the latest stable version will most likely not present problems. Tomcat can
                 be downloaded as a binary from <link
                     xl:href="http://tomcat.apache.org/download-55.cgi"
@@ -561,8 +562,8 @@ maven.tomcat.home=/usr/local/tomcat/</screen>
                 documentation, look for <filename>sakai_maven.doc</filename> in
                     <filename>reference/docs/architecture</filename> of the source archive or on
                 subversion at: <link
-                    xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_maven.doc"
-                    >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_maven.doc</link></para>
+                    xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_maven.doc"
+                    >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_maven.doc</link></para>
         </note>
         <sect2 xml:id="install-build-download">
             <title>Download Source</title>
@@ -594,7 +595,7 @@ maven.tomcat.home=/usr/local/tomcat/</screen>
                 <para>Subsequent builds would be advised to add the "clean" phase by using the
                     command <command>maven cln bld dpl</command>, or the equivalent shortcut:
                         <command>maven sakai</command>. See the <link
-                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_maven.doc"
+                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_maven.doc"
                         >sakai_maven.doc</link> for more details.</para>
             </note>
             <para>This will run for quite a few minutes with fairly verbose output, particularly
@@ -664,7 +665,7 @@ export MAVEN_OPTS="-Xmx384m -XX:PermSize=48m"</screen>
                     settings for installation are covered here, but to find the most detailed
                     documentation on the full variety of possible
                     <filename>sakai.properties</filename> settings, look in <link
-                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_properties.doc"
+                        xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_properties.doc"
                         >sakai_properties.doc</link> in subversion or
                         <filename>reference/docs/architecture/sakai_properties.doc</filename> of the
                     source archive.</para>
@@ -829,7 +830,7 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
         <title>Database Configuration</title>
         <sect2 xml:id="install-dbconfig-migrating">
             <title>Migrating from an Earlier Version</title>
-            <para>There are database schema changes between 2.1.2 and 2.2.0, and the conversion
+            <para>There are database schema changes between 2.2.0 and 2.2.1, and the conversion
                 scripts to be applied - in distinct versions for MySQL and Oracle, respectively -
                 are found in the <filename>reference/docs/updating</filename> folder of the release
                 or on subversion:</para>
@@ -839,8 +840,8 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                     <listitem>
                         <para>
                             <link
-                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql"
-                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql</link>
+                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql"
+                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql</link>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -849,17 +850,17 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                     <listitem>
                         <para>
                             <link
-                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql"
-                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql</link>
+                                xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql"
+                                >https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql</link>
                         </para>
                     </listitem>
                 </varlistentry>
             </variablelist>
             <para>In the same directory you'll also find conversion scripts for earlier Sakai
                 versions. Migration from an earlier version will require the successive application
-                of all intermediate scripts. You cannot, for example, move from 2.1.1 to 2.2.0 by
-                applying a single script. You will need to move first from 2.1.1 to 2.1.2, and then
-                to 2.2.0.</para>
+                of all intermediate scripts. You cannot, for example, move from 2.1.2 to 2.2.1 by
+                applying a single script. You will need to move first from 2.1.2 to 2.2.0, and then
+                to 2.2.1.</para>
             <note>
                 <title>Examine before using</title>
                 <para>As a general rule, be sure to read through these conversion scripts before
@@ -867,8 +868,8 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                     have made - such as new roles, or the deployment of additional tools - and they
                     may complicate your migration with unintended consequences if you execute them
                     blindly.</para>
-                <para>For the 2.2.0 release, the <emphasis>Message Center</emphasis> tool offers one
-                    such particular example. A number of schools deployed <emphasis>Message
+                <para>The <emphasis>Message Center</emphasis> tool offers one
+                    such particular example in 2.2. A number of schools deployed <emphasis>Message
                     Center</emphasis> in 2.1.x production, before it was yet a provisional tool. Now
                     that it is a provisional tool, the conversion scripts were written to introduce
                     its tables, and thus assume that <emphasis>Message Center</emphasis> is a new
@@ -1227,7 +1228,7 @@ Commit complete.</screen>
                 not. These extra tools require additional steps to enable, so that system users will
                 not stumble across them inadvertently if that's not desired, but you are encouraged
                 to evaluate them for your own deployment. See <link xl:href="provisional.html"
-                    >http://source.sakaiproject.org/release/2.2.0/provisional.html</link> for more
+                    >http://source.sakaiproject.org/release/2.2.1/provisional.html</link> for more
                 details.</para>
         </sect2>
         <sect2 xml:id="install-software-learn">
