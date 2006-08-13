@@ -5,7 +5,7 @@ authz			-r13310	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1-003
 courier			-r13310	https://source.sakaiproject.org/svn/courier/tags/sakai_2-2-1-003
 event			-r13310	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1-003
 entity			-r13310	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1-003
-velocity		-r13310	https://source.sakaiproject.org/svn/velocity/tags/sakai_2-2-1-003
+velocity			https://source.sakaiproject.org/svn/content/branches/velocity_2-2-1-availability
 user			-r13310	https://source.sakaiproject.org/svn/user/tags/sakai_2-2-1-003
 memory			-r13310	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1-003
 db			-r13310	https://source.sakaiproject.org/svn/db/tags/sakai_2-2-1-003
