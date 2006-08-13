@@ -14,9 +14,9 @@
             <title>Choose an Install Type</title>
             <para>Sakai 2.2.1 downloads are available for three different installation methods: <variablelist>
                 <varlistentry>
-                    <term>Installer (Windows and Mac):</term>
+                    <term>Installer:</term>
                     <listitem>
-                        <para>Download, double-click and go. Perfect for the quickest functionality demo of the basic product, or for single faculty/researcher desktop installations. (NOTE: 2.2.1 is the first release for which installer packages have been available, and they should be considered a work-in-progress for now. Please use advisedly, and send any feedback to ...)</para>
+                        <para>Available for Windows and Mac systems.  Just download, double-click and go. Perfect for the quickest functionality demo of the basic product, or for single faculty/researcher desktop installations. (NOTE: 2.2.1 is the first release for which installer packages have been available, and they should be considered a work-in-progress for now. Please use advisedly, and send any feedback to ...)</para>
                     </listitem>
                 </varlistentry>
                     <varlistentry>
