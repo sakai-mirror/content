@@ -1417,26 +1417,6 @@ bin/startup.sh; tail -f logs/catalina.out</screen>
                 </note>
             </sect3>
             <sect3>
-                <title>Startup halts with <emphasis>destroy</emphasis> messages</title>
-                <para>If you see those <emphasis>destroy</emphasis> messages, that's the end of it.
-                    Tomcat is not coming up, and you'll need to go back and change something before
-                    it will.</para>
-                <para>Unfortunately, there are quite a number of reasons this might have happened.
-                    The simplest such cause is that you have not added the Tomcat compatibility
-                    package to your installation (see <link linkend="install-env-tinstall">Set up
-                        Build Environment</link>). All the other cases involve some problem with
-                    your code or platform; these problems are more subtle, and the associated
-                        <filename>catalina.out</filename> messages are usually not very helpful in
-                    tracking them down.</para>
-                <para>To aid in debugging these problems, Josh Holtzman of Berkeley has created what
-                    he calls a "Noisy Spring" jar. You can find a full explanation and a link to the
-                    jar in the <emphasis>Sakaipedia</emphasis> at <link
-                        xl:href="http://bugs.sakaiproject.org/confluence/display/ENC/Noisy+Spring+JAR"
-                        >http://bugs.sakaiproject.org/confluence/display/ENC/Noisy+Spring+JAR</link>.
-                    Deploying this jar will produce a more Shakespearian death in its
-                verbosity.</para>
-            </sect3>
-            <sect3>
                 <title>"Unsupported major.minor version 49.0"</title>
                 <para>If this message appears in catalina.out during startup, it means that you've
                     built Sakai for Java 1.5, but your JRE is 1.4. Go back to the <link
