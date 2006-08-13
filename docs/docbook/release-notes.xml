@@ -9,7 +9,7 @@
     </info>
     <sect1 xml:id="overview">
         <title>Overview</title>
-        <para>2.2.1 is a maintenance release, meaning that its focused purpose is to distribute further fixes to issues that were present in the 2.2.0 release, and 2.2.1 does not include any new features which may introduce novel issues.  In short, 2.2.1 is the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to deploy 2.2.1 with confidence - its changes will not break your skins, providers, or other ordinary customizations.  Its feature notes are identical to the 2.2.0 release, and are included below.  Some of the fixes do involve database conversions, so be sure to examine that section below, along with the 2.2.1 fixes and open issues.</para>
+        <para>2.2.1 is a maintenance release, meaning that its focused purpose is to distribute further fixes to issues that were present in the 2.2.0 release, and 2.2.1 does not include any new features which may introduce novel issues.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to deploy 2.2.1 with confidence - its changes will not break your skins, providers, or other ordinary customizations.  Its feature notes are identical to the 2.2.0 release, and are included below.  Some of the fixes do involve database conversions, so be sure to examine that section below, along with the 2.2.1 fixes and open issues.</para>
     </sect1>
     <sect1 xml:id="new">
         <title>What's New</title>
