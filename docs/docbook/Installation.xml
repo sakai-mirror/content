@@ -5,7 +5,7 @@
 
     <info>
         <title>Installation Guide</title>
-        <edition>14 July 2006 - Document version 2.2</edition>
+        <edition>15 August 2006 - Document version 2.2</edition>
     </info>
 
     <sect1 xml:id="install-overview">
@@ -192,11 +192,15 @@
         </sect2>
         <sect2 xml:id="install-overview-migrating">
             <title>Migrating from a Previous Release</title>
-            <para>2.2.1 adds only bug fixes to 2.2.0, and so a transition between the two should be simple and trouble-free.  If you have been running 2.2.0 already, you should be able to deploy 2.2.1 with confidence: it will not break your skins, providers, or other customizations.</para>
-            <para>If you are moving from an earlier 2.1 or 2.0 codebase, however, 2.2 involves some significant changes: in tools, DB schema, and APIs.  Migrating
-                to 2.2 from a previous release therefore requires close attention to detail. Be sure to go
-                over the <link xl:href="release-notes.html">release notes</link> carefully, and a
-                few key hurdles are identified below:</para>
+            <para>2.2.1 adds only bug fixes to 2.2.0, and so a transition between the two should be
+                simple and trouble-free. If you have been running 2.2.0 already, you should be able
+                to deploy 2.2.1 with confidence: it will not break your skins, providers, or other
+                customizations.</para>
+            <para>If you are moving from an earlier 2.1 or 2.0 codebase, however, 2.2 involves some
+                significant changes: in tools, DB schema, and APIs. Migrating to 2.2 from a previous
+                release therefore requires close attention to detail. Be sure to go over the <link
+                    xl:href="release-notes.html">release notes</link> carefully, and a few key
+                hurdles are identified below:</para>
             <variablelist>
                 <varlistentry>
                     <term>sakai.properties:</term>
@@ -350,38 +354,6 @@ Java HotSpot(TM) Server VM (build 1.5.0_06-b05, mixed mode)</screen>
                     </listitem>
                 </varlistentry>
             </variablelist>
-            <para>Finally, you'll need to set an environment variable that will increase the size
-                and performance of your JVM ("Java Virtual Machine": the default JVM settings are
-                unfortunately not sufficient for Sakai), and the variable is named
-                    <command>JAVA_OPTS</command>. The value suggested below should be suitable for
-                developers or demo installations.</para>
-            <variablelist>
-                <varlistentry>
-                    <term>Windows:</term>
-                    <listitem>
-                        <para> Create a new environment variable <command>JAVA_OPTS</command> to
-                            hold the value "<command>-server -Xms512m -Xmx512m -XX:PermSize=128m
-                                -XX:MaxPermSize=196m -XX:NewSize=192m
-                            -XX:MaxNewSize=384m</command>". </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Mac/*nix:</term>
-                    <listitem>
-                        <para>
-                            <command>export JAVA_OPTS="-server -Xms512m -Xmx512m -XX:PermSize=128m
-                                -XX:MaxPermSize=196m -XX:NewSize=192m -XX:MaxNewSize=384m"</command>
-                        </para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-            <note>
-                <title>More on JVM Tuning</title>
-                <para>The above <command>JAVA_OPTS</command> settings are, it must be emphasized
-                    once again, minimal. For settings more suitable for production servers, see the
-                        <link linkend="install-config-jvm">JVM Tuning</link> section of
-                    Post-Installation Configuration.</para>
-            </note>
             <para>You should test that these variables are set correctly. In both Windows XP and
                 *nix operating systems you can simply start a new shell and type the
                 <command>set</command> command to see your environment variables.</para>
@@ -403,11 +375,19 @@ Java HotSpot(TM) Server VM (build 1.5.0_06-b05, mixed mode)</screen>
                 <para>Windows users have the option of either downloading an .exe Tomcat installer
                     (for installing Tomcat as a service) or a .zip binary. Although either may
                     serve, they are however not entirely equivalent when it comes to operational
-                    details, and for brevity's sake it's recommended that you grab the .zip. Sakai
-                    requires some tuning of the JVM, and the service install manages these settings
-                    through the registry rather than environment variables (see Tomcat installation
-                    instructions on the Apache site if you're committed to installing Tomcat as a
-                    service).</para>
+                    details, and for control and brevity's sake the main instructions will assume that you grabbed the .zip. You can turn the .zip install into a service install later, however, by running <command>service.bat</command> from the bin directory, e.g.</para>
+                    <screen>
+C:\tomcat\bin> service.bat install</screen>
+                <para>You can add a service name as a second argument to that script. The
+                    default is "Tomcat5". You can likewise uninstall the service by
+                    replacing "install" with "remove". Then to get the configuration window,
+                    just run this at the command prompt:</para>
+                <screen>
+C:\tomcat\bin> tomcat5w //ES//Tomcat5</screen>
+                <para>Replace "Tomcat5" with whatever service name you chose for the install.
+                    You'll want to set the service to startup automatically ("Startup Type"
+                    under the General tab).</para>  
+                    <para>Also be sure to read the Windows note in the <link linkend="install-config-jvm">JVM Tuning</link> section of <link linkend="install-config">Post-Installation Configuration</link>.</para>
             </note>
             <para>Unpack the Tomcat archive at your desired location, and unpack the compatibility
                 package directly on top of it. From this point forward these instructions will refer
@@ -759,15 +739,15 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                 variable upon startup and use it. Instead of putting this in an environment variable
                 you might create your own startup script to do so.</para>
             <note>
-                <title>JVM Tuning in Windows XP</title>
-                <para>Windows users that have installed Tomcat as a service may set Java options in
-                    a <emphasis>Tomcat Properties</emphasis> dialog. But you may find that the
-                    permanent generation settings mentioned above will not work appropriately if set
-                    in the "Java Options:" field of the dialog window. That's because these settings
-                    have their own fields in the properties GUI, under the headings
-                        <emphasis>Initial Memory Pool</emphasis> and <emphasis>Maximum Memory
-                    Pool</emphasis>, respectively. Windows will ignore attempts to alter these
-                    values through the Java Options field.</para>
+                <title>JVM Tuning of Tomcat as a Windows Service</title>
+                <para>Windows users that have installed Tomcat as a service may set most Java options through the Tomcat service manager GUI, but not all of them are as straightforward as inclusion in a single environment variable.</para>
+                <para>To achieve the equivalent of the "-server" option, for example, you'll need to change the Java Virtual Machine path from <filename>[..]\bin\client\jvm.dll</filename> to <filename>[..]\bin\server\jvm.dll</filename>.  Then be sure to put the remaining JAVA_OPTS on separate lines in the Java Options field of the GUI. e.g.:</para>
+                    <screen>
+-Xmx512m
+-Xms512m
+-XX:PermSize=128m
+-XX:MaxPermSize=128m</screen>  
+                    <para>Finally, clear out the <emphasis>Initial Memory Pool</emphasis> and <emphasis>Maximum Memory Pool</emphasis> values, as those might conflict with the options you're putting in the Java Options field. Then click <emphasis>Apply</emphasis>, restart the service, and double-check the service manager to verify that the values have changed.</para>
             </note>
         </sect2>
         <sect2 xml:id="install-config-test">
@@ -868,14 +848,13 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                     have made - such as new roles, or the deployment of additional tools - and they
                     may complicate your migration with unintended consequences if you execute them
                     blindly.</para>
-                <para>The <emphasis>Message Center</emphasis> tool offers one
-                    such particular example in 2.2. A number of schools deployed <emphasis>Message
-                    Center</emphasis> in 2.1.x production, before it was yet a provisional tool. Now
-                    that it is a provisional tool, the conversion scripts were written to introduce
-                    its tables, and thus assume that <emphasis>Message Center</emphasis> is a new
-                    tool for your deployment. If it isn't, you'll want to comment out the portions
-                    of the conversion script that treat it, and instead perform the following
-                    conversions:</para>
+                <para>The <emphasis>Message Center</emphasis> tool offers one such particular
+                    example in 2.2. A number of schools deployed <emphasis>Message Center</emphasis>
+                    in 2.1.x production, before it was yet a provisional tool. Now that it is a
+                    provisional tool, the conversion scripts were written to introduce its tables,
+                    and thus assume that <emphasis>Message Center</emphasis> is a new tool for your
+                    deployment. If it isn't, you'll want to comment out the portions of the
+                    conversion script that treat it, and instead perform the following conversions:</para>
                 <variablelist>
                     <varlistentry>
                         <term>MySQL:</term>
