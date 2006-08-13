@@ -13,13 +13,18 @@
         <sect2 xml:id="install-overview-choose">
             <title>Choose an Install Type</title>
             <para>Sakai 2.2.1 downloads are available for three different installation methods: <variablelist>
+                <varlistentry>
+                    <term>Installer (Windows and Mac):</term>
+                    <listitem>
+                        <para>Download, double-click and go. Perfect for the quickest functionality demo of the basic product, or for single faculty/researcher desktop installations. (NOTE: 2.2.1 is the first release for which installer packages have been available, and they should be considered a work-in-progress for now. Please use advisedly, and send any feedback to ...)</para>
+                    </listitem>
+                </varlistentry>
                     <varlistentry>
                         <term>Demo:</term>
                         <listitem>
-                            <para>This archive provides the quickest and easiest way to try out
-                                Sakai. It includes the Tomcat container and pre-built webapps, so
+                            <para>This archive includes the Tomcat container and pre-built webapps, so
                                 that the only prerequisite for getting started is Java (v. 1.4.2 or
-                                higher).</para>
+                                higher).  While not intended for large-scale implementations, it is suitable for evaluating the software and small-scale pilot implementations on single servers.</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
