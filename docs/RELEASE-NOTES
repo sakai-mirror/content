@@ -1,32 +1,45 @@
-                              2.2.0 Release Notes
+                              2.2.1 Release Notes
 
    --------------------------------------------------------------------------
 
    Table of Contents
 
-   1. What's New
-                1.1. Enhancements
-                1.2. New Tools
+   1. Overview
 
-   2. Migration Issues
-                2.1. Database Conversion
-                2.2. Framework Changes
-                2.3. Provider Changes
-                2.4. Skin Changes
+   2. What's New
+                2.1. Enhancements
+                2.2. New Tools
 
-   3. Maintenance Branch
+   3. Migration Issues
+                3.1. Database Conversion
+                3.2. Framework Changes
+                3.3. Provider Changes
+                3.4. Skin Changes
 
-   4. Fixes Included in this Release
+   4. Maintenance Branch
 
-   5. Open Issues
+   5. Fixes Included in this Release
 
-1. What's New
+   6. Open Issues
 
-  1.1. Enhancements
+1. Overview
 
-    1.1.1. Framework Refactoring
+   2.2.1 is a maintenance release, meaning that its purpose is to distribute
+   a further set of fixes to issues that were present in 2.2.0, while
+   deliberately avoiding any new features which may introduce novel bugs. In
+   short, 2.2.1 is currently the latest and best release of the 2.2 codebase,
+   and if you have already been running 2.2.0 you should be able to move to
+   2.2.1 with confidence: there have been no API changes, so all 2.2 code
+   should run without modification. Its feature notes are therefore identical
+   to the 2.2.0 release, and are included below under "What's New."
 
-   The 2.2.0 release marks the culmination of a significant effort to
+2. What's New
+
+  2.1. Enhancements
+
+    2.1.1. Framework Refactoring
+
+   The 2.2 codebase marks the culmination of a significant effort to
    restructure the framework into more logical functional/architectural
    units, paving the way for multiple, focused teams to work in parallel on
    moving the framework and legacy code forward.
@@ -37,37 +50,37 @@
    in 2.1. To see more discussion of migration issues that may result, see
    below.
 
-    1.1.2. Group Awareness
+    2.1.2. Group Awareness
 
    Group awareness has been extended to three additional tools: Resources,
    Assignments, and Schedule. That is to say, the contents of each of those
    tools can have their access restricted to specific groups, as they are
    defined by site maintainers in the Site Info tool.
 
-    1.1.3. EID/UID Separation
+    2.1.3. EID/UID Separation
 
    For the last few releases we've been working to introduce the concept of
    "internal" and "external" identifiers in Sakai in the user records. We
    started with a single identifier that had to play both of these roles, and
-   have been tweaking the code to separate these out. For 2.2.0 we have
-   completed this separation. It is now possible for an institution to, for
+   have been tweaking the code to separate these out. This separation was
+   completed with 2.2.0. It is now possible for an institution to, for
    example, alter the enterprise IDs of their users without losing access to
    their sites and materials in Sakai. For a thorough discussion of these
    changes, see the doc reference/docs/architecture/sakai_id_eid.doc (or in
    subversion at:
-   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_id_eid.doc)
+   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_id_eid.doc)
 
-    1.1.4. FCKeditor
+    2.1.4. FCKeditor
 
    The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In
-   2.2.0 it has become the default editor. HTMLArea is still included,
-   however, and the default editor may be overridden in sakai.properties by
-   altering the following setting:
+   2.2 it has become the default editor. HTMLArea is still included, however,
+   and the default editor may be overridden in sakai.properties by altering
+   the following setting:
 
  # specify the wysiwyg editor
  wysiwyg.editor=FCKeditor
 
-    1.1.5. Included Skins
+    2.1.5. Included Skins
 
    The three highest-scoring skins from the recent skins contest have been
    included in the distribution. You can make any of these your default skin
@@ -80,37 +93,37 @@
  # skin.default=some-u
  skin.default=default
 
-    1.1.6. Updated Help Content
+    2.1.6. Updated Help Content
 
    Help content in 2.1 was out of date, reflecting only version 2.0 of the
-   software. The help content has been updated for 2.2.0, along with some
-   style improvements. To see the ongoing work of the Help project, visit
-   their space in Confluence:
+   software. The help content has been updated for 2.2, along with some style
+   improvements. To see the ongoing work of the Help project, visit their
+   space in Confluence:
 
    http://bugs.sakaiproject.org/confluence/display/HELP/Home
 
-    1.1.7. New translations
+    2.1.7. New translations
 
    New interface translations for French and Catalan, as well as updated
    Japanese translations, are available in this release. See
    reference/docs/readme_i18n.txt for more information.
 
-  1.2. New Tools
+  2.2. New Tools
 
-    1.2.1. Open Source Portfolio
+    2.2.1. Open Source Portfolio
 
-   2.2.0 marks closer integration with the Open Source Portfolio, an existing
-   suite of tools supporting portfolio activities, and which are available in
-   this release as provisional tools. Using OSP, individuals can collect
-   items, reflect, design portfolios, and publish them to designated
-   audiences. Instructors and program administrators are able to provide
-   structure and guidance to an individual's work that include step-by-step
-   (sequential) wizards, matrices of goals/standards, and hierarchies to
-   organize related work.
+   2.2 involves closer integration with the Open Source Portfolio, an
+   existing suite of tools supporting portfolio activities, and which are
+   available in this release as [15]provisional tools. Using OSP, individuals
+   can collect items, reflect, design portfolios, and publish them to
+   designated audiences. Instructors and program administrators are able to
+   provide structure and guidance to an individual's work that include
+   step-by-step (sequential) wizards, matrices of goals/standards, and
+   hierarchies to organize related work.
 
-    1.2.2. Provisional Tools
+    2.2.2. Provisional Tools
 
-   Sakai 2.2.0 has added four new provisional tools
+   Sakai 2.2 has added four new provisional tools
 
      * Message Center: a tool combining a discussion forum with private
        messaging.
@@ -131,23 +144,23 @@
    You can find more details about these and all other provisional tools on
    the provisional tools page.
 
-2. Migration Issues
+3. Migration Issues
 
-  2.1. Database Conversion
+  3.1. Database Conversion
 
-   There are database schema changes between 2.1.2 and 2.2.0, and the
+   There are database schema changes between 2.2.0 and 2.2.1, and the
    conversion scripts to be applied - in distinct versions for MySQL and
    Oracle, respectively - are found in the reference/docs/conversion folder
    of the release or on subversion:
 
-MySQL:  https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql
-Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql
+MySQL:  https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql
+Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql
 
    In the same directory you'll also find conversion scripts for earlier
    Sakai versions. Migration from an earlier version will require the
    successive application of all intermediate conversion scripts. You cannot,
-   for example, move from 2.1.1 to 2.2.0 by applying a single DB script. You
-   will need to move first from 2.1.1 to 2.1.2, and then to 2.2.0.
+   for example, move from 2.1.2 to 2.2.1 by applying a single DB script. You
+   will need to move first from 2.1.2 to 2.2.0, and then to 2.2.1.
 
   Examine before using
 
@@ -157,13 +170,13 @@ Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conv
    tools - and they may complicate your migration with unintended
    consequences if you execute the script blindly.
 
-   For the 2.2.0 release, the Message Center tool offers one such particular
-   example. A number of schools deployed Message Center in 2.1.x production,
-   before it was yet a provisional tool. Now that it is a provisional tool,
-   the conversion scripts were written to introduce its tables, and thus
-   assume that Message Center is a new tool for your deployment. If it isn't,
-   you'll want to comment out the portions of the conversion script that
-   treat it, and instead perform the following conversions:
+   The Message Center tool offers one such particular example for 2.2. A
+   number of schools deployed Message Center in 2.1.x production, before it
+   was yet a provisional tool. Now that it is a provisional tool, the
+   conversion scripts were written to introduce its tables, and thus assume
+   that Message Center is a new tool for your deployment. If it isn't, you'll
+   want to comment out the portions of the 2.1.2 - 2.2.0 conversion script
+   that treat it, and instead perform the following conversions:
 
   MySQL:  ALTER TABLE MFR_TOPIC_T ADD DEFAULTASSIGNNAME VARCHAR(255);
           ALTER TABLE MFR_OPEN_FORUM_T ADD DEFAULTASSIGNNAME VARCHAR(255);
@@ -175,20 +188,23 @@ Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conv
           ALTER TABLE MFR_MESSAGE_T ADD GRADEASSIGNMENTNAME VARCHAR2(255) NULL;
           ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;
 
-  2.2. Framework Changes
+  3.2. Framework Changes
 
-   The 2.2 refactoring means that many package names have changed, and these
-   differences will mainly be encountered in sakai.properties settings with
-   bean references. It's best to not try to use a sakai.properties from a
-   previous release, and instead start with the sample in
+   Again, 2.2.1 involves no framework change from 2.2.0, but if you're
+   migrating from an earlier version you'll need to be apprised of the
+   framework changes that the 2.2 codebase involves. The 2.2 refactoring
+   means that many package names have changed from 2.1, and these differences
+   will mainly be encountered in sakai.properties settings with bean
+   references. It's best to not try to use a sakai.properties from a previous
+   release, and instead start with the sample in
    reference/docs/sakai.properties.
 
    Any custom code, such as providers, may also need revision. See below for
    more discussion of providers in particular.
 
-  2.3. Provider Changes
+  3.3. Provider Changes
 
-   As mentioned above, 2.2.0 introduces a separation of external user
+   As mentioned above, 2.2 introduces a separation of external user
    identifiers from Sakai's internal user ids. Any custom
    UserDirectoryProvider will need some alteration to account for this, along
    with changes to its import statements and declarations that stem from API
@@ -211,17 +227,18 @@ Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conv
    Be sure to review the SampleUserDirectoryProvider, and compare it against
    the sample for previous releases:
 
-   https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-0/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java
+   https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java
 
-  2.4. Skin Changes
+  3.4. Skin Changes
 
-   A number of CSS changes will need to be made to any 2.1 skins in order to
-   adapt them to 2.2.0. These changes - including conversion steps - are
+   Skins prepared for 2.2.0 will also work for 2.2.1. However, a number of
+   CSS changes will need to be made to any 2.1 skins in order to adapt them
+   to 2.2 versions. These changes - including conversion steps - are
    thoroughly documented in the appendices of the skin document available in
    reference/docs/architecture/sakai_skin.doc, or in subversion at:
-   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_skin.doc
+   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc
 
-3. Maintenance Branch
+4. Maintenance Branch
 
    The code of each release has a corresponding maintenance branch, which is
    patched with fixes in an ongoing way by a branch manager - effectively
@@ -239,17 +256,17 @@ Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conv
    the branch (and perhaps isn't yet), feel free to bring it to the attention
    of the branch manager, Lance Speelmon (lance@indiana.edu).
 
-4. Fixes Included in this Release
+5. Fixes Included in this Release
 
-   Sakai 2.2.0 fixes the following issues from previous releases:
+   Sakai 2.2.1 fixes the following issues from 2.2.0:
 
-   http://source.sakaiproject.org/release/2.2.0/fixed-issues.html
+   http://source.sakaiproject.org/release/2.2.1/fixed-issues.html
 
-5. Open Issues
+6. Open Issues
 
-   The list of known issues with Sakai 2.2.0 at the time of release is found
+   The list of known issues with Sakai 2.2.1 at the time of release is found
    at:
 
-   http://source.sakaiproject.org/release/2.2.0/open-issues.html
+   http://source.sakaiproject.org/release/2.2.1/open-issues.html
 
    See in particular the "Important Issues" noted at the top of the list.

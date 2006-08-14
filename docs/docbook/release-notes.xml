@@ -9,7 +9,7 @@
     </info>
     <sect1 xml:id="overview">
         <title>Overview</title>
-        <para>2.2.1 is a maintenance release, meaning that its focused purpose is to distribute further fixes to issues that were present in the 2.2.0 release, and 2.2.1 does not include any new features which may introduce novel issues.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to deploy 2.2.1 with confidence - its changes will not break your skins, providers, or other ordinary customizations.  Its feature notes are identical to the 2.2.0 release, and are included below.  Some of the fixes do involve database conversions, so be sure to examine that section below, along with the 2.2.1 fixes and open issues.</para>
+        <para>2.2.1 is a maintenance release, meaning that its purpose is to distribute a further set of fixes to issues that were present in 2.2.0, while deliberately avoiding any new features which may introduce novel bugs.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to move to 2.2.1 with confidence: there have been no API changes, so all 2.2 code should run without modification.  Its feature notes are therefore identical to the 2.2.0 release, and are included below under "What's New."</para>
     </sect1>
     <sect1 xml:id="new">
         <title>What's New</title>
@@ -38,7 +38,8 @@
                 <para>For the last few releases we've been working to introduce the concept of
                     "internal" and "external" identifiers in Sakai in the user records. We started
                     with a single identifier that had to play both of these roles, and have been
-                    tweaking the code to separate these out. This separation was completed with 2.2.0. It is now possible for an institution to, for example, alter the
+                    tweaking the code to separate these out. This separation was completed with
+                    2.2.0. It is now possible for an institution to, for example, alter the
                     enterprise IDs of their users without losing access to their sites and materials
                     in Sakai. For a thorough discussion of these changes, see the doc
                         <filename>reference/docs/architecture/sakai_id_eid.doc</filename> (or in
@@ -48,9 +49,9 @@
             </sect3>
             <sect3 xml:id="new-enhance-fck">
                 <title>FCKeditor</title>
-                <para>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In
-                    2.2 it has become the default editor. HTMLArea is still included, however, and
-                    the default editor may be overridden in <filename>sakai.properties</filename> by
+                <para>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In 2.2
+                    it has become the default editor. HTMLArea is still included, however, and the
+                    default editor may be overridden in <filename>sakai.properties</filename> by
                     altering the following setting:</para>
                 <screen>
 # specify the wysiwyg editor 
@@ -92,8 +93,8 @@ skin.default=default</screen>
             <title>New Tools</title>
             <sect3 xml:id="new-tools-osp">
                 <title>Open Source Portfolio</title>
-                <para>2.2 marks closer integration with the Open Source Portfolio, an existing
-                    suite of tools supporting portfolio activities, and which are available in this
+                <para>2.2 involves closer integration with the <emphasis>Open Source Portfolio</emphasis>, an existing suite
+                    of tools supporting portfolio activities, and which are available in this
                     release as <link xl:href="provisional.html">provisional tools</link>. Using OSP,
                     individuals can collect items, reflect, design portfolios, and publish them to
                     designated audiences. Instructors and program administrators are able to provide
@@ -179,14 +180,14 @@ skin.default=default</screen>
                     have made - such as new roles, or the deployment of additional tools - and they
                     may complicate your migration with unintended consequences if you execute the
                     script blindly.</para>
-                <para>The <emphasis>Message Center</emphasis> tool offers one
-                    such particular example for 2.2. A number of schools deployed <emphasis>Message
+                <para>The <emphasis>Message Center</emphasis> tool offers one such particular
+                    example for 2.2. A number of schools deployed <emphasis>Message
                     Center</emphasis> in 2.1.x production, before it was yet a provisional tool. Now
                     that it is a provisional tool, the conversion scripts were written to introduce
                     its tables, and thus assume that <emphasis>Message Center</emphasis> is a new
                     tool for your deployment. If it isn't, you'll want to comment out the portions
-                    of the 2.1.2 - 2.2.0 conversion script that treat it, and instead perform the following
-                    conversions:</para>
+                    of the 2.1.2 - 2.2.0 conversion script that treat it, and instead perform the
+                    following conversions:</para>
                 <variablelist>
                     <varlistentry>
                         <term>MySQL:</term>
@@ -213,7 +214,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
         </sect2>
         <sect2 xml:id="migration-api">
             <title>Framework Changes</title>
-            <para>The 2.2 refactoring means that many package names have changed, and these
+            <para>Again, 2.2.1 involves no framework change from 2.2.0, but if you're migrating from an earlier version you'll need to be apprised of the framework changes that the 2.2 codebase involves.  The 2.2 refactoring means that many package names have changed from 2.1, and these
                 differences will mainly be encountered in <filename>sakai.properties</filename>
                 settings with bean references. It's best to not try to use a
                     <filename>sakai.properties</filename> from a previous release, and instead start
@@ -223,7 +224,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
         </sect2>
         <sect2 xml:id="migration-providers">
             <title>Provider Changes</title>
-            <para>As mentioned above, 2.2.0 introduced a separation of external user identifiers
+            <para>As mentioned above, 2.2 introduces a separation of external user identifiers
                 from Sakai's internal user ids. Any custom
                 <filename>UserDirectoryProvider</filename> will need some alteration to account for
                 this, along with changes to its import statements and declarations that stem from
@@ -259,9 +260,10 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</screen>
         </sect2>
         <sect2>
             <title>Skin Changes</title>
-            <para>Skins prepared for 2.2.0 will also work for 2.2.1.  However, a number of CSS changes will need to be made to any 2.1 skins in order to adapt
-                them to 2.2 versions. These changes - including conversion steps - are thoroughly
-                documented in the appendices of the skin document available in
+            <para>Skins prepared for 2.2.0 will also work for 2.2.1. However, a number of CSS
+                changes will need to be made to any 2.1 skins in order to adapt them to 2.2
+                versions. These changes - including conversion steps - are thoroughly documented in
+                the appendices of the skin document available in
                     <filename>reference/docs/architecture/sakai_skin.doc</filename>, or in
                 subversion at: <link
                     xl:href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc"

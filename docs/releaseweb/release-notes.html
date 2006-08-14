@@ -11,7 +11,7 @@
 <div class="article" lang="en">
 <div class="titlepage">
 <div><div><h1 class="title">
-<a name="id4881691"></a>2.2.1 Release Notes</h1></div></div>
+<a name="id1704716"></a>2.2.1 Release Notes</h1></div></div>
 <hr>
 </div>
 <div class="toc">
@@ -28,7 +28,7 @@
 <dt><span class="sect2"><a href="#migration-conversion">3.1. Database Conversion</a></span></dt>
 <dt><span class="sect2"><a href="#migration-api">3.2. Framework Changes</a></span></dt>
 <dt><span class="sect2"><a href="#migration-providers">3.3. Provider Changes</a></span></dt>
-<dt><span class="sect2"><a href="#id4882406">3.4. Skin Changes</a></span></dt>
+<dt><span class="sect2"><a href="#id1705729">3.4. Skin Changes</a></span></dt>
 </dl></dd>
 <dt><span class="sect1"><a href="#maintenance">4. Maintenance Branch</a></span></dt>
 <dt><span class="sect1"><a href="#resolved">5. Fixes Included in this Release</a></span></dt>
@@ -41,7 +41,7 @@
 <div class="titlepage"><div><div><h2 class="title">
 <a name="overview"></a>1.&nbsp;Overview</h2></div></div></div>
 
-        <p>2.2.1 is a maintenance release, meaning that its focused purpose is to distribute further fixes to issues that were present in the 2.2.0 release, and 2.2.1 does not include any new features which may introduce novel issues.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to deploy 2.2.1 with confidence - its changes will not break your skins, providers, or other ordinary customizations.  Its feature notes are identical to the 2.2.0 release, and are included below.  Some of the fixes do involve database conversions, so be sure to examine that section below, along with the 2.2.1 fixes and open issues.</p>
+        <p>2.2.1 is a maintenance release, meaning that its purpose is to distribute a further set of fixes to issues that were present in 2.2.0, while deliberately avoiding any new features which may introduce novel bugs.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to move to 2.2.1 with confidence: there have been no API changes, so all 2.2 code should run without modification.  Its feature notes are therefore identical to the 2.2.0 release, and are included below under "What's New."</p>
     </div>
     <div class="sect1" lang="en">
 <div class="titlepage"><div><div><h2 class="title">
@@ -80,7 +80,8 @@
                 <p>For the last few releases we've been working to introduce the concept of
                     "internal" and "external" identifiers in Sakai in the user records. We started
                     with a single identifier that had to play both of these roles, and have been
-                    tweaking the code to separate these out. This separation was completed with 2.2.0. It is now possible for an institution to, for example, alter the
+                    tweaking the code to separate these out. This separation was completed with
+                    2.2.0. It is now possible for an institution to, for example, alter the
                     enterprise IDs of their users without losing access to their sites and materials
                     in Sakai. For a thorough discussion of these changes, see the doc
                         <code class="filename">reference/docs/architecture/sakai_id_eid.doc</code> (or in
@@ -90,9 +91,9 @@
 <div class="titlepage"><div><div><h4 class="title">
 <a name="new-enhance-fck"></a>2.1.4.&nbsp;FCKeditor</h4></div></div></div>
 
-                <p>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In
-                    2.2 it has become the default editor. HTMLArea is still included, however, and
-                    the default editor may be overridden in <code class="filename">sakai.properties</code> by
+                <p>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In 2.2
+                    it has become the default editor. HTMLArea is still included, however, and the
+                    default editor may be overridden in <code class="filename">sakai.properties</code> by
                     altering the following setting:</p>
                 <pre class="screen">
 # specify the wysiwyg editor
@@ -143,8 +144,8 @@ skin.default=default</pre>
 <div class="titlepage"><div><div><h4 class="title">
 <a name="new-tools-osp"></a>2.2.1.&nbsp;Open Source Portfolio</h4></div></div></div>
 
-                <p>2.2 marks closer integration with the Open Source Portfolio, an existing
-                    suite of tools supporting portfolio activities, and which are available in this
+                <p>2.2 involves closer integration with the <span class="emphasis"><em>Open Source Portfolio</em></span>, an existing suite
+                    of tools supporting portfolio activities, and which are available in this
                     release as <a href="provisional.html" target="_top">provisional tools</a>. Using OSP,
                     individuals can collect items, reflect, design portfolios, and publish them to
                     designated audiences. Instructors and program administrators are able to provide
@@ -234,14 +235,14 @@ skin.default=default</pre>
                     have made - such as new roles, or the deployment of additional tools - and they
                     may complicate your migration with unintended consequences if you execute the
                     script blindly.</p>
-                <p>The <span class="emphasis"><em>Message Center</em></span> tool offers one
-                    such particular example for 2.2. A number of schools deployed <span class="emphasis"><em>Message
+                <p>The <span class="emphasis"><em>Message Center</em></span> tool offers one such particular
+                    example for 2.2. A number of schools deployed <span class="emphasis"><em>Message
                     Center</em></span> in 2.1.x production, before it was yet a provisional tool. Now
                     that it is a provisional tool, the conversion scripts were written to introduce
                     its tables, and thus assume that <span class="emphasis"><em>Message Center</em></span> is a new
                     tool for your deployment. If it isn't, you'll want to comment out the portions
-                    of the 2.1.2 - 2.2.0 conversion script that treat it, and instead perform the following
-                    conversions:</p>
+                    of the 2.1.2 - 2.2.0 conversion script that treat it, and instead perform the
+                    following conversions:</p>
                 <div class="variablelist"><table border="0">
 <col align="left" valign="top">
 <tbody>
@@ -275,7 +276,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
 <div class="titlepage"><div><div><h3 class="title">
 <a name="migration-api"></a>3.2.&nbsp;Framework Changes</h3></div></div></div>
 
-            <p>The 2.2 refactoring means that many package names have changed, and these
+            <p>Again, 2.2.1 involves no framework change from 2.2.0, but if you're migrating from an earlier version you'll need to be apprised of the framework changes that the 2.2 codebase involves.  The 2.2 refactoring means that many package names have changed from 2.1, and these
                 differences will mainly be encountered in <code class="filename">sakai.properties</code>
                 settings with bean references. It's best to not try to use a
                     <code class="filename">sakai.properties</code> from a previous release, and instead start
@@ -287,7 +288,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
 <div class="titlepage"><div><div><h3 class="title">
 <a name="migration-providers"></a>3.3.&nbsp;Provider Changes</h3></div></div></div>
 
-            <p>As mentioned above, 2.2.0 introduced a separation of external user identifiers
+            <p>As mentioned above, 2.2 introduces a separation of external user identifiers
                 from Sakai's internal user ids. Any custom
                 <code class="filename">UserDirectoryProvider</code> will need some alteration to account for
                 this, along with changes to its import statements and declarations that stem from
@@ -321,11 +322,12 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
         </div>
         <div class="sect2" lang="en">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="id4882406"></a>3.4.&nbsp;Skin Changes</h3></div></div></div>
+<a name="id1705729"></a>3.4.&nbsp;Skin Changes</h3></div></div></div>
 
-            <p>Skins prepared for 2.2.0 will also work for 2.2.1.  However, a number of CSS changes will need to be made to any 2.1 skins in order to adapt
-                them to 2.2 versions. These changes - including conversion steps - are thoroughly
-                documented in the appendices of the skin document available in
+            <p>Skins prepared for 2.2.0 will also work for 2.2.1. However, a number of CSS
+                changes will need to be made to any 2.1 skins in order to adapt them to 2.2
+                versions. These changes - including conversion steps - are thoroughly documented in
+                the appendices of the skin document available in
                     <code class="filename">reference/docs/architecture/sakai_skin.doc</code>, or in
                 subversion at: <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc</a></p>
         </div>
