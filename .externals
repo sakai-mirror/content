@@ -17,7 +17,7 @@ reference			https://source.sakaiproject.org/svn/content/branches/reference_2-2-1
 login			-r13310	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1-003
 access			-r13310	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1-003
 content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-avail-01
-metaobj				https://source.sakaiproject.org/svn/content/tags/metaobj_2-2-1-avail-01
+metaobj				https://source.sakaiproject.org/svn/content/branches/metaobj_2-2-1-avail-01
 presence		-r13310	https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1-003
 calendar		-r13310	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-2-1-003
 portal			-r13310	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1-003
