@@ -12,19 +12,16 @@
         <title>Overview</title>
         <sect2 xml:id="install-overview-choose">
             <title>Choose an Install Type</title>
-            <para>Sakai 2.2.1 downloads are available for three different installation methods: <variablelist>
-                <varlistentry>
-                    <term>Installer:</term>
-                    <listitem>
-                        <para>Available for Windows and Mac systems.  Just download, double-click and go. Perfect for the quickest functionality demo of the basic product, or for single faculty/researcher desktop installations. (NOTE: 2.2.1 is the first release for which installer packages have been available, and they should be considered a work-in-progress for now. Please use advisedly, and send any feedback to ...)</para>
-                    </listitem>
-                </varlistentry>
+            <para>Sakai 2.2.1 downloads are available for three different installation methods: 
+            <variablelist>
                     <varlistentry>
                         <term>Demo:</term>
                         <listitem>
-                            <para>This archive includes the Tomcat container and pre-built webapps, so
-                                that the only prerequisite for getting started is Java (v. 1.4.2 or
-                                higher).  While not intended for large-scale implementations, it is suitable for evaluating the software and small-scale pilot implementations on single servers.</para>
+                            <para>This archive includes the Tomcat container and pre-built webapps,
+                                so that the only prerequisite for getting started is Java (v. 1.4.2
+                                or higher). While not intended for large-scale implementations, it
+                                is suitable for evaluating the software and small-scale pilot
+                                implementations on single servers.</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
@@ -198,9 +195,9 @@
         <sect2 xml:id="install-overview-migrating">
             <title>Migrating from a Previous Release</title>
             <para>2.2.1 adds only bug fixes to 2.2.0, and so a transition between the two should be
-                simple and trouble-free. If you have been running 2.2.0 already, you should be able
+                straightforward. If you have been running 2.2.0 already, you should be able
                 to deploy 2.2.1 with confidence: it will not break your skins, providers, or other
-                customizations.</para>
+                2.2 code.</para>
             <para>If you are moving from an earlier 2.1 or 2.0 codebase, however, 2.2 involves some
                 significant changes: in tools, DB schema, and APIs. Migrating to 2.2 from a previous
                 release therefore requires close attention to detail. Be sure to go over the <link
@@ -380,19 +377,24 @@ Java HotSpot(TM) Server VM (build 1.5.0_06-b05, mixed mode)</screen>
                 <para>Windows users have the option of either downloading an .exe Tomcat installer
                     (for installing Tomcat as a service) or a .zip binary. Although either may
                     serve, they are however not entirely equivalent when it comes to operational
-                    details, and for control and brevity's sake the main instructions will assume that you grabbed the .zip. You can turn the .zip install into a service install later, however, by running <command>service.bat</command> from the bin directory, e.g.</para>
-                    <screen>
+                    details, and for control and brevity's sake the main instructions will assume
+                    that you grabbed the .zip. You can turn the .zip install into a service install
+                    later, however, by running <command>service.bat</command> from the bin
+                    directory, e.g.</para>
+                <screen>
 C:\tomcat\bin> service.bat install</screen>
-                <para>You can add a service name as a second argument to that script. The
-                    default is "Tomcat5". You can likewise uninstall the service by
-                    replacing "install" with "remove". Then to get the configuration window,
-                    just run this at the command prompt:</para>
+                <para>You can add a service name as a second argument to that script. The default is
+                    "Tomcat5". You can likewise uninstall the service by replacing "install" with
+                    "remove". Then to get the configuration window, just run this at the command
+                    prompt:</para>
                 <screen>
 C:\tomcat\bin> tomcat5w //ES//Tomcat5</screen>
-                <para>Replace "Tomcat5" with whatever service name you chose for the install.
-                    You'll want to set the service to startup automatically ("Startup Type"
-                    under the General tab).</para>  
-                    <para>Also be sure to read the Windows note in the <link linkend="install-config-jvm">JVM Tuning</link> section of <link linkend="install-config">Post-Installation Configuration</link>.</para>
+                <para>Replace "Tomcat5" with whatever service name you chose for the install. You'll
+                    want to set the service to startup automatically ("Startup Type" under the
+                    General tab).</para>
+                <para>Also be sure to read the Windows note in the <link
+                        linkend="install-config-jvm">JVM Tuning</link> section of <link
+                        linkend="install-config">Post-Installation Configuration</link>.</para>
             </note>
             <para>Unpack the Tomcat archive at your desired location, and unpack the compatibility
                 package directly on top of it. From this point forward these instructions will refer
@@ -745,14 +747,25 @@ JAVA_OPTS="-server -Xms1500m -Xmx1500m -XX:NewSize=400m -XX:MaxNewSize=400m -XX:
                 you might create your own startup script to do so.</para>
             <note>
                 <title>JVM Tuning of Tomcat as a Windows Service</title>
-                <para>Windows users that have installed Tomcat as a service may set most Java options through the Tomcat service manager GUI, but not all of them are as straightforward as inclusion in a single environment variable.</para>
-                <para>To achieve the equivalent of the "-server" option, for example, you'll need to change the Java Virtual Machine path from <filename>[..]\bin\client\jvm.dll</filename> to <filename>[..]\bin\server\jvm.dll</filename>.  Then be sure to put the remaining JAVA_OPTS on separate lines in the Java Options field of the GUI. e.g.:</para>
-                    <screen>
+                <para>Windows users that have installed Tomcat as a service may set most Java
+                    options through the Tomcat service manager GUI, but not all of them are as
+                    straightforward as inclusion in a single environment variable.</para>
+                <para>To achieve the equivalent of the "-server" option, for example, you'll need to
+                    change the Java Virtual Machine path from
+                    <filename>[..]\bin\client\jvm.dll</filename> to
+                        <filename>[..]\bin\server\jvm.dll</filename>. Then be sure to put the
+                    remaining JAVA_OPTS on separate lines in the Java Options field of the GUI.
+                    e.g.:</para>
+                <screen>
 -Xmx512m
 -Xms512m
 -XX:PermSize=128m
--XX:MaxPermSize=128m</screen>  
-                    <para>Finally, clear out the <emphasis>Initial Memory Pool</emphasis> and <emphasis>Maximum Memory Pool</emphasis> values, as those might conflict with the options you're putting in the Java Options field. Then click <emphasis>Apply</emphasis>, restart the service, and double-check the service manager to verify that the values have changed.</para>
+-XX:MaxPermSize=128m</screen>
+                <para>Finally, clear out the <emphasis>Initial Memory Pool</emphasis> and
+                        <emphasis>Maximum Memory Pool</emphasis> values, as those might conflict
+                    with the options you're putting in the Java Options field. Then click
+                        <emphasis>Apply</emphasis>, restart the service, and double-check the
+                    service manager to verify that the values have changed.</para>
             </note>
         </sect2>
         <sect2 xml:id="install-config-test">

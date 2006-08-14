@@ -53,13 +53,14 @@
 
   1.1. Choose an Install Type
 
-   Sakai 2.2.0 downloads are available for three different installation
+   Sakai 2.2.1 downloads are available for three different installation
    methods:
 
-   Demo:   This archive provides the quickest and easiest way to try out
-           Sakai. It includes the Tomcat container and pre-built webapps, so
-           that the only prerequisite for getting started is Java (v. 1.4.2
-           or higher).
+   Demo:   This archive includes the Tomcat container and pre-built webapps,
+           so that the only prerequisite for getting started is Java (v.
+           1.4.2 or higher). While not intended for large-scale
+           implementations, it is suitable for evaluating the software and
+           small-scale pilot implementations on single servers.
            
    Binary: This archive is a kind of Tomcat overlay. If you have a working
            Tomcat appropriately configured, the binary installation provides
@@ -84,10 +85,6 @@
 
     2. Download and unpack the Demo archive
 
-          * Windows demo archive
-
-          * Mac/*nix archive
-
     3. Start Tomcat with the following commands from the root Tomcat
        directory:
 
@@ -111,13 +108,14 @@
                  HypersonicSQL database (HSQLDB) which is stored in memory
                  and then written out to files when Tomcat is shut down.
                  These files are located at sakai-demo/sakai/db/sakai.db.*.
+                 
    Email not     The Sakai demo is configured to neither send nor receive
    configured:   email.
 
   1.3. Binary Installation
 
    The Binary installation of Sakai provides a shortcut for those that
-   already have Tomcat in place and configured as needed (see [44]Set up
+   already have Tomcat in place and configured as needed (see Set up
    Environment for details on Tomcat configuration), and it does so by
    providing a pre-built Sakai that can simply be dropped into place. All you
    need to do is unpack the binary archive at the root Tomcat directory, and
@@ -150,10 +148,16 @@
 
   1.5. Migrating from a Previous Release
 
-   Since there have been a number of changes in tools, DB schema, and APIs,
-   migrating to 2.2 from a previous release requires close attention to
-   detail. Be sure to go over the release notes carefully, and a few key
-   hurdles are identified below:
+   2.2.1 adds only bug fixes to 2.2.0, and so a transition between the two
+   should be straightforward. If you have been running 2.2.0 already, you
+   should be able to deploy 2.2.1 with confidence: it will not break your
+   skins, providers, or other 2.2 code.
+
+   If you are moving from an earlier 2.1 or 2.0 codebase, however, 2.2
+   involves some significant changes: in tools, DB schema, and APIs.
+   Migrating to 2.2 from a previous release therefore requires close
+   attention to detail. Be sure to go over the release notes carefully,
+   and a few key hurdles are identified below:
 
    sakai.properties:      The 2.2 framework refactoring means that many
                           package names have changed, and these differences
@@ -163,8 +167,8 @@
                           release, and instead start with the sample in
                           reference/docs/sakai.properties.
                           
-   DB conversion scripts: Every release has DB conversion scripts, and 2.2 is
-                          no exception. Be sure, however, to read these
+   DB conversion scripts: Every release has DB conversion scripts, and 2.2.1
+                          is no exception. Be sure, however, to read these
                           scripts over carefully before executing them on
                           your production data. They do not take into account
                           any special customizations you may have done, and
@@ -173,10 +177,10 @@
                           details.
                           
    Provisional tools:     A few contrib tools that schools may have already
-                          put into production are now provisional with the
-                          2.2 release. The DB conversion scripts in
-                          particular assume that these new provisional tools
-                          are not represented in your schema, and attempt to
+                          put into production are now provisional with 2.2
+                          releases. The DB conversion scripts in particular
+                          assume that these new provisional tools are not
+                          represented in your schema, and attempt to
                           introduce them. If you have already deployed
                           Message Center, Post 'Em, Search, or Summary
                           Calendar on a production system, you'll want to be
@@ -237,7 +241,7 @@
    There are three Java environment variables you'll want to set for
    everything to function as it should, and though some of them may have
    already been set by your Java installation (depending on your platform),
-   you'll want to double-check them all. You can also look at the Sun
+   you'll want to double-check them all. You can also look at the [54]Sun
    Java Installation Instructions page at the Java web site for further
    details.
 
@@ -270,31 +274,13 @@
    Mac:     Not necessary.
    *nix:    export PATH=$PATH:$JAVA_HOME/bin/
 
-   Finally, you'll need to set an environment variable that will increase the
-   size and performance of your JVM ("Java Virtual Machine": the default JVM
-   settings are unfortunately not sufficient for Sakai), and the variable is
-   named JAVA_OPTS. The value suggested below should be suitable for
-   developers or demo installations.
-
-   Windows:  Create a new environment variable JAVA_OPTS to hold the value
-             "-server -Xmx512m -Xms512m -XX:PermSize=128m
-             -XX:MaxPermSize=196m -XX:NewSize=192m -XX:MaxNewSize=384m".
-   Mac/*nix: export JAVA_OPTS="-server -Xmx512m -Xms512m -XX:PermSize=128m
-             -XX:MaxPermSize=196m -XX:NewSize=192m -XX:MaxNewSize=384m"
-
-  More on JVM Tuning
-
-   The above JAVA_OPTS settings are, it must be emphasized once again,
-   minimal. For settings more suitable for production servers, see the
-   JVM Tuning section of Post-Installation Configuration.
-
    You should test that these variables are set correctly. In both Windows XP
    and *nix operating systems you can simply start a new shell and type the
    set command to see your environment variables.
 
   2.3. Install Tomcat
 
-   Sakai 2.2.0 was QA'ed with Tomcat 5.5.17, and so that's the version we
+   Sakai 2.2.1 was QA'ed with Tomcat 5.5.17, and so that's the version we
    recommend, although the latest stable version will most likely not present
    problems. Tomcat can be downloaded as a binary from
    http://tomcat.apache.org/download-55.cgi. The distribution you want is
@@ -309,11 +295,26 @@
    Windows users have the option of either downloading an .exe Tomcat
    installer (for installing Tomcat as a service) or a .zip binary. Although
    either may serve, they are however not entirely equivalent when it comes
-   to operational details, and for brevity's sake it's recommended that you
-   grab the .zip. Sakai requires some tuning of the JVM, and the service
-   install manages these settings through the registry rather than
-   environment variables (see Tomcat installation instructions on the Apache
-   site if you're committed to installing Tomcat as a service).
+   to operational details, and for control and brevity's sake the main
+   instructions will assume that you grabbed the .zip. You can turn the .zip
+   install into a service install later, however, by running service.bat from
+   the bin directory, e.g.
+
+ C:\tomcat\bin> service.bat install
+
+   You can add a service name as a second argument to that script. The
+   default is "Tomcat5". You can likewise uninstall the service by replacing
+   "install" with "remove". Then to get the configuration window, just run
+   this at the command prompt:
+
+ C:\tomcat\bin> tomcat5w //ES//Tomcat5
+
+   Replace "Tomcat5" with whatever service name you chose for the install.
+   You'll want to set the service to startup automatically ("Startup Type"
+   under the General tab).
+
+   Also be sure to read the Windows note in the JVM Tuning section of
+   Post-Installation Configuration.
 
    Unpack the Tomcat archive at your desired location, and unpack the
    compatibility package directly on top of it. From this point forward these
@@ -438,7 +439,7 @@
    feel the need to learn more about how Sakai uses Maven. To find the most
    detailed such documentation, look for sakai_maven.doc in
    reference/docs/architecture of the source archive or on subversion at:
-   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/architecture/sakai_maven.doc
+   https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_maven.doc
 
   3.1. Download Source
 
@@ -479,7 +480,7 @@
    $CATALINA_HOME/webapps directory. If Maven completes with the message
    BUILD SUCCESSFUL, you should be able to move on to the next step. If you
    are greeted with the report BUILD FAILED read the accompanying error
-   message carefully to troubleshoot (see the Troubleshooting section).
+   message carefully to troubleshoot (see the [63]Troubleshooting section).
 
   Maven and Memory
 
@@ -489,7 +490,7 @@
    need to set an additional environment variable, namely, MAVEN_OPTS. The
    value in the sample Unix command below should be more than enough:
 
-                     export MAVEN_OPTS="-Xmx384m -XX:PermSize=48m"
+ export MAVEN_OPTS="-Xmx384m -XX:PermSize=48m"
 
    You will probably be able to start up Tomcat and run Sakai with the
    default configuration at this point, but it would be better to take care
@@ -598,7 +599,7 @@
    for further experimentation and testing, but the following details are
    however offered only as samples or suggestions, and we recommend that you
    consult a systems administrator or local Java guru before making any such
-   changes to a production system. See the Programmer's Cafe on our
+   changes to a production system. See the [65]Programmer's Cafe on our
    Confluence wiki for more discussion of the details.
 
    The standard way to control the JVM options when Tomcat starts up is to
@@ -644,15 +645,26 @@
    startup and use it. Instead of putting this in an environment variable you
    might create your own startup script to do so.
 
-  JVM Tuning in Windows XP
+  JVM Tuning of Tomcat as a Windows Service
 
-   Windows users that have installed Tomcat as a service may set Java options
-   in a Tomcat Properties dialog. But you may find that the permanent
-   generation settings mentioned above will not work appropriately if set in
-   the "Java Options:" field of the dialog window. That's because these
-   settings have their own fields in the properties GUI, under the headings
-   Initial Memory Pool and Maximum Memory Pool, respectively. Windows will
-   ignore attempts to alter these values through the Java Options field.
+   Windows users that have installed Tomcat as a service may set most Java
+   options through the Tomcat service manager GUI, but not all of them are as
+   straightforward as inclusion in a single environment variable.
+
+   To achieve the equivalent of the "-server" option, for example, you'll
+   need to change the Java Virtual Machine path from [..]\bin\client\jvm.dll
+   to [..]\bin\server\jvm.dll. Then be sure to put the remaining JAVA_OPTS on
+   separate lines in the Java Options field of the GUI. e.g.:
+
+ -Xmx512m
+ -Xms512m
+ -XX:PermSize=128m
+ -XX:MaxPermSize=128m
+
+   Finally, clear out the Initial Memory Pool and Maximum Memory Pool values,
+   as those might conflict with the options you're putting in the Java
+   Options field. Then click Apply, restart the service, and double-check the
+   service manager to verify that the values have changed.
 
   4.5. Test Sakai
 
@@ -663,7 +675,7 @@
    problems exist before you try to connect it to another database. Tomcat
    will take a minute or so to start up, depending on the speed of your
    machine, and it's a good idea to watch the Tomcat log as it comes up to
-   catch any errors (see Troubleshooting).
+   catch any errors (see [66]Troubleshooting).
 
    From $CATALINA_HOME you can start up Tomcat with the command:
 
@@ -686,19 +698,19 @@
 
   5.1. Migrating from an Earlier Version
 
-   There are database schema changes between 2.1.2 and 2.2.0, and the
+   There are database schema changes between 2.2.0 and 2.2.1, and the
    conversion scripts to be applied - in distinct versions for MySQL and
    Oracle, respectively - are found in the reference/docs/updating folder of
    the release or on subversion:
 
-MySQL:  https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_mysql_conversion.sql
-Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conversion/sakai_2_1_2-2_2_0_oracle_conversion.sql
+MySQL:  https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql
+Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql
 
    In the same directory you'll also find conversion scripts for earlier
    Sakai versions. Migration from an earlier version will require the
    successive application of all intermediate scripts. You cannot, for
-   example, move from 2.1.1 to 2.2.0 by applying a single script. You will
-   need to move first from 2.1.1 to 2.1.2, and then to 2.2.0.
+   example, move from 2.1.2 to 2.2.1 by applying a single script. You will
+   need to move first from 2.1.2 to 2.2.0, and then to 2.2.1.
 
   Examine before using
 
@@ -708,13 +720,13 @@ Oracle: https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-0/docs/conv
    tools - and they may complicate your migration with unintended
    consequences if you execute them blindly.
 
-   For the 2.2.0 release, the Message Center tool offers one such particular
-   example. A number of schools deployed Message Center in 2.1.x production,
-   before it was yet a provisional tool. Now that it is a provisional tool,
-   the conversion scripts were written to introduce its tables, and thus
-   assume that Message Center is a new tool for your deployment. If it isn't,
-   you'll want to comment out the portions of the conversion script that
-   treat it, and instead perform the following conversions:
+   The Message Center tool offers one such particular example in 2.2. A
+   number of schools deployed Message Center in 2.1.x production, before it
+   was yet a provisional tool. Now that it is a provisional tool, the
+   conversion scripts were written to introduce its tables, and thus assume
+   that Message Center is a new tool for your deployment. If it isn't, you'll
+   want to comment out the portions of the conversion script that treat it,
+   and instead perform the following conversions:
 
   MySQL:  ALTER TABLE MFR_TOPIC_T ADD DEFAULTASSIGNNAME VARCHAR(255);
           ALTER TABLE MFR_OPEN_FORUM_T ADD DEFAULTASSIGNNAME VARCHAR(255);
@@ -843,7 +855,7 @@ Oracle: hibernate.dialect=org.hibernate.dialect.Oracle9Dialect
 
    Once you've configured the database appropriately, you need only stop and
    restart Tomcat. As Tomcat is coming up you can watch its log to see if
-   there are any database connection errors (see the [72]Troubleshooting
+   there are any database connection errors (see the [73]Troubleshooting
    section).
 
   Oracle and Tests&Quizzes
@@ -896,6 +908,7 @@ Oracle: hibernate.dialect=org.hibernate.dialect.Oracle9Dialect
  SQL> commit;
 
  Commit complete.
+
 
 6. Getting Started with the Software
 
@@ -1019,7 +1032,7 @@ Oracle: hibernate.dialect=org.hibernate.dialect.Oracle9Dialect
    ones do not. These extra tools require additional steps to enable, so that
    system users will not stumble across them inadvertently if that's not
    desired, but you are encouraged to evaluate them for your own deployment.
-   See http://source.sakaiproject.org/release/2.2.0/provisional.html for
+   See http://source.sakaiproject.org/release/2.2.1/provisional.html for
    more details.
 
   6.6. Where to Learn More
@@ -1100,7 +1113,7 @@ Oracle: hibernate.dialect=org.hibernate.dialect.Oracle9Dialect
    code.
 
    If this does not account for the download failures you're seeing, then you
-   may want to double-check your maven.remote.repo setting. See the [83]Maven
+   may want to double-check your maven.remote.repo setting. See the [84]Maven
    Configuration section, and follow it precisely.
 
     7.1.2. Out of Memory errors
@@ -1223,33 +1236,14 @@ Oracle: hibernate.dialect=org.hibernate.dialect.Oracle9Dialect
    The SMTP server logs from Sakai will be written to the
    $CATALINA_HOME/sakai/logs directory.
 
-    7.2.2. Startup halts with destroy messages
-
-   If you see those destroy messages, that's the end of it. Tomcat is not
-   coming up, and you'll need to go back and change something before it will.
-
-   Unfortunately, there are quite a number of reasons this might have
-   happened. The simplest such cause is that you have not added the Tomcat
-   compatibility package to your installation (see Set up Build
-   Environment). All the other cases involve some problem with your code or
-   platform; these problems are more subtle, and the associated catalina.out
-   messages are usually not very helpful in tracking them down.
-
-   To aid in debugging these problems, Josh Holtzman of Berkeley has created
-   what he calls a "Noisy Spring" jar. You can find a full explanation and a
-   link to the jar in the Sakaipedia at
-   http://bugs.sakaiproject.org/confluence/display/ENC/Noisy+Spring+JAR.
-   Deploying this jar will produce a more Shakespearian death in its
-   verbosity.
-
-    7.2.3. "Unsupported major.minor version 49.0"
+    7.2.2. "Unsupported major.minor version 49.0"
 
    If this message appears in catalina.out during startup, it means that
    you've built Sakai for Java 1.5, but your JRE is 1.4. Go back to the
-   [86]Set up Build Environment section and double-check your Java version
+   [85]Set up Build Environment section and double-check your Java version
    and environment variables.
 
-    7.2.4. "java.net.BindException: Address already in use"
+    7.2.3. "java.net.BindException: Address already in use"
 
    If this message appears in catalina.out during startup, it means that some
    other application is already running on the port you've assigned for this
