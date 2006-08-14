@@ -12,6 +12,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/event-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/site-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/site-manage-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/user-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/content-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/metaobj-api"/>
