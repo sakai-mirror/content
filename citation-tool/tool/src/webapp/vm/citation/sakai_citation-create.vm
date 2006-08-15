@@ -1,0 +1,116 @@
+#set($default = "")
+#if($!DEFAULT_TEMPLATE)#set($default = "$!DEFAULT_TEMPLATE.identifier")#end
+
+<script type="text/javascript">
+	function openWindow(url, title, height) 
+	{ 
+		var params = "scrollbars=no,menubar=no,height=" + height + ",width=800,toolbar=no,location=no,status=no";
+	  window.open(url,title,params);
+	  return false;
+	}
+	function closePopup()
+	{
+		window.opener.closeWindow();
+	}
+</script>
+
+<div class="portletBody">
+	<h3>Add citation </h3>
+	<p class="shorttext">
+		<label for="type">
+			$tcite.getString("type.select")
+		</label>
+		<select name="type" onchange="changeSchema(this);">
+			#foreach($template in $TEMPLATES)
+				<option value="$template.identifier"#if("$template.identifier" == "$default") selected="selected"#end>
+					$tcite.getString("type.$!{template.identifier}")
+				</option>
+			#end
+		</select>
+	</p>
+	<h4></h4>
+
+		<span class="reqStar">*</span>
+
+	<form name="$FORM_NAME" id="$FORM_NAME" method="post" action="#toolForm("CitationHelperAction")&$!{specialHelperFlag}=$!{citationToolId}">
+		<div id="div_$!FORM_NAME">
+			#foreach($field in $DEFAULT_TEMPLATE.fields)
+				<p class="shorttext">
+					#if ($field.isRequired())						 
+						<span class="reqStar">*</span>
+					#end
+					<label for="$field.identifier">
+						$tcite.getString("$!{DEFAULT_TEMPLATE.identifier}.$!{field.identifier}")
+					</label>
+					<input name="$!{field.identifier}" id="$!{field.identifier}" value="$!{field.defaultValue}" type="text" size="50" />
+				</p>
+			#end
+		</div>
+ 		<p class="act">
+    		<input type="button" name="Save" id="Save" value="Add Citation to List" onclick="" >
+    		<input type="button" name="Cancel" id="Cancel" value="Cancel" onclick="closePopup();">
+    	</p>
+	</form>
+
+</div>
+
+<script type="text/javascript">
+	var templates = new Array();
+	var templateIdentifiers = new Array();
+	var defaultTemplate = "$DEFAULT_TEMPLATE";
+	#foreach($template in $TEMPLATES)
+	
+		templateIdentifiers[templateIdentifiers.length] = "$template.identifier";
+		templates["$template.identifier"] = new Array();
+		templates["$template.identifier"]["label"] = "$tcite.getString("type.$!{template.identifier}")";
+		templates["$template.identifier"]["fields"] = new Array();
+		#foreach($field in $template.fields)
+		
+			templates["$template.identifier"][$velocityCount - 1] = new Object();
+			templates["$template.identifier"][$velocityCount -1].identifier = "$!{field.identifier}";
+			templates["$template.identifier"][$velocityCount - 1].label = "$tcite.getString("$!{template.identifier}.$!{field.identifier}")"
+			templates["$template.identifier"][$velocityCount - 1].description = "$!{field.description}";
+			templates["$template.identifier"][$velocityCount - 1].minCardinality = $!{field.minCardinality};
+			templates["$template.identifier"][$velocityCount - 1].maxCardinality = $!{field.maxCardinality};
+			templates["$template.identifier"][$velocityCount - 1].defaultValue = "$!{field.defaultValue}";
+			templates["$template.identifier"][$velocityCount - 1].isRequired = $field.isRequired();
+			templates["$template.identifier"][$velocityCount - 1].valueType = "$!{field.valueType}";
+		#end
+	#end
+	
+	var currentValues = new Array();
+	
+	function changeSchema(type_element)
+	{
+		var form_div = document.getElementById("div_$!FORM_NAME");
+		var type = type_element.value;
+		var fields = document.getElementsByTagName("input");
+		
+		for(var i = 0; i < fields.length; i++)
+		{
+			if(fields[i].value)
+			{
+				currentValues[ fields[i].id ] = fields[i].value;
+			}
+		}
+		
+		var html = " ";
+		
+		for(var t = 0; t < templates[type].length; t++)
+		{
+			html += '<p class="shorttext">\n';
+			if(templates[type][t].isRequired)
+			{						 
+				html += '<span class="reqStar">*</span>\n';
+			}
+			html += '<label for="' + templates[type][t].identifier + '">\n' + templates[type][t].label + '\n</label>\n'
+					 + '<input name="' + templates[type][t].identifier + '" id="' + templates[type][t].identifier + '" type="text" size="50" ';
+			if(currentValues[templates[type][t].identifier])
+			{
+				html += 'value="' + currentValues[templates[type][t].identifier] + '" ';
+			}
+			html += '/>\n</p>\n';
+		}
+		form_div.innerHTML = html;
+	}
+</script>

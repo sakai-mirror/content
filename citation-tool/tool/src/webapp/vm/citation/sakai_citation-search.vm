@@ -1,0 +1,46 @@
+<script type="text/javascript">
+	function openWindow(url, title, height) 
+	{ 
+		var params = "scrollbars=no,menubar=no,height=" + height + ",width=800,toolbar=no,location=no,status=no";
+	  window.open(url,title,params);
+	  return false;
+	}
+	function closePopup()
+	{
+		window.opener.closeWindow();
+	}
+</script>
+
+<div class="portletBody">
+	<h3>Search Library Resources</h3>
+
+	<form name="$FORM_NAME" id="$FORM_NAME" method="post" action="">
+		
+		<p class="shorttext">
+			<label for="target">
+				Select your search set
+			</label>
+			<select name="target" id="target" />
+				<option selected="selected">General Interest</option>
+				<option>Arts</option>
+				<option>Humanities</option>
+				<option>Business and Economics</option>
+				<option>Engineering</option>
+				<option>Science</option>
+				<option>Government Information</option>
+			</select>
+		</p>
+		<p class="shorttext">
+			<label for="words">
+				Enter your search terms
+			</label>
+			<input name="words" id="words" type="text" size="50" />
+		</p>
+		<p class="act">
+			<input type="button" name="Submit" value="Search">
+			<input type="button" name="Cancel" id="Cancel" value="Cancel" onclick="closePopup();" />
+		</p>
+	</form>
+
+</div>
+

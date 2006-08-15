@@ -1,0 +1,117 @@
+<!--
+## $URL:  $
+## $Id:  $
+ **********************************************************************************
+ *
+ * Copyright (c) 2006 The Sakai Foundation.
+ * 
+ * Licensed under the Educational Community License, Version 1.0 (the "License"); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.opensource.org/licenses/ecl1.php
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License.
+ *
+ **********************************************************************************
+-->
+<script type="text/javascript">
+	var popup;
+	function openWindow(url, title, height) 
+	{ 
+		var params = "scrollbars=no,menubar=no,height=" + height + ",width=800,toolbar=no,location=no,status=no";
+		popup = window.open(url,title,params);
+		return false;
+	}
+	function closeWindow()
+	{
+		popup.close();
+	}
+</script>
+<div class="portletBody">
+	#if ($alertMessage)
+		<br />
+		<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div>
+		<div class="clear" ></div>
+	#end
+	<form name="$FORM_NAME" id="$FORM_NAME" action="#toolForm("CitationHelperAction")&panel=${mainFrameId}&$!{specialHelperFlag}=$!{citationToolId}" method="post">
+		<div class="">
+			<input type="button" name="Search" id="Search" value="Search Library Resources" onclick="openWindow('#contentLink("$mainFrameId")&sakai_action=doSearch','Search Library Resources', 250);" />
+			<input type="button" name="CreateCitation" id="CreateCitation" value="Create New Citation" onclick="openWindow('#contentLink("$mainFrameId")&sakai_action=doCreate','Create New Citation', 800);" />
+		</div>
+		<table id="table7" border="0" width="100%">
+			<tbody>
+				<tr>
+					<td>
+						<input value="$tcite.getString("list.export")" name="B7" type="submit">
+					</td>
+					<td>
+						<p align="right">Viewing 1 - 10 of 19 items (0 selected)</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p align="right">
+			Sort by: 
+			<select size="1" name="D1">
+				<option selected="selected">Title</option>
+				<option>Author</option>
+				<option>Source</option>
+				<option>Date</option>
+			</select>
+			
+			<input name="Submit1" value="|&lt;" type="submit">
+			<input name="Submit2" value="&lt;" type="submit">
+			<select name="select2">
+				<option selected="selected">Show 10</option>
+			</select>
+			<input name="Submit3" value="&gt;" type="submit">
+			<input name="Submit" value="&gt;|" type="submit">
+		</p>
+	
+		<table width="100%" cellpadding="10" cellspacing="1" id="table4">
+			<tbody>
+				<tr valign="top" bgcolor="#dde3eb">
+					<td colspan="2">
+						<input name="C1" value="ON" type="checkbox">
+						Citations
+					</td>
+				</tr>
+				<tr valign="top">
+					<td valign="top">
+						<input name="C2" value="ON" style="float: right;" type="checkbox">
+					</td>
+					<td valign="top">
+						<a href="item.openurl">item.title</a> 
+						item.author; 
+						item.source 
+						<br />
+		  				<a href="ite.openurl">Find It!</a>
+		  				|  
+		  				<a href="http://">Related Web page</a> 
+		  				| 
+		  				<a href="http://">PDF version</a> 
+		  				| 
+		  				<a href="http://">View Details </a>
+		  			</td>
+		  		</tr>
+			</tbody>
+		</table>
+	
+		<p align="right">
+			<input value="$tcite.getString("list.export")" name="B6" style="float: left;" type="button"> 
+			<input name="Submit4" value="|&lt;" type="submit">
+			<input name="Submit5" value="&lt;" type="submit">
+			<select name="select3">
+				<option selected="selected">Show 10</option>
+			</select>
+			<input name="Submit6" value="&gt;" type="submit">
+			<input name="Submit7" value="&gt;|" type="submit">
+		</p>
+			
+	</form>
+</div>

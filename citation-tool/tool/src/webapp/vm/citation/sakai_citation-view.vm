@@ -1,0 +1,161 @@
+<p><font size="2">Add my own citation </font></p>
+
+<table border="0" width="100%" id="table1" cellspacing="0" cellpadding="2" bordercolor="#DDE3EB" bgcolor="#DDE3EB">
+
+	<tr>
+
+		<td><font size="2"><b>1. Select Citation Type</b></font></td>
+	</tr>
+</table>
+<p>
+	<select name="menu1" onchange="changeSchema(this);">
+		#foreach($template in $TEMPLATES)
+			<option value="$template.identifier"#if("$template.identifier" == "DEFAULT_TEMPLATE") selected="selected"#end>
+				$template.label
+			</option>
+		#end
+		</select>
+</p>
+<table border="0" width="100%" id="table3" cellspacing="0" cellpadding="2" bordercolor="#DDE3EB" bgcolor="#DDE3EB">
+	<tr>
+
+		<td><b><font size="2">2. Enter Information </font></b></td>
+
+	</tr>
+</table>
+<br>
+<form name="$FORM_NAME" id="$FORM_NAME" method="post" action="">
+	
+	<div 
+  
+  <table width="600" border="0">
+    <tr>
+      <td width="121"><span class="style5">Title:</span></td>
+      <td width="469"><input name="textfield3" type="text" size="50"></td>
+    </tr>
+    <tr>
+
+      <td width="121"><span class="style5">Author:</span></td>
+      <td width="469"><input name="textfield32" type="text" size="50"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Year:</span></td>
+      <td width="469"><input name="textfield33" type="text" size="10"></td>
+    </tr>
+    <tr>
+
+      <td width="121"><span class="style5">Full Date: </span></td>
+      <td width="469"><input name="textfield332" type="text" size="10"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Publisher:</span></td>
+      <td width="469"><input name="textfield333" type="text" size="50"></td>
+    </tr>
+    <tr>
+
+      <td width="121"><span class="style5">Edition:</span></td>
+      <td width="469"><input name="textfield3332" type="text" size="10"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Place of Publication:</span></td>
+      <td width="469"><input name="textfield3334" type="text" size="50"></td>
+    </tr>
+    <tr>
+
+      <td width="121"><span class="style5">Copyright:</span></td>
+      <td width="469"><input name="textfield3333" type="text" size="10"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Language:</span></td>
+      <td width="469"><input name="textfield3335" type="text" size="50"></td>
+    </tr>
+    <tr>
+
+      <td width="121"><span class="style5">Keywords:</span></td>
+      <td width="469"><input name="textfield3336" type="text" size="50"></td>
+    </tr>
+    
+    <tr>
+      <td width="121"><span class="style5">Abstract:</span></td>
+      <td width="469"><textarea name="textarea" cols="50" rows="3"></textarea></td>
+    </tr>
+
+    <tr>
+      <td width="121"><span class="style5">Notes:</span></td>
+      <td width="469"><textarea name="textarea2" cols="50" rows="3"></textarea></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">ISBN:</span></td>
+      <td width="469"><input name="textfield3337" type="text" size="50"></td>
+
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Call Number: </span></td>
+	  <td width="469"><input name="textfield33372" type="text" size="50"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Series Editor: </span></td>
+	  <td width="469"><input name="textfield33373" type="text" size="50"></td>
+
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Series Title: </span></td>
+	  <td width="469"><input name="textfield333732" type="text" size="50"></td>
+    </tr>
+    <tr>
+      <td width="121"><span class="style5">Pages:</span></td>
+      <td width="469"><input name="textfield33332" type="text" size="10"></td>
+
+    </tr>
+    <tr>
+      <td><span class="style5">Full Text (URL): </span></td>
+      <td><input name="textfield3337322" type="text" size="50"></td>
+    </tr>
+    
+    <tr>
+      <td><span class="style5">Related Web Page (URL):</span></td>
+      <td><input name="textfield3337324" type="text" size="50"></td>
+
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>[<a href="add_item_page_additional.html" class="style8">add additional URLs</a>] </td>
+    </tr>
+  </table>
+  <p>
+
+    <input type="submit" name="Submit" value="Add Citation to List">
+    <input type="submit" name="Submit2" value="Cancel">
+  </p>
+</form>
+
+<script type="text/javascript">
+	var templates = new Array();
+	var templateIdentifiers = new Array();
+	var defaultTemplate = "$DEFAULT_TEMPLATE";
+	#foreach($template in $TEMPLATES)
+	
+		templateIdentifiers[templateNames.length] = "$template.identifier";
+		templates["$template.identifier"] = new Array();
+		templates["$template.identifier"]["label"] = "$template.label";
+		templates["$template.identifier"]["fields"] = new Array();
+		#foreach($field in $template.fields)
+		
+			templates["$template.identifier"]["fields"][$velocityCount] = new Object();
+			templates["$template.identifier"]["fields"][$velocityCount].identifier = "$field.identifier";
+			templates["$template.identifier"]["fields"][$velocityCount].name = "$field.name";
+			templates["$template.identifier"]["fields"][$velocityCount].label = "$field.label"
+			templates["$template.identifier"]["fields"][$velocityCount].description = "$field.description";
+			templates["$template.identifier"]["fields"][$velocityCount].minCardinality = $field.minCardinality;
+			templates["$template.identifier"]["fields"][$velocityCount].maxCardinality = $field.maxCardinality;
+			templates["$template.identifier"]["fields"][$velocityCount].defaultValue = "$field.defaultValue";
+			templates["$template.identifier"]["fields"][$velocityCount].isRequired = $field.isRequired();
+			templates["$template.identifier"]["fields"][$velocityCount].valueType = "$field.valueType";
+		#end
+	#end
+	
+	function setSchema(schemaId)
+	{
+		
+	}
+</script>
