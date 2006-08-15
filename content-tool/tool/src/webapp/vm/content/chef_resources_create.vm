@@ -85,6 +85,7 @@
 			#end
 		#end
 	</div>
+	
 	######################## ================ Change Item Type, Number of Items ================ ########################
 	<form name="addItemForm" id="addItemForm" method="post" action="#toolForm("ResourcesAction")" >
 		<input type="hidden" name="sakai_action" value="doCreate" />
@@ -101,10 +102,12 @@
 				#if($show_form_items)
 					<option value="$TYPE_FORM" id="$validator.escapeJavascript("$TYPE_FORM")"#if("$itemType" == "$TYPE_FORM") selected="selected"#end>$tlang.getString("addi.meta")</option>
 				#end
+				<option value="$TYPE_CITE_LIST" id="$validator.escapeJavascript("$TYPE_CITE_LIST")"#if("$itemType" == "$TYPE_CITE_LIST") selected="selected"#end>$tlang.getString("addi.cites")</option>
 			</select>
 		</p>
 	</form>
 </div>
+<!-- citationsFrameId == $citationsFrameId -->
 <!-- before parse -->
 #parse("/vm/content/chef_resources_itemtype.vm")
 <!-- after parse -->
