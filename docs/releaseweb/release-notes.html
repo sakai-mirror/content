@@ -11,24 +11,18 @@
 <div class="article" lang="en">
 <div class="titlepage">
 <div><div><h1 class="title">
-<a name="id1704716"></a>2.2.1 Release Notes</h1></div></div>
+<a name="id2247494"></a>2.2.1 Release Notes</h1></div></div>
 <hr>
 </div>
 <div class="toc">
 <p><b>Table of Contents</b></p>
 <dl>
 <dt><span class="sect1"><a href="#overview">1. Overview</a></span></dt>
-<dt><span class="sect1"><a href="#new">2. What's New</a></span></dt>
+<dt><span class="sect1"><a href="#migration-220">2. Migrating from 2.2.0</a></span></dt>
+<dt><span class="sect1"><a href="#migration-21x">3. Migrating from 2.1.x</a></span></dt>
 <dd><dl>
-<dt><span class="sect2"><a href="#new-enhance">2.1. Enhancements</a></span></dt>
-<dt><span class="sect2"><a href="#new-tools">2.2. New Tools</a></span></dt>
-</dl></dd>
-<dt><span class="sect1"><a href="#migration">3. Migration Issues</a></span></dt>
-<dd><dl>
-<dt><span class="sect2"><a href="#migration-conversion">3.1. Database Conversion</a></span></dt>
-<dt><span class="sect2"><a href="#migration-api">3.2. Framework Changes</a></span></dt>
-<dt><span class="sect2"><a href="#migration-providers">3.3. Provider Changes</a></span></dt>
-<dt><span class="sect2"><a href="#id1705729">3.4. Skin Changes</a></span></dt>
+<dt><span class="sect2"><a href="#new">3.1. What's New</a></span></dt>
+<dt><span class="sect2"><a href="#migration">3.2. Migration Issues</a></span></dt>
 </dl></dd>
 <dt><span class="sect1"><a href="#maintenance">4. Maintenance Branch</a></span></dt>
 <dt><span class="sect1"><a href="#resolved">5. Fixes Included in this Release</a></span></dt>
@@ -41,19 +35,63 @@
 <div class="titlepage"><div><div><h2 class="title">
 <a name="overview"></a>1.&nbsp;Overview</h2></div></div></div>
 
-        <p>2.2.1 is a maintenance release, meaning that its purpose is to distribute a further set of fixes to issues that were present in 2.2.0, while deliberately avoiding any new features which may introduce novel bugs.  In short, 2.2.1 is currently the latest and best release of the 2.2 codebase, and if you have already been running 2.2.0 you should be able to move to 2.2.1 with confidence: there have been no API changes, so all 2.2 code should run without modification.  Its feature notes are therefore identical to the 2.2.0 release, and are included below under "What's New."</p>
+        <p>2.2.1 is a maintenance release, meaning that its purpose is to distribute a further
+            set of fixes to issues that were present in 2.2.0, while deliberately avoiding any new
+            features which may introduce novel bugs. In short, 2.2.1 is currently the latest and
+            best release of the 2.2 codebase, and if you have already been running 2.2.0 you should
+            be able to move to 2.2.1 with confidence: there have been no API changes, so that all 2.2
+            code should run without modification.</p>
     </div>
     <div class="sect1" lang="en">
 <div class="titlepage"><div><div><h2 class="title">
-<a name="new"></a>2.&nbsp;What's New</h2></div></div></div>
+<a name="migration-220"></a>2.&nbsp;Migrating from 2.2.0</h2></div></div></div>
 
-        <div class="sect2" lang="en">
+        <p>Since 2.2.1 involves no API changes, a migration from 2.2.0 is very simple and straightforward: skins, providers, and other code written for the 2.2 codebase should be fine.</p>
+        <p>Some of the 2.2.1 fixes, however, are applied to the DB schema, and so a DB conversion script is still necessary. The conversion
+            scripts to be applied - in distinct versions for MySQL and Oracle, respectively -
+            are found in the <code class="filename">reference/docs/conversion</code> folder of the
+            release or on subversion:</p>
+            <div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td>
+<span class="term">MySQL:</span></td>
+<td>
+                        <p>
+                            <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql</a>
+                        </p>
+                    </td>
+</tr>
+<tr>
+<td>
+<span class="term">Oracle:</span></td>
+<td>
+                        <p>
+                            <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql</a>
+                        </p>
+                    </td>
+</tr>
+</tbody>
+</table></div>
+        <p>That's it for a migration from 2.2.0.  You can freely skip past most of the rest of this page, though you'll probably want to jump down and skim the <a href="#resolved" title="5.&nbsp;Fixes Included in this Release">fixed issues</a> and <a href="#open-issues" title="6.&nbsp;Open Issues">open issues</a> sections.</p>
+    </div>
+    <div class="sect1" lang="en">
+<div class="titlepage"><div><div><h2 class="title">
+<a name="migration-21x"></a>3.&nbsp;Migrating from 2.1.x</h2></div></div></div>
+
+        <p>If you're moving to 2.2 from a 2.1 version (or earlier) the changes are more significant, and since the 2.2 code is still fairly recent, it's worth spending a little more time here to describe what you can look forward to.</p>
+    <div class="sect2" lang="en">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="new-enhance"></a>2.1.&nbsp;Enhancements</h3></div></div></div>
+<a name="new"></a>3.1.&nbsp;What's New</h3></div></div></div>
 
-            <div class="sect3" lang="en">
+        <div class="sect3" lang="en">
 <div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-framework"></a>2.1.1.&nbsp;Framework Refactoring</h4></div></div></div>
+<a name="new-enhance"></a>3.1.1.&nbsp;Enhancements</h4></div></div></div>
+
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-framework"></a>3.1.1.1.&nbsp;Framework Refactoring</h5></div></div></div>
 
                 <p>The 2.2 codebase marks the culmination of a significant effort to restructure
                     the framework into more logical functional/architectural units, paving the way
@@ -64,18 +102,18 @@
                     many services and packages have different names from those in 2.1. To see more
                     discussion of migration issues that may result, see below.</p>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-group"></a>2.1.2.&nbsp;Group Awareness</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-group"></a>3.1.1.2.&nbsp;Group Awareness</h5></div></div></div>
 
                 <p>Group awareness has been extended to three additional tools: Resources,
                     Assignments, and Schedule. That is to say, the contents of each of those tools
                     can have their access restricted to specific groups, as they are defined by site
                     maintainers in the <span class="emphasis"><em>Site Info</em></span> tool.</p>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-eid"></a>2.1.3.&nbsp;EID/UID Separation</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-eid"></a>3.1.1.3.&nbsp;EID/UID Separation</h5></div></div></div>
 
                 <p>For the last few releases we've been working to introduce the concept of
                     "internal" and "external" identifiers in Sakai in the user records. We started
@@ -87,9 +125,9 @@
                         <code class="filename">reference/docs/architecture/sakai_id_eid.doc</code> (or in
                     subversion at: <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_id_eid.doc" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_id_eid.doc</a>)</p>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-fck"></a>2.1.4.&nbsp;FCKeditor</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-fck"></a>3.1.1.4.&nbsp;FCKeditor</h5></div></div></div>
 
                 <p>The FCKeditor WYSIWYG editor was available in 2.1, but not the default. In 2.2
                     it has become the default editor. HTMLArea is still included, however, and the
@@ -99,9 +137,9 @@
 # specify the wysiwyg editor
 wysiwyg.editor=FCKeditor</pre>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-skins"></a>2.1.5.&nbsp;Included Skins</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-skins"></a>3.1.1.5.&nbsp;Included Skins</h5></div></div></div>
 
                 <p>The three highest-scoring skins from the recent skins contest have been
                     included in the distribution. You can make any of these your default skin by
@@ -114,9 +152,9 @@ wysiwyg.editor=FCKeditor</pre>
 # skin.default=some-u
 skin.default=default</pre>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-help"></a>2.1.6.&nbsp;Updated Help Content</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-help"></a>3.1.1.6.&nbsp;Updated Help Content</h5></div></div></div>
 
                 <p>Help content in 2.1 was out of date, reflecting only version 2.0 of the
                     software. The help content has been updated for 2.2, along with some style
@@ -126,9 +164,9 @@ skin.default=default</pre>
                     <a href="http://bugs.sakaiproject.org/confluence/display/HELP/Home" target="_top">http://bugs.sakaiproject.org/confluence/display/HELP/Home</a>
                 </p>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-enhance-translate"></a>2.1.7.&nbsp;New translations</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-enhance-translate"></a>3.1.1.7.&nbsp;New translations</h5></div></div></div>
 
                 <p>New interface translations for French and Catalan, as well as updated Japanese
                     translations, are available in this release. See
@@ -136,26 +174,26 @@ skin.default=default</pre>
                 information.</p>
             </div>
         </div>
-        <div class="sect2" lang="en">
-<div class="titlepage"><div><div><h3 class="title">
-<a name="new-tools"></a>2.2.&nbsp;New Tools</h3></div></div></div>
-
-            <div class="sect3" lang="en">
+        <div class="sect3" lang="en">
 <div class="titlepage"><div><div><h4 class="title">
-<a name="new-tools-osp"></a>2.2.1.&nbsp;Open Source Portfolio</h4></div></div></div>
+<a name="new-tools"></a>3.1.2.&nbsp;New Tools</h4></div></div></div>
 
-                <p>2.2 involves closer integration with the <span class="emphasis"><em>Open Source Portfolio</em></span>, an existing suite
-                    of tools supporting portfolio activities, and which are available in this
-                    release as <a href="provisional.html" target="_top">provisional tools</a>. Using OSP,
-                    individuals can collect items, reflect, design portfolios, and publish them to
-                    designated audiences. Instructors and program administrators are able to provide
-                    structure and guidance to an individual's work that include step-by-step
-                    (sequential) wizards, matrices of goals/standards, and hierarchies to organize
-                    related work.</p>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-tools-osp"></a>3.1.2.1.&nbsp;Open Source Portfolio</h5></div></div></div>
+
+                <p>2.2 involves closer integration with the <span class="emphasis"><em>Open Source
+                    Portfolio</em></span>, an existing suite of tools supporting portfolio
+                    activities, and which are available in this release as <a href="provisional.html" target="_top">provisional tools</a>. Using OSP, individuals
+                    can collect items, reflect, design portfolios, and publish them to designated
+                    audiences. Instructors and program administrators are able to provide structure
+                    and guidance to an individual's work that include step-by-step (sequential)
+                    wizards, matrices of goals/standards, and hierarchies to organize related
+                work.</p>
             </div>
-            <div class="sect3" lang="en">
-<div class="titlepage"><div><div><h4 class="title">
-<a name="new-tools-provisional"></a>2.2.2.&nbsp;Provisional Tools</h4></div></div></div>
+            <div class="sect4" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="new-tools-provisional"></a>3.1.2.2.&nbsp;Provisional Tools</h5></div></div></div>
 
                 <p>Sakai 2.2 has added four new provisional tools</p>
                 <div class="itemizedlist"><ul>
@@ -187,46 +225,18 @@ skin.default=default</pre>
             </div>
         </div>
     </div>
-    <div class="sect1" lang="en">
-<div class="titlepage"><div><div><h2 class="title">
-<a name="migration"></a>3.&nbsp;Migration Issues</h2></div></div></div>
-
-        <div class="sect2" lang="en">
+    <div class="sect2" lang="en">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="migration-conversion"></a>3.1.&nbsp;Database Conversion</h3></div></div></div>
+<a name="migration"></a>3.2.&nbsp;Migration Issues</h3></div></div></div>
 
-            <p>There are database schema changes between 2.2.0 and 2.2.1, and the conversion
-                scripts to be applied - in distinct versions for MySQL and Oracle, respectively -
-                are found in the <code class="filename">reference/docs/conversion</code> folder of the
+        <div class="sect3" lang="en">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="migration-conversion"></a>3.2.1.&nbsp;Database Conversion</h4></div></div></div>
+
+            <p>A database conversion is required for migration between each Sakai release, and 2.2.1 is no exception.  Since DB conversions require the successive application of all intermediate scripts, a migration from a 2.1.x or earlier version will require at least two conversions (e.g. one from 2.1.2 to 2.2.0, and then one from 2.2.0 to 2.2.1).  The conversion scripts to be applied - in distinct versions for MySQL and Oracle, respectively - are found in the <code class="filename">reference/docs/conversion</code> folder of the
                 release or on subversion:</p>
-            <div class="variablelist"><table border="0">
-<col align="left" valign="top">
-<tbody>
-<tr>
-<td>
-<span class="term">MySQL:</span></td>
-<td>
-                        <p>
-                            <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_mysql_conversion.sql</a>
+<p><a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion" target="_top"> https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion</a>
                         </p>
-                    </td>
-</tr>
-<tr>
-<td>
-<span class="term">Oracle:</span></td>
-<td>
-                        <p>
-                            <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/conversion/sakai_2_2_0-2_2_1_oracle_conversion.sql</a>
-                        </p>
-                    </td>
-</tr>
-</tbody>
-</table></div>
-            <p>In the same directory you'll also find conversion scripts for earlier Sakai
-                versions. Migration from an earlier version will require the successive application
-                of all intermediate conversion scripts. You cannot, for example, move from 2.1.2 to
-                2.2.1 by applying a single DB script. You will need to move first from 2.1.2 to
-                2.2.0, and then to 2.2.1.</p>
             <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
 <h3 class="title">Examine before using</h3>
 
@@ -272,27 +282,30 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
 </table></div>
             </div>
         </div>
-        <div class="sect2" lang="en">
-<div class="titlepage"><div><div><h3 class="title">
-<a name="migration-api"></a>3.2.&nbsp;Framework Changes</h3></div></div></div>
+        <div class="sect3" lang="en">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="migration-api"></a>3.2.2.&nbsp;Framework Changes</h4></div></div></div>
 
-            <p>Again, 2.2.1 involves no framework change from 2.2.0, but if you're migrating from an earlier version you'll need to be apprised of the framework changes that the 2.2 codebase involves.  The 2.2 refactoring means that many package names have changed from 2.1, and these
-                differences will mainly be encountered in <code class="filename">sakai.properties</code>
-                settings with bean references. It's best to not try to use a
-                    <code class="filename">sakai.properties</code> from a previous release, and instead start
-                with the sample in <code class="filename">reference/docs/sakai.properties</code>.</p>
+            <p>If you're migrating from
+                an earlier version you'll also need to be apprised of the framework changes that the 2.2
+                codebase involves. The 2.2 refactoring means that many package names have changed
+                from 2.1, and these differences will mainly be encountered in
+                    <code class="filename">sakai.properties</code> settings with bean references. It's best
+                to not try to use a <code class="filename">sakai.properties</code> from a previous release,
+                and instead start with the sample in
+                <code class="filename">reference/docs/sakai.properties</code>.</p>
             <p>Any custom code, such as providers, may also need revision. See below for more
                 discussion of providers in particular.</p>
         </div>
-        <div class="sect2" lang="en">
-<div class="titlepage"><div><div><h3 class="title">
-<a name="migration-providers"></a>3.3.&nbsp;Provider Changes</h3></div></div></div>
+        <div class="sect3" lang="en">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="migration-providers"></a>3.2.3.&nbsp;Provider Changes</h4></div></div></div>
 
-            <p>As mentioned above, 2.2 introduces a separation of external user identifiers
-                from Sakai's internal user ids. Any custom
-                <code class="filename">UserDirectoryProvider</code> will need some alteration to account for
-                this, along with changes to its import statements and declarations that stem from
-                API changes. Below is a list of changes that a typical provider should require:</p>
+            <p>As mentioned above, 2.2 introduces a separation of external user identifiers from
+                Sakai's internal user ids. Any custom <code class="filename">UserDirectoryProvider</code>
+                will need some alteration to account for this, along with changes to its import
+                statements and declarations that stem from API changes. Below is a list of changes
+                that a typical provider should require:</p>
             <div class="orderedlist"><ol type="1">
 <li>
                     <p>Import statements altered to reflect new package names.</p>
@@ -320,17 +333,17 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
                 <a href="https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java" target="_top">https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java</a>
             </p>
         </div>
-        <div class="sect2" lang="en">
-<div class="titlepage"><div><div><h3 class="title">
-<a name="id1705729"></a>3.4.&nbsp;Skin Changes</h3></div></div></div>
+        <div class="sect3" lang="en">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="skins"></a>3.2.4.&nbsp;Skin Changes</h4></div></div></div>
 
-            <p>Skins prepared for 2.2.0 will also work for 2.2.1. However, a number of CSS
-                changes will need to be made to any 2.1 skins in order to adapt them to 2.2
+            <p>A number of CSS changes will need to be made to any 2.1 skins in order to adapt them to 2.2
                 versions. These changes - including conversion steps - are thoroughly documented in
                 the appendices of the skin document available in
                     <code class="filename">reference/docs/architecture/sakai_skin.doc</code>, or in
                 subversion at: <a href="https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc" target="_top">https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1/docs/architecture/sakai_skin.doc</a></p>
         </div>
+    </div>
     </div>
     <div class="sect1" lang="en">
 <div class="titlepage"><div><div><h2 class="title">
@@ -357,7 +370,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
 
         <p>Sakai 2.2.1 fixes the following issues from 2.2.0:</p>
         <p>
-            <a href="fixed-issues.html" target="_top">http://source.sakaiproject.org/release/2.2.1/fixed-issues.html</a>
+            <a href="fixed-issues.html" target="_top"> http://source.sakaiproject.org/release/2.2.1/fixed-issues.html</a>
         </p>
     </div>
     <div class="sect1" lang="en">
@@ -366,7 +379,7 @@ ALTER TABLE MFR_MESSAGE_T ADD GRADECOMMENT VARCHAR2(255) NULL;</pre>
 
         <p>The list of known issues with Sakai 2.2.1 at the time of release is found at:</p>
         <p>
-            <a href="open-issues.html" target="_top">http://source.sakaiproject.org/release/2.2.1/open-issues.html</a>
+            <a href="open-issues.html" target="_top"> http://source.sakaiproject.org/release/2.2.1/open-issues.html</a>
         </p>
         <p>See in particular the "Important Issues" noted at the top of the list.</p>
     </div>
