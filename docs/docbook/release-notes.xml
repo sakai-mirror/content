@@ -49,7 +49,7 @@
     </sect1>
     <sect1 xml:id="migration-21x">
         <title>Migrating from 2.1.x</title>
-        <para>If you're moving to 2.2 from a 2.1 version (or earlier) the changes are more significant, and since the 2.2 code is still fairly recent, it's worth spending a little more time here to describe what you can look forward to.</para>
+        <para>If you're moving to 2.2.1 from a 2.1 version (or earlier) the changes are more significant, and since the 2.2 code is still fairly recent, it's worth spending a little more time here to describe what you can look forward to.</para>
     <sect2 xml:id="new">
         <title>What's New</title>
         <sect3 xml:id="new-enhance">
