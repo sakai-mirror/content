@@ -10233,6 +10233,7 @@ public class ResourcesAction
 						{
 							isAvailable = resource.isAvailable();
 						}
+						newItem.setAvailable(isAvailable);
 
 						newItem.setAccess(access_mode.toString());
 						newItem.setInheritedAccess(folder.getEffectiveAccess());
