@@ -5,7 +5,7 @@ authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
 courier			-r13762	https://source.sakaiproject.org/svn/courier/tags/sakai_2-2-1
 event			-r13762	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1
 entity			-r13762	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1
-velocity		-r13762	https://source.sakaiproject.org/svn/velocity/tags/sakai_2-2-1
+velocity			https://source.sakaiproject.org/svn/content/branches/velocity_2-2-1-avail-02
 user			-r13762	https://source.sakaiproject.org/svn/user/tags/sakai_2-2-1
 memory			-r13762	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1
 db			-r13762	https://source.sakaiproject.org/svn/db/tags/sakai_2-2-1
@@ -13,11 +13,11 @@ email			-r13762	https://source.sakaiproject.org/svn/email/tags/sakai_2-2-1
 alias			-r13762	https://source.sakaiproject.org/svn/alias/tags/sakai_2-2-1
 site			-r13762	https://source.sakaiproject.org/svn/site/tags/sakai_2-2-1
 master			-r13762	https://source.sakaiproject.org/svn/master/tags/sakai_2-2-1
-reference		-r13762 https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1
+reference			https://source.sakaiproject.org/svn/content/branches/reference_2-2-1-avail-02
 login			-r13762	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1
 access			-r13762	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1
-content			-r13762	https://source.sakaiproject.org/svn/content/tags/sakai_2-2-1
-metaobj			-r13762	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1
+content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-avail-02
+metaobj				https://source.sakaiproject.org/svn/content/branches/metaobj_2-2-1-avail-02
 presence		-r13762	https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1
 calendar		-r13762	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-2-1
 portal			-r13762	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1
