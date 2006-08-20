@@ -1,4 +1,4 @@
-component		-r13762	https://source.sakaiproject.org/svn/component/tags/sakai_2-2-1
+component			https://source.sakaiproject.org/svn/content/branches/component_2-2-1-avail-02
 util			-r13762	https://source.sakaiproject.org/svn/util/tags/sakai_2-2-1
 tool			-r13762	https://source.sakaiproject.org/svn/tool/tags/sakai_2-2-1
 authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
