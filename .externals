@@ -1,7 +1,7 @@
-component			https://source.sakaiproject.org/svn/content/branches/component_2-2-1-avail-02
+component		-r13762	https://source.sakaiproject.org/svn/component/tags/sakai_2-2-1
 util			-r13762	https://source.sakaiproject.org/svn/util/tags/sakai_2-2-1
 tool			-r13762	https://source.sakaiproject.org/svn/tool/tags/sakai_2-2-1
-authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
+authz				https://source.sakaiproject.org/svn/content/branches/authz_2-2-1-avail-02
 courier			-r13762	https://source.sakaiproject.org/svn/courier/tags/sakai_2-2-1
 event			-r13762	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1
 entity			-r13762	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1
