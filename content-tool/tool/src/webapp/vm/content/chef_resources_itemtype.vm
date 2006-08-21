@@ -1463,7 +1463,7 @@
 				
 			#end
 			######### begin availability section ##########
-			#if($availability_is_enabled $item.&&  !$item.isInWorkspace())
+			#if($availability_is_enabled &&  !$item.isInWorkspace())
 			<h4>$tlang.getString("avail.title")</h4>
 			<div  class="labelindnt">
 				<table>
@@ -1561,7 +1561,7 @@
 						<td>
 						</td>
 						<td>
-							#custom_dateselectionwidget("retract_year$i" "retract_month$i" "retract_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_start_date$i').checked=true;")
+							#custom_dateselectionwidget("retract_year$i" "retract_month$i" "retract_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")
 						</td>
 						<td>
 							#custom_timeSelectionWidget("retract$i" $item.retractDate "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")

@@ -500,6 +500,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			FunctionManager.registerFunction(EVENT_RESOURCE_WRITE);
 			FunctionManager.registerFunction(EVENT_RESOURCE_REMOVE);
 			FunctionManager.registerFunction(EVENT_RESOURCE_ALL_GROUPS);
+//			if(m_availabilityChecksEnabled)
+//			{
+//				FunctionManager.registerFunction(EVENT_RESOURCE_HIDDEN);
+//			}
 			FunctionManager.registerFunction(EVENT_RESOURCE_HIDDEN);
 
 			FunctionManager.registerFunction(EVENT_DROPBOX_OWN);
