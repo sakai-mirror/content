@@ -2246,6 +2246,7 @@ public class ResourcesAction
 
 		String collectionId = (String) current_stack_frame.get(STATE_STACK_EDIT_COLLECTION_ID);
 		context.put ("collectionId", collectionId);
+		
 		String id = (String) current_stack_frame.get(STATE_STACK_EDIT_ID);
 		if(id == null)
 		{
@@ -2610,6 +2611,15 @@ public class ResourcesAction
 			// TODO Auto-generated catch block
 			logger.warn("ResourcesAction.newEditItems() TypeException ", e);
 		}
+		
+		boolean isUserSite = false;
+		String refstr = collection.getReference();
+		Reference ref = EntityManager.newReference(refstr);
+		String contextId = ref.getContext();
+		if(contextId != null)
+		{
+			isUserSite = SiteService.isUserSite(contextId);
+		}
 
 		boolean pubviewset = ContentHostingService.isInheritingPubView(collectionId) || ContentHostingService.isPubView(collectionId);
 		
@@ -2688,6 +2698,7 @@ public class ResourcesAction
 			item.setReleaseDate(TimeService.newTime());
 			item.setUseRetractDate(false);
 			item.setRetractDate(defaultRetractDate);
+			item.setInWorkspace(isUserSite);
 
 			item.setCopyrightStatus(defaultCopyrightStatus);
 			new_items.add(item);
@@ -5986,12 +5997,21 @@ public class ResourcesAction
 				itemType = ((ContentResource) entity).getContentType();
 				content = ((ContentResource) entity).getContent();
 			}
-
+			
 			String itemName = properties.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 
 			item = new EditItem(id, itemName, itemType);
 			
 			item.setInDropbox(ContentHostingService.isInDropbox(id));
+			boolean isUserSite = false;
+			String refstr = entity.getReference();
+			Reference ref = EntityManager.newReference(refstr);
+			String contextId = ref.getContext();
+			if(contextId != null)
+			{
+				isUserSite = SiteService.isUserSite(contextId);
+			}
+			item.setInWorkspace(isUserSite);
 			
 			BasicRightsAssignment rightsObj = new BasicRightsAssignment(item.getItemNum(), properties);
 			item.setRights(rightsObj);
@@ -6009,7 +6029,6 @@ public class ResourcesAction
 				state.setAttribute(DEFAULT_COPYRIGHT, defaultCopyrightStatus);
 			}
 			item.setCopyrightStatus(defaultCopyrightStatus);
-
 
 			if(content != null)
 			{
@@ -6358,9 +6377,7 @@ public class ResourcesAction
 				// setup for quota - ADMIN only, site-root collection only
 				if (SecurityService.isSuperUser())
 				{
-					Reference ref = EntityManager.newReference(entity.getReference());
-					String context = ref.getContext();
-					String siteCollectionId = ContentHostingService.getSiteCollection(context);
+					String siteCollectionId = ContentHostingService.getSiteCollection(contextId);
 					if(siteCollectionId.equals(entity.getId()))
 					{
 						item.setCanSetQuota(true);
@@ -12537,6 +12554,7 @@ public class ResourcesAction
 		protected Time m_retractDate;
 		protected boolean m_useReleaseDate;
 		protected boolean m_useRetractDate;
+		private boolean m_isInUserSite;
 
 		/**
 		 * @param id
@@ -12579,6 +12597,16 @@ public class ResourcesAction
 		
 		}
 		
+		public void setInWorkspace(boolean isInUserSite) 
+		{
+			m_isInUserSite = isInUserSite;
+		}
+		
+		public boolean isInWorkspace()
+		{
+			return m_isInUserSite;
+		}
+
 		public void setHidden(boolean hidden) 
 		{
 			this.m_hidden = hidden;

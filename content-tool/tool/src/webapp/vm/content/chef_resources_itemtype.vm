@@ -1463,7 +1463,7 @@
 				
 			#end
 			######### begin availability section ##########
-			#if($availability_is_enabled)
+			#if($availability_is_enabled $item.&&  !$item.isInWorkspace())
 			<h4>$tlang.getString("avail.title")</h4>
 			<div  class="labelindnt">
 				<table>
