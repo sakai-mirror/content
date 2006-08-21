@@ -64,6 +64,7 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.GroupAwareEdit;
+import org.sakaiproject.content.api.GroupAwareEntity;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.cover.ContentTypeImageService;
 import org.sakaiproject.entity.api.ContextObserver;
@@ -420,6 +421,28 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		return m_allowGroupResources;
 	}
 	
+	/** flag indicating whether entities can be hidden (scheduled or otherwise) */
+	protected boolean m_availabilityChecksEnabled = false;
+	
+	/**
+	 * Configuration: set a flag indicating whether entities can be hidden (scheduled or otherwise)
+	 * 
+	 * @param value
+	 *        The value indicating whether entities can be hidden.
+	 */
+	public void setAvailabilityChecksEnabled(String value)
+	{
+		m_availabilityChecksEnabled = value != null && Boolean.TRUE.toString().equalsIgnoreCase(value);
+	}
+	
+	/**
+	 * Access flag indicating whether entities can be hidden (scheduled or otherwise).
+	 * @return true if the availability features are enabled, false otherwise.
+	 */
+	public boolean isAvailabilityEnabled()
+	{
+		return m_availabilityChecksEnabled;
+	}
 
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Init and Destroy
@@ -477,6 +500,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			FunctionManager.registerFunction(EVENT_RESOURCE_WRITE);
 			FunctionManager.registerFunction(EVENT_RESOURCE_REMOVE);
 			FunctionManager.registerFunction(EVENT_RESOURCE_ALL_GROUPS);
+			FunctionManager.registerFunction(EVENT_RESOURCE_HIDDEN);
 
 			FunctionManager.registerFunction(EVENT_DROPBOX_OWN);
 			FunctionManager.registerFunction(EVENT_DROPBOX_MAINTAIN);
@@ -834,6 +858,109 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		return entityId.startsWith("/group-user");
 	}
+	
+	/**
+	 * Check whether the resource is hidden.
+	 * @param id
+	 * @return
+	 * @throws IdUnusedException
+	 */
+	protected boolean availabilityCheck(String id) throws IdUnusedException
+	{
+		if(isAttachmentResource(id))
+		{
+			return true;
+		}
+		
+		// assume it's blocked
+		boolean available = false;
+		
+		
+		boolean first_try = true;
+		GroupAwareEntity entity = null;
+		boolean isCollection = id.endsWith(Entity.SEPARATOR);
+		while(entity == null)
+		{
+			try
+			{
+				if (isCollection)
+				{
+					entity = findCollection(id);
+				}
+				else
+				{
+					entity = findResource(id);
+				}
+			}
+			catch (TypeException ignore)
+			{
+			}
+			
+			if (entity == null)
+			{
+				// this deals with case where we're creating a new entity
+				if(first_try)
+				{
+					first_try = false;
+					id = isolateContainingId(id);
+					isCollection = true;
+				}
+				else
+				{
+					throw new IdUnusedException(id);
+				}
+			}
+		}
+		
+		String creator = entity.getProperties().getProperty(ResourceProperties.PROP_CREATOR);
+		String userId = SessionManager.getCurrentSessionUserId();
+		
+		// available if user is creator
+		available = creator != null && userId != null && creator.equals(userId);
+		
+		if(! available)
+		{
+			// available if user has permission to view hidden entities
+			String lock = EVENT_RESOURCE_HIDDEN;
+			lock = convertLockIfDropbox(lock, id);
+			available = SecurityService.unlock(lock, entity.getReference());
+		}
+
+		if(! available && m_availabilityChecksEnabled)
+		{
+			// available if not hidden or in a hidden collection
+			available = entity.isAvailable();
+			
+			// TODO: reevaluate 
+			// suppose user does not have adequate permission 
+			// higher in hierarchy where folder is hidden
+			// but does have it here???
+		}
+		
+		return available;
+		
+	}
+	
+	/**
+	 * Determine whether an entity is available to this user at this time, taking into account whether the item is hidden and the user's 
+	 * status with respect to viewing hidden entities in this context.
+	 * @param entityId
+	 * @return true if the item is not hidden or it's hidden but the user has permissions to view hidden items in this context (site? folder? group?), 
+	 * and false otherwise. 
+	 */
+	public boolean isAvailable(String entityId)
+	{
+		boolean available = true;
+		try
+		{
+			available = availabilityCheck(entityId);
+		}
+		catch(IdUnusedException e)
+		{
+			available = false;
+		}
+		return available;
+	}
 
 	/**
 	 * Check security permission.
@@ -859,6 +986,18 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			
 			isAllowed = ref != null && SecurityService.unlock(lock, ref);
+		}
+		
+		if(isAllowed && m_availabilityChecksEnabled)
+		{
+			try 
+			{
+				isAllowed = availabilityCheck(id);
+			} 
+			catch (IdUnusedException e) 
+			{
+				// ignore because we would have caught this earlier.
+			}
 		}
 		
 		return isAllowed;
@@ -909,6 +1048,19 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 
 		if (!SecurityService.unlock(lock, ref))
+		{
+			throw new PermissionException(SessionManager.getCurrentSessionUserId(), lock, ref);
+		}
+		boolean available = false;
+		try 
+		{
+			available = availabilityCheck(id);
+		} 
+		catch (IdUnusedException e) 
+		{
+			// ignore. this was checked earlier in the call
+		}
+		if(! available)
 		{
 			throw new PermissionException(SessionManager.getCurrentSessionUserId(), lock, ref);
 		}
@@ -1165,6 +1317,37 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		return edit;
 
+	}
+
+	public ContentCollection addCollection(String id, ResourceProperties properties, Collection groups, boolean hidden, Time releaseDate, Time retractDate) 
+			throws IdUsedException, IdInvalidException, PermissionException, InconsistentException 
+	{
+		ContentCollectionEdit edit = addCollection(id);
+	
+		// add the provided of properties
+		addProperties(edit.getPropertiesEdit(), properties);
+		try
+		{
+			if(groups == null || groups.isEmpty())
+			{
+				((BasicGroupAwareEdit) edit).clearGroupAccess();
+			}
+			else
+			{
+				((BasicGroupAwareEdit) edit).setGroupAccess(groups);
+			}
+		}
+		catch(InconsistentException e)
+		{
+			// ignore
+		}
+		edit.setAvailability(hidden, releaseDate, retractDate);
+		
+		// commit the change
+		commitCollection(edit);
+	
+		return edit;
+	
 	}
 
 	/**
@@ -2172,6 +2355,279 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 * @return a new ContentResource object.
 	 */
 	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content,
+			ResourceProperties properties, Collection groups, boolean hidden, Time releaseDate, Time retractDate, int priority) 
+		throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, 
+			InconsistentException, OverQuotaException, ServerOverloadException
+	{
+		try
+		{
+			collectionId = collectionId.trim();
+			name = Validator.escapeResourceName(name.trim());
+			checkCollection(collectionId);
+		}
+		catch (IdUnusedException e)
+		{
+			throw new InconsistentException(collectionId);
+		}
+		catch (TypeException e)
+		{
+			throw new InconsistentException(collectionId);
+		}
+
+		String id = collectionId + name;
+		id = (String) ((Hashtable) fixTypeAndId(id, type)).get("id");
+		if (id.length() > MAXIMUM_RESOURCE_ID_LENGTH)
+		{
+			throw new IdLengthException(id);
+		}
+
+		ContentResourceEdit edit = null;
+
+		try
+		{
+			edit = addResource(id);
+			edit.setContentType(type);
+			edit.setContent(content);
+			addProperties(edit.getPropertiesEdit(), properties);
+			if(groups == null || groups.isEmpty())
+			{
+				// access is inherited (the default)
+			}
+			else
+			{
+				edit.setGroupAccess(groups);
+				// TODO: Need to deal with failure here
+			}
+			edit.setAvailability(hidden, releaseDate, retractDate);
+			
+			// commit the change
+			commitResource(edit, priority);
+		}
+		catch (IdUsedException e)
+		{
+			try
+			{
+				checkResource(id);
+			}
+			catch (IdUnusedException inner_e)
+			{
+				// TODO: What does this condition actually represent? What exception should be thrown?
+				throw new IdUniquenessException(id);
+			}
+			catch (TypeException inner_e)
+			{
+				throw new InconsistentException(id);
+			}
+
+			SortedSet siblings = new TreeSet();
+			try
+			{
+				ContentCollection collection = findCollection(collectionId);
+				siblings.addAll(collection.getMembers());
+			}
+			catch (TypeException inner_e)
+			{
+				throw new InconsistentException(collectionId);
+			}
+
+			int index = name.lastIndexOf(".");
+			String base = name;
+			String ext = "";
+			if (index > 0 && !"Url".equalsIgnoreCase(type))
+			{
+				base = name.substring(0, index);
+				ext = name.substring(index);
+			}
+			boolean trying = true;
+			int attempts = 1;
+			while (trying) // see end of loop for condition that enforces attempts <= limit)
+			{
+				String new_id = collectionId + base + "-" + attempts + ext;
+				if (new_id.length() > MAXIMUM_RESOURCE_ID_LENGTH)
+				{
+					throw new IdLengthException(new_id);
+				}
+				if (!siblings.contains(new_id))
+				{
+					try
+					{
+						edit = addResource(new_id);
+						edit.setContentType(type);
+						edit.setContent(content);
+						if(groups == null || groups.isEmpty())
+						{
+							// access is inherited (the default)
+						}
+						else
+						{
+							edit.setGroupAccess(groups);
+							// TODO: Need to deal with failure here
+						}
+						
+						addProperties(edit.getPropertiesEdit(), properties);
+						// commit the change
+						commitResource(edit, priority);
+
+						trying = false;
+					}
+					catch (IdUsedException ignore)
+					{
+						// try again
+					}
+				}
+				attempts++;
+				if (attempts > limit)
+				{
+					throw new IdUniquenessException(new_id);
+				}
+			}
+		}
+		return edit;
+
+	}
+
+	/**
+	 * Create a new resource with the given resource name used as a resource id within the specified collection or (if that id is already in use) with a resource id based on a variation on the name to achieve a unique id, provided a unique id can be found
+	 * before a limit is reached on the number of attempts to achieve uniqueness. Used to create a resource that is not group aware.
+	 * 
+	 * @param name
+	 *        The name of the new resource (such as a filename).
+	 * @param collectionId
+	 *        The id of the collection to which the resource should be added.
+	 * @param limit
+	 *        The maximum number of attempts at finding a unique id based on the given name.
+	 * @param type
+	 *        The mime type string of the resource.
+	 * @param content
+	 *        An array containing the bytes of the resource's content.
+	 * @param properties
+	 *        A ResourceProperties object with the properties to add to the new resource.
+	 * @param priority
+	 *        The notification priority for this commit.
+	 * @exception PermissionException
+	 *            if the user does not have permission to add a resource to the containing collection.
+	 * @exception IdUniquenessException
+	 *            if a unique resource id cannot be found before the limit on the number of attempts is reached.
+	 * @exception IdLengthException
+	 *            if the resource id exceeds the maximum number of characters for a valid resource id.
+	 * @exception IdInvalidException
+	 *            if the resource id is invalid.
+	 * @exception InconsistentException
+	 *            if the containing collection does not exist.
+	 * @exception OverQuotaException
+	 *            if this would result in being over quota.
+	 * @exception ServerOverloadException
+	 *            if the server is configured to write the resource body to the filesystem and the save fails.
+	 * @return a new ContentResource object.
+	 */
+	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content,
+			ResourceProperties properties, int priority) 
+		throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, 
+			InconsistentException, OverQuotaException, ServerOverloadException
+	{
+		Collection no_groups = new Vector();
+		return addResource(name, collectionId, limit, type, content, properties, no_groups, false, null, null, priority);
+	}
+	/**
+	 * Create a new resource with the given resource id, locked for update. Must commitResource() to make official, or cancelResource() when done!
+	 * 
+	 * @param id
+	 *        The id of the new resource.
+	 * @exception PermissionException
+	 *            if the user does not have permission to add a resource to the containing collection.
+	 * @exception IdUsedException
+	 *            if the resource id is already in use.
+	 * @exception IdInvalidException
+	 *            if the resource id is invalid.
+	 * @exception InconsistentException
+	 *            if the containing collection does not exist.
+	 * @return a new ContentResource object.
+	 */
+	public ContentResourceEdit addResource(String id) throws PermissionException, IdUsedException, IdInvalidException,
+			InconsistentException
+	{
+		// check the id's validity (this may throw IdInvalidException)
+		// use only the "name" portion, separated at the end
+		String justName = isolateName(id);
+		Validator.checkResourceId(justName);
+		// resource must also NOT end with a separator characters (we fix it)
+		if (id.endsWith(Entity.SEPARATOR))
+		{
+			id = id.substring(0, id.length() - 1);
+		}
+
+		// check security
+		checkExplicitLock(id);
+		unlock(EVENT_RESOURCE_ADD, id);
+
+		// make sure the containing collection exists
+		String container = isolateContainingId(id);
+		ContentCollection containingCollection = m_storage.getCollection(container);
+		if (containingCollection == null)
+		{
+			// make any missing collections
+			generateCollections(container);
+
+			// try again
+			containingCollection = m_storage.getCollection(container);
+			if (containingCollection == null) throw new InconsistentException(id);
+		}
+
+		// reserve the resource in storage - it will fail if the id is in use
+		BaseResourceEdit edit = (BaseResourceEdit) m_storage.putResource(id);
+		if (edit == null)
+		{
+			throw new IdUsedException(id);
+		}
+
+		// add live properties
+		addLiveResourceProperties(edit);
+
+		// track event
+		edit.setEvent(EVENT_RESOURCE_ADD);
+
+		return edit;
+
+	} // addResource
+
+	/**
+	 * Create a new resource with the given resource name used as a resource id within the specified collection or (if that id is already in use) with a resource id based on a variation on the name to achieve a unique id, provided a unique id can be found
+	 * before a limit is reached on the number of attempts to achieve uniqueness.  Used to create a group-aware resource.
+	 * 
+	 * @param name
+	 *        The name of the new resource (such as a filename).
+	 * @param collectionId
+	 *        The id of the collection to which the resource should be added.
+	 * @param limit
+	 *        The maximum number of attempts at finding a unique id based on the given name.
+	 * @param type
+	 *        The mime type string of the resource.
+	 * @param content
+	 *        An array containing the bytes of the resource's content.
+	 * @param properties
+	 *        A ResourceProperties object with the properties to add to the new resource.
+	 * @param groups
+	 *        A collection (String) of references to Group objects representing the site subgroups that should have access to this entity.
+	 *        May be empty to indicate access is not limited to a group or groups.
+	 * @param priority
+	 *        The notification priority for this commit.
+	 * @exception PermissionException
+	 *            if the user does not have permission to add a resource to the containing collection.
+	 * @exception IdUniquenessException
+	 *            if a unique resource id cannot be found before the limit on the number of attempts is reached.
+	 * @exception IdLengthException
+	 *            if the resource id exceeds the maximum number of characters for a valid resource id.
+	 * @exception IdInvalidException
+	 *            if the resource id is invalid.
+	 * @exception InconsistentException
+	 *            if the containing collection does not exist.
+	 * @exception OverQuotaException
+	 *            if this would result in being over quota.
+	 * @exception ServerOverloadException
+	 *            if the server is configured to write the resource body to the filesystem and the save fails.
+	 * @return a new ContentResource object.
+	 */
+	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content,
 			ResourceProperties properties, Collection groups, int priority) 
 		throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, 
 			InconsistentException, OverQuotaException, ServerOverloadException
@@ -2301,110 +2757,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		return edit;
 
 	}
-
-	/**
-	 * Create a new resource with the given resource name used as a resource id within the specified collection or (if that id is already in use) with a resource id based on a variation on the name to achieve a unique id, provided a unique id can be found
-	 * before a limit is reached on the number of attempts to achieve uniqueness. Used to create a resource that is not group aware.
-	 * 
-	 * @param name
-	 *        The name of the new resource (such as a filename).
-	 * @param collectionId
-	 *        The id of the collection to which the resource should be added.
-	 * @param limit
-	 *        The maximum number of attempts at finding a unique id based on the given name.
-	 * @param type
-	 *        The mime type string of the resource.
-	 * @param content
-	 *        An array containing the bytes of the resource's content.
-	 * @param properties
-	 *        A ResourceProperties object with the properties to add to the new resource.
-	 * @param priority
-	 *        The notification priority for this commit.
-	 * @exception PermissionException
-	 *            if the user does not have permission to add a resource to the containing collection.
-	 * @exception IdUniquenessException
-	 *            if a unique resource id cannot be found before the limit on the number of attempts is reached.
-	 * @exception IdLengthException
-	 *            if the resource id exceeds the maximum number of characters for a valid resource id.
-	 * @exception IdInvalidException
-	 *            if the resource id is invalid.
-	 * @exception InconsistentException
-	 *            if the containing collection does not exist.
-	 * @exception OverQuotaException
-	 *            if this would result in being over quota.
-	 * @exception ServerOverloadException
-	 *            if the server is configured to write the resource body to the filesystem and the save fails.
-	 * @return a new ContentResource object.
-	 */
-	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content,
-			ResourceProperties properties, int priority) 
-		throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, 
-			InconsistentException, OverQuotaException, ServerOverloadException
-	{
-		Collection no_groups = new Vector();
-		return addResource(name, collectionId, limit, type, content, properties, no_groups, priority);
-	}
-	/**
-	 * Create a new resource with the given resource id, locked for update. Must commitResource() to make official, or cancelResource() when done!
-	 * 
-	 * @param id
-	 *        The id of the new resource.
-	 * @exception PermissionException
-	 *            if the user does not have permission to add a resource to the containing collection.
-	 * @exception IdUsedException
-	 *            if the resource id is already in use.
-	 * @exception IdInvalidException
-	 *            if the resource id is invalid.
-	 * @exception InconsistentException
-	 *            if the containing collection does not exist.
-	 * @return a new ContentResource object.
-	 */
-	public ContentResourceEdit addResource(String id) throws PermissionException, IdUsedException, IdInvalidException,
-			InconsistentException
-	{
-		// check the id's validity (this may throw IdInvalidException)
-		// use only the "name" portion, separated at the end
-		String justName = isolateName(id);
-		Validator.checkResourceId(justName);
-		// resource must also NOT end with a separator characters (we fix it)
-		if (id.endsWith(Entity.SEPARATOR))
-		{
-			id = id.substring(0, id.length() - 1);
-		}
-
-		// check security
-		checkExplicitLock(id);
-		unlock(EVENT_RESOURCE_ADD, id);
-
-		// make sure the containing collection exists
-		String container = isolateContainingId(id);
-		ContentCollection containingCollection = m_storage.getCollection(container);
-		if (containingCollection == null)
-		{
-			// make any missing collections
-			generateCollections(container);
-
-			// try again
-			containingCollection = m_storage.getCollection(container);
-			if (containingCollection == null) throw new InconsistentException(id);
-		}
-
-		// reserve the resource in storage - it will fail if the id is in use
-		BaseResourceEdit edit = (BaseResourceEdit) m_storage.putResource(id);
-		if (edit == null)
-		{
-			throw new IdUsedException(id);
-		}
-
-		// add live properties
-		addLiveResourceProperties(edit);
-
-		// track event
-		edit.setEvent(EVENT_RESOURCE_ADD);
-
-		return edit;
-
-	} // addResource
 
 	/**
 	 * check permissions for addAttachmentResource().
@@ -6894,6 +7246,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 	public static final String RETRACT_DATE = "sakai:retract_date";
 
+	public static final String HIDDEN = "sakai:hidden";
+
 	/**
 	 * @inheritDoc
 	 */
@@ -7405,10 +7759,13 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		protected AccessMode m_access = AccessMode.INHERITED;
 
 		/** The date/time after which the entity should no longer be generally available */
-		protected Time m_retractDate = TimeService.newTimeGmt(9999, 12, 31, 23, 59, 59, 999);
+		protected Time m_retractDate = null;
 
 		/** The date/time before which the entity should not be generally available */
-		protected Time m_releaseDate = TimeService.newTime(0);
+		protected Time m_releaseDate = null;
+
+		/** The availability of the item */
+		protected boolean m_hidden = false;
 
 		/** The Collection of group-ids for groups with access to this entity. */
 		protected Collection m_groups = new Vector();
@@ -7645,6 +8002,114 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			return unlockCheck(EVENT_RESOURCE_ADD, group.getReference()) || unlockCheck(EVENT_RESOURCE_ADD, collectionId);
 		}
 
+		public Time getReleaseDate()
+		{
+			return m_releaseDate;
+		}
+
+		public Time getRetractDate()
+		{
+			// TODO Auto-generated method stub
+			return m_retractDate;
+		}
+
+		public boolean isAvailable() 
+		{
+			boolean available = !m_hidden;
+			
+			if(available && (this.m_releaseDate != null || this.m_retractDate != null))
+			{
+				Time now = TimeService.newTime();
+				if(this.m_releaseDate != null)
+				{
+					available = this.m_releaseDate.before(now);
+				}
+				if(available && this.m_retractDate != null)
+				{
+					available = this.m_retractDate.after(now);
+				}
+			}
+			if(!available)
+			{
+				return available;
+			}
+			ContentCollection parent = ((ContentEntity) this).getContainingCollection();
+			if(parent == null)
+			{
+				return available;
+			}
+			return parent.isAvailable();
+		}
+
+		public boolean isHidden() 
+		{
+			return this.m_hidden;
+		}
+
+		public void setReleaseDate(Time time)
+		{
+			if(time == null)
+			{
+				m_releaseDate = null;
+			}
+			else
+			{
+				m_releaseDate = TimeService.newTime(time.getTime());
+			}
+			m_hidden = false;
+		}
+
+		public void setRetractDate(Time time)
+		{
+			if(time == null)
+			{
+				m_retractDate = null;
+			}
+			else
+			{
+				m_retractDate = TimeService.newTime(time.getTime());
+			}
+			m_hidden = false;
+		}
+
+		public void setAvailability(boolean hidden, Time releaseDate, Time retractDate) 
+		{
+			m_hidden = hidden;
+			if(hidden)
+			{
+				this.m_releaseDate = null;
+				this.m_retractDate = null;
+			}
+			else
+			{
+				if(releaseDate == null)
+				{
+					this.m_releaseDate = null;
+				}
+				else
+				{
+					this.m_releaseDate = TimeService.newTime(releaseDate.getTime());
+				}
+				if(retractDate == null)
+				{
+					this.m_retractDate = null;
+				}
+				else
+				{
+					this.m_retractDate = TimeService.newTime(retractDate.getTime());
+				}
+			}
+			
+		}
+
+		public void setHidden() 
+		{
+			m_hidden = true;
+			this.m_releaseDate = null;
+			this.m_retractDate = null;
+		}
+
+
 	}	// BasicGroupAwareEntity
 
 	/**********************************************************************************************************************************************************************************************************************************************************
@@ -7752,7 +8217,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			
 			// extract release date
-			m_releaseDate = TimeService.newTime(0);
+			// m_releaseDate = TimeService.newTime(0);
 			String date0 = el.getAttribute(RELEASE_DATE);
 			if(date0 != null && !date0.trim().equals(""))
 			{
@@ -7760,12 +8225,15 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			
 			// extract retract date
-			m_retractDate = TimeService.newTimeGmt(9999,12, 31, 23, 59, 59, 999);
+			// m_retractDate = TimeService.newTimeGmt(9999,12, 31, 23, 59, 59, 999);
 			String date1 = el.getAttribute(RETRACT_DATE);
 			if(date1 != null && !date1.trim().equals(""))
 			{
 				m_retractDate = TimeService.newTimeGmt(date1);
 			}
+			
+			String hidden = el.getAttribute(HIDDEN);
+			m_hidden = hidden != null && ! hidden.trim().equals("") && ! Boolean.FALSE.toString().equalsIgnoreCase(hidden);
 			
 		} // BaseCollectionEdit
 
@@ -7789,8 +8257,24 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 			m_properties.addAll(other.getProperties());
 			
-			m_releaseDate = TimeService.newTime(other.getReleaseDate().getTime());
-			m_retractDate = TimeService.newTime(other.getRetractDate().getTime());
+			m_hidden = other.isHidden();
+			
+			if(m_hidden || other.getReleaseDate() == null)
+			{
+				m_releaseDate = null;
+			}
+			else
+			{
+				m_releaseDate = TimeService.newTime(other.getReleaseDate().getTime());
+			}
+			if(m_hidden || other.getRetractDate() == null)
+			{
+				m_retractDate = null;
+			}
+			else
+			{
+				m_retractDate = TimeService.newTime(other.getRetractDate().getTime());
+			}
 
 		} // set
 
@@ -8082,9 +8566,18 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				m_access = AccessMode.INHERITED;
 			}
-			collection.setAttribute(ACCESS_MODE, m_access.toString());
-			collection.setAttribute(RELEASE_DATE, m_releaseDate.toString());
-			collection.setAttribute(RETRACT_DATE, m_retractDate.toString());
+			collection.setAttribute(HIDDEN, Boolean.toString(m_hidden));
+			if(!m_hidden && m_releaseDate != null)
+			{
+				// add release-date 
+				collection.setAttribute(RELEASE_DATE, m_releaseDate.toString());
+			}
+			if(!m_hidden && m_retractDate != null)
+			{
+				// add retract-date
+				collection.setAttribute(RETRACT_DATE, m_retractDate.toString());
+			}
+
 
 			// properties
 			m_properties.toXml(doc, stack);
@@ -8189,29 +8682,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 
 		} // valueUnbound
-
-		public void setReleaseDate(Time time)
-		{
-			m_releaseDate = TimeService.newTime(time.getTime());
-			
-		}
-
-		public void getRetractDate(Time time)
-		{
-			m_retractDate = TimeService.newTime(time.getTime());
-			
-		}
-
-		public Time getReleaseDate()
-		{
-			return m_releaseDate;
-		}
-
-		public Time getRetractDate()
-		{
-			// TODO Auto-generated method stub
-			return m_retractDate;
-		}
 
 		/**
 		 * @inheritDoc
@@ -8361,8 +8831,24 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 			m_properties.addAll(other.getProperties());
 
-			m_releaseDate = TimeService.newTime(other.getReleaseDate().getTime());
-			m_retractDate = TimeService.newTime(other.getRetractDate().getTime());
+			m_hidden = other.isHidden();
+			
+			if(m_hidden || other.getReleaseDate() == null)
+			{
+				m_releaseDate = null;
+			}
+			else
+			{
+				m_releaseDate = TimeService.newTime(other.getReleaseDate().getTime());
+			}
+			if(m_hidden || other.getRetractDate() == null)
+			{
+				m_retractDate = null;
+			}
+			else
+			{
+				m_retractDate = TimeService.newTime(other.getRetractDate().getTime());
+			}
 
 		} // set
 
@@ -8431,20 +8917,29 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					m_access = AccessMode.INHERITED;
 				}
 				
-				// extract release date
-				m_releaseDate = TimeService.newTime(0);
-				String date0 = el.getAttribute(RELEASE_DATE);
-				if(date0 != null && !date0.trim().equals(""))
-				{
-					m_releaseDate = TimeService.newTimeGmt(date0);
-				}
+				String hidden = el.getAttribute(HIDDEN);
+				m_hidden = hidden != null && ! hidden.trim().equals("") && ! Boolean.FALSE.toString().equalsIgnoreCase(hidden);
 				
-				// extract retract date
-				m_retractDate = TimeService.newTimeGmt(9999, 12, 31, 23, 59, 59, 999);
-				String date1 = el.getAttribute(RETRACT_DATE);
-				if(date1 != null && !date1.trim().equals(""))
+				if(m_hidden)
 				{
-					m_retractDate = TimeService.newTimeGmt(date1);
+					m_releaseDate = null;
+					m_retractDate = null;
+				}
+				else
+				{
+					// extract release date
+					String date0 = el.getAttribute(RELEASE_DATE);
+					if(date0 != null && !date0.trim().equals(""))
+					{
+						m_releaseDate = TimeService.newTimeGmt(date0);
+					}
+					
+					// extract retract date
+					String date1 = el.getAttribute(RETRACT_DATE);
+					if(date1 != null && !date1.trim().equals(""))
+					{
+						m_retractDate = TimeService.newTimeGmt(date1);
+					}
 				}
 				
 			}
@@ -8738,9 +9233,17 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			resource.setAttribute(ACCESS_MODE, m_access.toString());
 			
-			// add release-date and retract-date
-			resource.setAttribute(RELEASE_DATE, m_releaseDate.toString());
-			resource.setAttribute(RETRACT_DATE, m_retractDate.toString());
+			resource.setAttribute(HIDDEN, Boolean.toString(m_hidden));
+			if(!m_hidden && m_releaseDate != null)
+			{
+				// add release-date 
+				resource.setAttribute(RELEASE_DATE, m_releaseDate.toString());
+			}
+			if(!m_hidden && m_retractDate != null)
+			{
+				// add retract-date
+				resource.setAttribute(RETRACT_DATE, m_retractDate.toString());
+			}
 
 			// properties
 			m_properties.toXml(doc, stack);
@@ -8844,28 +9347,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 
 		} // valueUnbound
-
-		public void setReleaseDate(Time time)
-		{
-			m_releaseDate = TimeService.newTime(time.getTime());
-			
-		}
-
-		public void getRetractDate(Time time)
-		{
-			m_retractDate = TimeService.newTime(time.getTime());
-			
-		}
-
-		public Time getReleaseDate()
-		{
-			return m_releaseDate;
-		}
-
-		public Time getRetractDate()
-		{
-			return m_retractDate;
-		}
 
 		public boolean isResource()
 		{

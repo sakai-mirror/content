@@ -42,6 +42,7 @@ import org.sakaiproject.exception.OverQuotaException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
+import org.sakaiproject.time.api.Time;
 import org.w3c.dom.Document;
 
 /**
@@ -108,6 +109,9 @@ public interface ContentHostingService extends EntityProducer
 
 	/** Name of the event when removing a resource. */
 	public static final String EVENT_RESOURCE_REMOVE = "content.delete";
+	
+	/** name of event when accessing hidden entities */
+	public static final String EVENT_RESOURCE_HIDDEN = "content.hidden";
 	
 	/** Security function granted to users who will then have membership in all site groups based on their site membership. */
 	public static final String EVENT_RESOURCE_ALL_GROUPS = "content.all.groups";
@@ -202,6 +206,37 @@ public interface ContentHostingService extends EntityProducer
 	 */
 	public ContentCollection addCollection(String id, ResourceProperties properties, Collection groups) throws IdUsedException, IdInvalidException, PermissionException, InconsistentException;
 
+	/**
+	 * Create a new collection with the given resource id.
+	 * 
+	 * @param id
+	 *        The id of the collection.
+	 * @param properties
+	 *        A ResourceProperties object with the properties to add to the new collection.
+	 * @param groups
+	 *        The (possibly empty) collection (String) of reference-strings for groups to be associated with this entity.
+	 * @param hidden
+	 *        A flag indicating that the entity should be hidden from users unless they created the entity or have permission to modify it.
+	 * @param releaseDate
+	 *        The time at which the entity becomes available to most users. The entity should be available immediately if this value is null.
+	 * @param retractDate
+	 *        The date after which the entity is no longer available to most users. The entity should be available indefinitely if this value is null.
+	 * 
+	 * @exception IdUsedException
+	 *            if the id is already in use.
+	 * @exception IdInvalidException
+	 *            if the id is invalid.
+	 * @exception PermissionException
+	 *            if the user does not have permission to add a collection, or add a member to a collection.
+	 * @exception InconsistentException
+	 *            if the containing collection does not exist.
+	 * @return a new ContentCollection object.
+	 * @throws InconsistentException 
+	 * @throws PermissionException 
+	 * @throws IdInvalidException 
+	 * @throws IdUsedException 
+	 */
+	public ContentCollection addCollection(String id, ResourceProperties properties, Collection groups, boolean hidden, Time releaseDate, Time retractDate) throws IdUsedException, IdInvalidException, PermissionException, InconsistentException;
 
 	/**
 	 * Create a new collection with the given resource id, locked for update. Must commitCollection() to make official, or cancelCollection() when done!
@@ -538,6 +573,55 @@ public interface ContentHostingService extends EntityProducer
 	 * @return a new ContentResource object.
 	 */
 	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content, ResourceProperties properties, Collection groups, int priority)
+			throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, InconsistentException, IdLengthException, OverQuotaException,
+			ServerOverloadException;
+
+	/**
+	 * Create a new resource with the given resource name used as a resource id within the
+	 * specified collection or (if that id is already in use) with a resource id based on
+	 * a variation on the name to achieve a unique id, provided a unique id can be found 
+	 * before a limit is reached on the number of attempts to achieve uniqueness.
+	 * 
+	 * @param name
+	 *        The name of the new resource (such as a filename).
+	 * @param collectionId
+	 *        The id of the collection to which the resource should be added.
+	 * @param limit
+	 *        The maximum number of attempts at finding a unique id based on the given id.
+	 * @param type
+	 *        The mime type string of the resource.
+	 * @param content
+	 *        An array containing the bytes of the resource's content.
+	 * @param properties
+	 *        A ResourceProperties object with the properties to add to the new resource.
+	 * @param groups
+	 *        A collection (String) of references to Group objects representing the site subgroups that should have access to this entity.
+	 *        May be empty to indicate access is not limited to a group or groups.
+	 * @param hidden
+	 *        A flag indicating that the entity should be hidden from users unless they created the entity or have permission to modify it.
+	 * @param releaseDate
+	 *        The time at which the entity becomes available to most users. The entity should be available immediately if this value is null.
+	 * @param retractDate
+	 *        The date after which the entity is no longer available to most users. The entity should be available indefinitely if this value is null.
+	 * @param priority
+	 *        The notification priority for this commit.
+	 * @exception PermissionException
+	 *            if the user does not have permission to add a resource to the containing collection.
+	 * @exception IdUniquenessException
+	 *            if a unique resource id cannot be found before the limit on the number of attempts is reached.
+	 * @exception IdLengthException
+	 *            if the resource id exceeds the maximum number of characters for a valid resource id.
+	 * @exception IdInvalidException
+	 *            if the resource id is invalid.
+	 * @exception InconsistentException
+	 *            if the containing collection does not exist.
+	 * @exception OverQuotaException
+	 *            if this would result in being over quota.
+	 * @exception ServerOverloadException
+	 *            if the server is configured to write the resource body to the filesystem and the save fails.
+	 * @return a new ContentResource object.
+	 */
+	public ContentResource addResource(String name, String collectionId, int limit, String type, byte[] content, ResourceProperties properties, Collection groups, boolean hidden, Time releaseDate, Time retractDate, int priority)
 			throws PermissionException, IdUniquenessException, IdLengthException, IdInvalidException, InconsistentException, IdLengthException, OverQuotaException,
 			ServerOverloadException;
 
@@ -1378,4 +1462,19 @@ public interface ContentHostingService extends EntityProducer
 	 * @return true if shortRefs is enabled, false if not.
 	 */
 	public boolean isShortRefs();
+	
+	/**
+	 * Access flag indicating whether entities can be hidden (scheduled or otherwise).
+	 * @return true if the availability features are enabled, false otherwise.
+	 */
+	public boolean isAvailabilityEnabled();
+	
+	/**
+	 * Determine whether an entity is available to this user at this time, taking into account whether the item is hidden and the user's 
+	 * status with respect to viewing hidden entities in this context.
+	 * @param entityId
+	 * @return true if the item is not hidden or it's hidden but the user has permissions to view hidden items in this context (site? folder? group?), 
+	 * and false otherwise. 
+	 */
+	public boolean isAvailable(String entityId);
 }

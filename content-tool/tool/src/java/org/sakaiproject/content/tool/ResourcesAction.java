@@ -107,6 +107,8 @@ import org.sakaiproject.metaobj.shared.model.ValidationError;
 import org.sakaiproject.metaobj.utils.xml.SchemaNode;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.Term;
+import org.sakaiproject.site.cover.CourseManagementService;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
@@ -186,9 +188,9 @@ public class ResourcesAction
 
 	/** The display name of the "home" collection (can't go up from here.) */
 	private static final String STATE_HOME_COLLECTION_DISPLAY_NAME = "resources.collection_home_display_name";
-
-	/** The inqualified input field */
-	private static final String STATE_UNQUALIFIED_INPUT_FIELD = "resources.unqualified_input_field";
+	
+	/** name of state attribute for the default retract time */
+	protected static final String STATE_DEFAULT_RETRACT_TIME = "resources.default_retract_time";
 
 	/** The collection id path */
 	private static final String STATE_COLLECTION_PATH = "resources.collection_path";
@@ -570,6 +572,10 @@ public class ResourcesAction
 
 	/** string used to represent "public" access mode in UI elements */
 	protected static final String PUBLIC_ACCESS = "public";
+
+	/** A long representing the number of milliseconds in one week.  Used for date calculations */
+	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
+
 	/**
 	* Build the context for normal display
 	*/
@@ -736,6 +742,11 @@ public class ResourcesAction
 
 		context.put("atHome", Boolean.toString(atHome));
 
+		if(ContentHostingService.isAvailabilityEnabled())
+		{
+			context.put("availability_is_enabled", Boolean.TRUE);
+		}
+		
 		List cPath = getCollectionPath(state);
 		context.put ("collectionPath", cPath);
 
@@ -1163,17 +1174,14 @@ public class ResourcesAction
 		}
 		else if(MODE_ATTACHMENT_CREATE_INIT.equals(helper_mode))
 		{
-			// setupStructuredObjects(state);
 			template = buildCreateContext(portlet, context, data, state);
 		}
 		else if(MODE_ATTACHMENT_NEW_ITEM_INIT.equals(helper_mode))
 		{
-			// setupStructuredObjects(state);
 			template = buildItemTypeContext(portlet, context, data, state);
 		}
 		else if(MODE_ATTACHMENT_EDIT_ITEM_INIT.equals(helper_mode))
 		{
-			// setupStructuredObjects(state);
 			template = buildEditContext(portlet, context, data, state);
 		}
 		return template;
@@ -1313,7 +1321,14 @@ public class ResourcesAction
 				state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, preventPublicDisplay);
 			}
 
-			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
+
+			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 		}
 		context.put("new_items", new_items);
@@ -1346,6 +1361,11 @@ public class ResourcesAction
 		// put schema for metadata into context
 		metadataGroupsIntoContext(state, context);
 
+		if(ContentHostingService.isAvailabilityEnabled())
+		{
+			context.put("availability_is_enabled", Boolean.TRUE);
+		}
+		
 		if(TYPE_FORM.equals(itemType))
 		{
 			setupStructuredObjects(state);
@@ -2354,6 +2374,11 @@ public class ResourcesAction
 
 			context.put("TRUE", Boolean.TRUE.toString());
 		}
+		
+		if(ContentHostingService.isAvailabilityEnabled())
+		{
+			context.put("availability_is_enabled", Boolean.TRUE);
+		}
 
 		// copyright
 		copyrightChoicesIntoContext(state, context);
@@ -2513,7 +2538,6 @@ public class ResourcesAction
 		{
 			current_stack_frame = pushOnStack(state);
 		}
-		//setupStructuredObjects(state);
 
 		String encoding = data.getRequest().getCharacterEncoding();
 
@@ -2529,7 +2553,14 @@ public class ResourcesAction
 		String collectionId = params.getString ("collectionId");
 		current_stack_frame.put(STATE_STACK_CREATE_COLLECTION_ID, collectionId);
 
-		List new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+		Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+		if(defaultRetractDate == null)
+		{
+			defaultRetractDate = TimeService.newTime();
+			state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+		}
+
+		List new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 		current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 		current_stack_frame.put(STATE_STACK_CREATE_TYPE, itemType);
@@ -2545,7 +2576,7 @@ public class ResourcesAction
 
 	}	// doCreate
 	
-	protected static List newEditItems(String collectionId, String itemtype, String encoding, String defaultCopyrightStatus, boolean preventPublicDisplay, int number)
+	protected static List newEditItems(String collectionId, String itemtype, String encoding, String defaultCopyrightStatus, boolean preventPublicDisplay, Time defaultRetractDate, int number)
 	{
 		List new_items = new Vector();
 		
@@ -2652,6 +2683,11 @@ public class ResourcesAction
 			item.setInheritedGroupRefs(inherited_access_groups);
 			item.setAllowedAddGroupRefs(allowedAddGroups);
 			
+			item.setHidden(false);
+			item.setUseReleaseDate(false);
+			item.setReleaseDate(TimeService.newTime());
+			item.setUseRetractDate(false);
+			item.setRetractDate(defaultRetractDate);
 
 			item.setCopyrightStatus(defaultCopyrightStatus);
 			new_items.add(item);
@@ -2751,7 +2787,14 @@ public class ResourcesAction
 
 				String encoding = data.getRequest().getCharacterEncoding();
 
-				items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+				Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+				if(defaultRetractDate == null)
+				{
+					defaultRetractDate = TimeService.newTime();
+					state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+				}
+
+				items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 			}
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, items);
@@ -2895,7 +2938,14 @@ public class ResourcesAction
 
 				String encoding = data.getRequest().getCharacterEncoding();
 				
-				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+				Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+				if(defaultRetractDate == null)
+				{
+					defaultRetractDate = TimeService.newTime();
+					state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+				}
+
+				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 				current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 
@@ -2929,7 +2979,14 @@ public class ResourcesAction
 
 				String encoding = data.getRequest().getCharacterEncoding();
 
-				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+				Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+				if(defaultRetractDate == null)
+				{
+					defaultRetractDate = TimeService.newTime();
+					state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+				}
+
+				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 				current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 
 			}
@@ -2968,7 +3025,14 @@ public class ResourcesAction
 
 				String encoding = data.getRequest().getCharacterEncoding();
 
-				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+				Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+				if(defaultRetractDate == null)
+				{
+					defaultRetractDate = TimeService.newTime();
+					state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+				}
+
+				new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 				current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 			}
 			if(new_items != null && new_items.size() > twiggleNumber)
@@ -3165,7 +3229,15 @@ public class ResourcesAction
 				current_stack_frame.put(STATE_STACK_CREATE_TYPE, itemType);
 			}
 			String encoding = (String) state.getAttribute(STATE_ENCODING);
-			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, true, CREATE_MAX_ITEMS);
+			
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
+
+			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, true, defaultRetractDate, CREATE_MAX_ITEMS);
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 		}
 
@@ -3229,6 +3301,26 @@ public class ResourcesAction
 					SortedSet groups = new TreeSet(item.getEntityGroupRefs());
 					groups.retainAll(item.getAllowedAddGroupRefs());
 
+					boolean hidden = false;
+
+					Time releaseDate = null;
+					Time retractDate = null;
+					
+					if(ContentHostingService.isAvailabilityEnabled())
+					{
+						hidden = item.isHidden();
+						
+						if(item.useReleaseDate())
+						{
+							releaseDate = item.getReleaseDate();
+						}
+						
+						if(item.useRetractDate())
+						{
+							retractDate = item.getRetractDate();
+						}
+					}
+					
 					try
 					{
 						ContentResource resource = ContentHostingService.addResource (filename + extension,
@@ -3238,6 +3330,9 @@ public class ResourcesAction
 																					item.getContent(),
 																					resourceProperties,
 																					groups,
+																					hidden,
+																					releaseDate,
+																					retractDate,
 																					item.getNotification());
 
 
@@ -3464,7 +3559,6 @@ public class ResourcesAction
 							parent.appendChild(node);
 						}
 					}
-
 				}
 			}
 			else if(object instanceof ElementCarrier)
@@ -3567,7 +3661,14 @@ public class ResourcesAction
 			String encoding = (String) state.getAttribute(STATE_ENCODING);
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			
-			new_items = newEditItems(collectionId, TYPE_FOLDER, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
+
+			new_items = newEditItems(collectionId, TYPE_FOLDER, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 
@@ -3614,7 +3715,26 @@ public class ResourcesAction
 				SortedSet groups = new TreeSet(item.getEntityGroupRefs());
 				groups.retainAll(item.getAllowedAddGroupRefs());
 
-				ContentCollection collection = ContentHostingService.addCollection (newCollectionId, resourceProperties, groups);
+				boolean hidden = false;
+
+				Time releaseDate = null;
+				Time retractDate = null;
+				
+				if(ContentHostingService.isAvailabilityEnabled())
+				{
+					hidden = item.isHidden();
+					
+					if(item.useReleaseDate())
+					{
+						releaseDate = item.getReleaseDate();
+					}
+					if(item.useRetractDate())
+					{
+						retractDate = item.getRetractDate();
+					}
+				}
+				
+				ContentCollection collection = ContentHostingService.addCollection (newCollectionId, resourceProperties, groups, hidden, releaseDate, retractDate);
 				
 				Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 				if(preventPublicDisplay == null)
@@ -3702,7 +3822,14 @@ public class ResourcesAction
 			String encoding = (String) state.getAttribute(STATE_ENCODING);
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			
-			new_items = newEditItems(collectionId, TYPE_FOLDER, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
+
+			new_items = newEditItems(collectionId, TYPE_FOLDER, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 
@@ -3766,7 +3893,26 @@ public class ResourcesAction
 			
 			SortedSet groups = new TreeSet(item.getEntityGroupRefs());
 			groups.retainAll(item.getAllowedAddGroupRefs());
+			
+			boolean hidden = false;
 
+			Time releaseDate = null;
+			Time retractDate = null;
+			
+			if(ContentHostingService.isAvailabilityEnabled())
+			{
+				hidden = item.isHidden();
+				
+				if(item.useReleaseDate())
+				{
+					releaseDate = item.getReleaseDate();
+				}
+				if(item.useRetractDate())
+				{
+					retractDate = item.getRetractDate();
+				}
+			}
+			
 			try
 			{
 				ContentResource resource = ContentHostingService.addResource (filename,
@@ -3776,6 +3922,9 @@ public class ResourcesAction
 																			item.getContent(),
 																			resourceProperties,
 																			groups,
+																			hidden,
+																			releaseDate,
+																			retractDate,
 																			item.getNotification());
 
 				item.setAdded(true);
@@ -4679,7 +4828,26 @@ public class ResourcesAction
 
 			SortedSet groups = new TreeSet(item.getEntityGroupRefs());
 			groups.retainAll(item.getAllowedAddGroupRefs());
+			
+			boolean hidden = false;
 
+			Time releaseDate = null;
+			Time retractDate = null;
+			
+			if(ContentHostingService.isAvailabilityEnabled())
+			{
+				hidden = item.isHidden();
+				
+				if(item.useReleaseDate())
+				{
+					releaseDate = item.getReleaseDate();
+				}
+				if(item.useRetractDate())
+				{
+					retractDate = item.getRetractDate();
+				}
+			}
+			
 			try
 			{
 				ContentResource resource = ContentHostingService.addResource (name,
@@ -4689,6 +4857,9 @@ public class ResourcesAction
 																			newUrl,
 																			resourceProperties, 
 																			groups,
+																			hidden,
+																			releaseDate,
+																			retractDate,
 																			item.getNotification());
 
 				item.setAdded(true);
@@ -4827,6 +4998,11 @@ public class ResourcesAction
 
 		Map current_stack_frame = peekAtStack(state);
 
+		if(ContentHostingService.isAvailabilityEnabled())
+		{
+			context.put("availability_is_enabled", Boolean.TRUE);
+		}
+		
 		String itemType = (String) current_stack_frame.get(STATE_STACK_CREATE_TYPE);
 		if(itemType == null || itemType.trim().equals(""))
 		{
@@ -4887,8 +5063,15 @@ public class ResourcesAction
 			}
 
 			String encoding = data.getRequest().getCharacterEncoding();
+			
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
 
-			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 		}
 		context.put("new_items", new_items);
@@ -5975,7 +6158,44 @@ public class ResourcesAction
 				}
 			}
 
-
+			if(entity.isHidden())
+			{
+				item.setHidden(true);
+				//item.setReleaseDate(null);
+				//item.setRetractDate(null);
+			}
+			else
+			{
+				item.setHidden(false);
+				Time releaseDate = entity.getReleaseDate();
+				if(releaseDate == null)
+				{
+					item.setUseReleaseDate(false);
+					item.setReleaseDate(TimeService.newTime());
+				}
+				else
+				{
+					item.setUseReleaseDate(true);
+					item.setReleaseDate(releaseDate);
+				}
+				Time retractDate = entity.getRetractDate();
+				if(retractDate == null)
+				{
+					item.setUseRetractDate(false);
+					Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+					if(defaultRetractDate == null)
+					{
+						defaultRetractDate = TimeService.newTime();
+						state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+					}
+					item.setRetractDate(defaultRetractDate);
+				}
+				else
+				{
+					item.setUseRetractDate(true);
+					item.setRetractDate(retractDate);
+				}
+			}
 
 			if(item.isUrl())
 			{
@@ -6915,6 +7135,61 @@ public class ResourcesAction
 		}
 		if(!  RESOURCES_MODE_DROPBOX.equalsIgnoreCase((String) state.getAttribute(STATE_MODE_RESOURCES)))
 		{
+			String hidden = params.getString("hidden");
+			String use_start_date = params.getString("use_start_date");
+			String use_end_date = params.getString("use_end_date");
+			String release_month = params.getString("release_month");
+			String release_day = params.getString("release_day");
+			String release_year = params.getString("release_year");
+			String release_hour = params.getString("release_hour");
+			String release_min = params.getString("release_minute");
+			String release_ampm = params.getString("release_ampm");
+			
+			String release_time = params.getString("release_time");
+			String retract_month = params.getString("retract_month");
+			String retract_day = params.getString("retract_day");
+			String retract_year = params.getString("retract_year");
+			String retract_time = params.getString("retract_time");
+			String retract_hour = params.getString("retract_hour");
+			String retract_min = params.getString("retract_minute");
+			String retract_ampm = params.getString("retract_ampm");
+			
+			item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
+			item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
+			item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
+			
+			int begin_year = Integer.parseInt(release_year);
+			int begin_month = Integer.parseInt(release_month);
+			int begin_day = Integer.parseInt(release_day);
+			int begin_hour = Integer.parseInt(release_hour);
+			int begin_min = Integer.parseInt(release_min);
+			if("pm".equals(release_ampm))
+			{
+				begin_hour += 12;
+			}
+			else if(begin_hour == 12)
+			{
+				begin_hour = 0;
+			}
+			Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
+			item.setReleaseDate(releaseDate);
+			
+			int end_year = Integer.parseInt(retract_year);
+			int end_month = Integer.parseInt(retract_month);
+			int end_day = Integer.parseInt(retract_day);
+			int end_hour = Integer.parseInt(retract_hour);
+			int end_min = Integer.parseInt(retract_min);
+			if("pm".equals(retract_ampm))
+			{
+				end_hour += 12;
+			}
+			else if(begin_hour == 12)
+			{
+				end_hour = 0;
+			}
+			Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
+			item.setRetractDate(retractDate);
+			
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			if(preventPublicDisplay == null)
 			{
@@ -7124,17 +7399,17 @@ public class ResourcesAction
 		if(item.isFileUpload())
 		{
 			String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
-			int max_bytes = 1096 * 1096;
+			int max_bytes = 1024 * 1024;
 			try
 			{
-				max_bytes = Integer.parseInt(max_file_size_mb) * 1096 * 1096;
+				max_bytes = Integer.parseInt(max_file_size_mb) * 1024 * 1024;
 			}
 			catch(Exception e)
 			{
 				// if unable to parse an integer from the value
 				// in the properties file, use 1 MB as a default
 				max_file_size_mb = "1";
-				max_bytes = 1096 * 1096;
+				max_bytes = 1024 * 1024;
 			}
 			/*
 			 // params.getContentLength() returns m_req.getContentLength()
@@ -7400,6 +7675,59 @@ public class ResourcesAction
 
 		if(!  RESOURCES_MODE_DROPBOX.equalsIgnoreCase((String) state.getAttribute(STATE_MODE_RESOURCES)))
 		{
+			String hidden = params.getString("hidden" + index);
+			String use_start_date = params.getString("use_start_date" + index);
+			String use_end_date = params.getString("use_end_date" + index);
+			String release_month = params.getString("release_month" + index);
+			String release_day = params.getString("release_day" + index);
+			String release_year = params.getString("release_year" + index);
+			String release_hour = params.getString("release" + index + "_hour");
+			String release_min = params.getString("release" + index + "_minute");
+			String release_ampm = params.getString("release" + index + "_ampm");
+			
+			String retract_month = params.getString("retract_month" + index);
+			String retract_day = params.getString("retract_day" + index);
+			String retract_year = params.getString("retract_year" + index);
+			String retract_hour = params.getString("retract" + index + "_hour");
+			String retract_min = params.getString("retract" + index + "_minute");
+			String retract_ampm = params.getString("retract" + index + "_ampm");
+			
+			item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
+			item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
+			item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
+			
+			int begin_year = Integer.parseInt(release_year);
+			int begin_month = Integer.parseInt(release_month);
+			int begin_day = Integer.parseInt(release_day);
+			int begin_hour = Integer.parseInt(release_hour);
+			int begin_min = Integer.parseInt(release_min);
+			if("pm".equals(release_ampm))
+			{
+				begin_hour += 12;
+			}
+			else if(begin_hour == 12)
+			{
+				begin_hour = 0;
+			}
+			Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
+			item.setReleaseDate(releaseDate);
+			
+			int end_year = Integer.parseInt(retract_year);
+			int end_month = Integer.parseInt(retract_month);
+			int end_day = Integer.parseInt(retract_day);
+			int end_hour = Integer.parseInt(retract_hour);
+			int end_min = Integer.parseInt(retract_min);
+			if("pm".equals(retract_ampm))
+			{
+				end_hour += 12;
+			}
+			else if(begin_hour == 12)
+			{
+				end_hour = 0;
+			}
+			Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
+			item.setRetractDate(retractDate);
+			
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			if(preventPublicDisplay == null)
 			{
@@ -7609,7 +7937,14 @@ public class ResourcesAction
 
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 
-			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+			Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+			if(defaultRetractDate == null)
+			{
+				defaultRetractDate = TimeService.newTime();
+				state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+			}
+
+			new_items = newEditItems(collectionId, itemType, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), defaultRetractDate, CREATE_MAX_ITEMS);
 			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
 		}
 
@@ -7623,17 +7958,17 @@ public class ResourcesAction
 		Set first_item_alerts = null;
 
 		String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
-		int max_bytes = 1096 * 1096;
+		int max_bytes = 1024 * 1024;
 		try
 		{
-			max_bytes = Integer.parseInt(max_file_size_mb) * 1096 * 1096;
+			max_bytes = Integer.parseInt(max_file_size_mb) * 1024 * 1024;
 		}
 		catch(Exception e)
 		{
 			// if unable to parse an integer from the value
 			// in the properties file, use 1 MB as a default
 			max_file_size_mb = "1";
-			max_bytes = 1096 * 1096;
+			max_bytes = 1024 * 1024;
 		}
 
 		/*
@@ -7916,8 +8251,25 @@ public class ResourcesAction
 					// TODO: Should this be reported to user??
 					logger.warn("ResourcesAction.doSavechanges ***** InconsistentException changing groups ***** " + e.getMessage());
 				}
-				
-				
+								
+				if(ContentHostingService.isAvailabilityEnabled())
+				{
+					Time releaseDate = null;
+					Time retractDate = null;
+					
+					boolean hidden = item.isHidden();
+					
+					if(item.useReleaseDate())
+					{
+						releaseDate = item.getReleaseDate();
+					}
+					if(item.useRetractDate())
+					{
+						retractDate = item.getRetractDate();
+					}
+					gedit.setAvailability(hidden, releaseDate, retractDate);
+				}
+						
 				if(item.isFolder())
 				{
 				}
@@ -8965,15 +9317,15 @@ public class ResourcesAction
 		state.setAttribute (STATE_COLLECTION_ID, home);
 		state.setAttribute (STATE_NAVIGATION_ROOT, home);
 
-//		HomeFactory factory = (HomeFactory) ComponentManager.get("homeFactory");
-//		if(factory != null)
-//		{
-//			Map homes = factory.getHomes(StructuredArtifactHomeInterface.class);
-//			if(! homes.isEmpty())
-//			{
-//				state.setAttribute(STATE_SHOW_FORM_ITEMS, Boolean.TRUE.toString());
-//			}
-//		}
+		HomeFactory factory = (HomeFactory) ComponentManager.get("homeFactory");
+		if(factory != null)
+		{
+			Map homes = factory.getHomes(StructuredArtifactHomeInterface.class);
+			if(! homes.isEmpty())
+			{
+				state.setAttribute(STATE_SHOW_FORM_ITEMS, Boolean.TRUE.toString());
+			}
+		}
 
 		// state.setAttribute (STATE_COLLECTION_ID, state.getAttribute (STATE_HOME_COLLECTION_ID));
 
@@ -9072,30 +9424,59 @@ public class ResourcesAction
 		
 		state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, Boolean.FALSE);
 		String[] siteTypes = ServerConfigurationService.getStrings("prevent.public.resources");
-		if(siteTypes != null)
+		String siteType = null;
+		Site site;
+		try
 		{
-			Site site;
-			try
+			site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
+			siteType = site.getType();
+			if(siteTypes != null)
 			{
-				site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
 				for(int i = 0; i < siteTypes.length; i++)
 				{
-					if ((StringUtil.trimToNull(siteTypes[i])).equals(site.getType()))
+					if ((StringUtil.trimToNull(siteTypes[i])).equals(siteType))
 					{
 						state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, Boolean.TRUE);
 					}
 				}
 			}
-			catch (IdUnusedException e)
+		}
+		catch (IdUnusedException e)
+		{
+			// allow public display
+		}
+		catch(NullPointerException e)
+		{
+			// allow public display
+		}
+		
+		Time defaultRetractTime = TimeService.newTime(TimeService.newTime().getTime() + ONE_WEEK);
+		Time guess = null;
+		Time now = TimeService.newTime();
+		if(siteType != null && siteType.equalsIgnoreCase("course"))
+		{
+			List terms = CourseManagementService.getTerms();
+			boolean found = false;
+			Term term = null;
+			Iterator termIt = terms.iterator();
+			while(termIt.hasNext())
 			{
-				// allow public display
+				term = (Term) termIt.next();
+				if(term.getEndTime().after(now))
+				{
+					if(guess == null || term.getEndTime().before(guess))
+					{
+						guess = term.getEndTime();
+					}
+				}
 			}
-			catch(NullPointerException e)
+			if(guess != null)
 			{
-				// allow public display
+				defaultRetractTime = guess;
 			}
 		}
-
+		state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractTime);
+			
 		state.setAttribute (STATE_INITIALIZED, Boolean.TRUE.toString());
 
 	}
@@ -9731,6 +10112,8 @@ public class ResourcesAction
 			folder.setCanAddFolder(canAddFolder);
 			folder.setCanDelete(canDelete);
 			folder.setCanUpdate(canUpdate);
+			
+			folder.setAvailable(collection.isAvailable());
 
 			try
 			{
@@ -9805,6 +10188,11 @@ public class ResourcesAction
 					ResourceProperties props = resource.getProperties();
 
 					String itemId = resource.getId();
+					
+					if(contentService.isAvailabilityEnabled() && ! contentService.isAvailable(itemId))
+					{
+						continue;
+					}
 
 					if(resource.isCollection())
 					{
@@ -9839,6 +10227,13 @@ public class ResourcesAction
 						BrowseItem newItem = new BrowseItem(itemId, itemName, itemType);
 						
 						boolean isLocked = contentService.isLocked(itemId);
+						
+						boolean isAvailable = folder.isAvailable();
+						if(isAvailable)
+						{
+							isAvailable = resource.isAvailable();
+						}
+						newItem.setAvailable(isAvailable);
 
 						newItem.setAccess(access_mode.toString());
 						newItem.setInheritedAccess(folder.getEffectiveAccess());
@@ -10801,6 +11196,8 @@ public class ResourcesAction
 		protected boolean m_canAddFolder;
 		protected boolean m_canSelect;
 		
+		protected boolean m_available;
+		
 		protected boolean m_inDropbox;
 
 		protected List m_members;
@@ -10882,6 +11279,7 @@ public class ResourcesAction
 			m_canRevise = false;
 			m_canDelete = false;
 			m_canCopy = false;
+			m_available = true;
 			m_isEmpty = true;
 			m_toobig = false;
 			m_isCopied = false;
@@ -10920,6 +11318,16 @@ public class ResourcesAction
 		public String getItemNum()
 		{
 			return m_itemnum;
+		}
+		
+		public boolean isAvailable()
+		{
+			return m_available;
+		}
+
+		public void setAvailable(boolean available)
+		{
+			m_available = available;
 		}
 
 		public boolean isInherited(Group group)
@@ -12123,6 +12531,12 @@ public class ResourcesAction
 		protected String m_ccModification;
 		protected String m_ccRightsOwner;
 		protected String m_ccRightsYear;
+		
+		protected boolean m_hidden;
+		protected Time m_releaseDate;
+		protected Time m_retractDate;
+		protected boolean m_useReleaseDate;
+		protected boolean m_useRetractDate;
 
 		/**
 		 * @param id
@@ -12156,6 +12570,23 @@ public class ResourcesAction
 			m_ccLicense = "";
 			// m_copyrightStatus = ServerConfigurationService.getString("default.copyright");
 			
+			m_hidden = false;
+			m_releaseDate = TimeService.newTime();
+			m_retractDate = TimeService.newTime();
+			m_useReleaseDate = false;
+			m_useRetractDate = false;
+
+		
+		}
+		
+		public void setHidden(boolean hidden) 
+		{
+			this.m_hidden = hidden;
+		}
+		
+		public boolean isHidden()
+		{
+			return this.m_hidden;
 		}
 		
 		public SortedSet convertToRefs(Collection groupIds) 
@@ -13007,6 +13438,70 @@ public class ResourcesAction
 		public boolean hasBeenAdded()
 		{
 			return m_hasBeenAdded;
+		}
+
+		/**
+		 * @return the releaseDate
+		 */
+		public Time getReleaseDate() 
+		{
+			return m_releaseDate;
+		}
+
+		/**
+		 * @param releaseDate the releaseDate to set
+		 */
+		public void setReleaseDate(Time releaseDate) 
+		{
+			this.m_releaseDate = releaseDate;
+		}
+
+		/**
+		 * @return the retractDate
+		 */
+		public Time getRetractDate() 
+		{
+			return m_retractDate;
+		}
+
+		/**
+		 * @param retractDate the retractDate to set
+		 */
+		public void setRetractDate(Time retractDate) 
+		{
+			this.m_retractDate = retractDate;
+		}
+
+		/**
+		 * @return the useReleaseDate
+		 */
+		public boolean useReleaseDate() 
+		{
+			return m_useReleaseDate;
+		}
+
+		/**
+		 * @param useReleaseDate the useReleaseDate to set
+		 */
+		public void setUseReleaseDate(boolean useReleaseDate) 
+		{
+			this.m_useReleaseDate = useReleaseDate;
+		}
+
+		/**
+		 * @return the useRetractDate
+		 */
+		public boolean useRetractDate() 
+		{
+			return m_useRetractDate;
+		}
+
+		/**
+		 * @param useRetractDate the useRetractDate to set
+		 */
+		public void setUseRetractDate(boolean useRetractDate) 
+		{
+			this.m_useRetractDate = useRetractDate;
 		}
 
 
