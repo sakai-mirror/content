@@ -48,6 +48,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jdom.JDOMException;
@@ -62,6 +64,7 @@ import org.sakaiproject.cheftool.PortletConfig;
 import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
+import org.sakaiproject.citation.api.CitationHelper;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
@@ -111,6 +114,7 @@ import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
@@ -122,6 +126,7 @@ import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.StringUtil;
 import org.sakaiproject.util.Validator;
 import org.sakaiproject.util.Xml;
+import org.sakaiproject.vm.ActionURL;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -290,6 +295,7 @@ public class ResourcesAction
 	public static final String TYPE_FORM = MIME_TYPE_STRUCTOBJ;
 	public static final String TYPE_HTML = MIME_TYPE_DOCUMENT_HTML;
 	public static final String TYPE_TEXT = MIME_TYPE_DOCUMENT_PLAINTEXT;
+	public static final String TYPE_CITE_LIST = "CitationList";
 
 	private static final int CREATE_MAX_ITEMS = 10;
 
@@ -1339,7 +1345,15 @@ public class ResourcesAction
 		context.put("TYPE_TEXT", TYPE_TEXT);
 		context.put("TYPE_URL", TYPE_URL);
 		context.put("TYPE_FORM", TYPE_FORM);
-
+		context.put("TYPE_CITE_LIST", TYPE_CITE_LIST);
+		
+		String mainFrameId = Validator.escapeJavascript("Main" + ToolManager.getCurrentPlacement().getId());
+		context.put("mainFrameId", mainFrameId);
+		context.put("citationsFrameId", CitationHelper.CITATION_FRAME_ID);
+		
+		context.put("citationToolId", CitationHelper.CITATION_ID);
+		context.put("specialHelperFlag", CitationHelper.SPECIAL_HELPER_ID);
+		
 		// copyright
 		copyrightChoicesIntoContext(state, context);
 
@@ -2501,6 +2515,23 @@ public class ResourcesAction
 		{
 			itemType = TYPE_UPLOAD;
 		}
+	
+		if(itemType.equals(TYPE_CITE_LIST))
+		{
+			
+			HttpServletRequest req = data.getRequest();
+			state.setAttribute(HELPER_ID + CitationHelper.CITATION_FRAME_ID, CitationHelper.CITATION_ID);
+
+			// the done URL - this url and the extra parameter to indicate done
+			// also make sure the panel is indicated - assume that it needs to be main, assuming that helpers are taking over the entire tool response
+			String doneUrl = req.getContextPath() + req.getServletPath() + (req.getPathInfo() == null ? "" : req.getPathInfo()) + "?"
+					+ HELPER_ID + CitationHelper.CITATION_FRAME_ID + "=done" + "&" + ActionURL.PARAM_PANEL + "=" + CitationHelper.CITATION_FRAME_ID;
+
+			state.setAttribute(CitationHelper.CITATION_ID + Tool.HELPER_DONE_URL, doneUrl);
+			
+			// the following should replace what's above once this is not a static method
+			// startHelper(req, CitationHelper.CITATION_ID, CitationHelper.CITATION_FRAME_ID);
+		}
 
 		String stackOp = params.getString("suspended-operations-stack");
 
@@ -2513,7 +2544,6 @@ public class ResourcesAction
 		{
 			current_stack_frame = pushOnStack(state);
 		}
-		//setupStructuredObjects(state);
 
 		String encoding = data.getRequest().getCharacterEncoding();
 
@@ -2855,6 +2885,25 @@ public class ResourcesAction
 				}
 			}
 		}
+		else if(flow.equals("create") && TYPE_CITE_LIST.equals(itemType))
+		{
+			captureMultipleValues(state, params, true);
+			alerts = (Set) state.getAttribute(STATE_CREATE_ALERTS);
+			if(alerts == null)
+			{
+				alerts = new HashSet();
+				state.setAttribute(STATE_CREATE_ALERTS, alerts);
+			}
+			if(alerts.isEmpty())
+			{
+				createCitationList(state);
+				alerts = (Set) state.getAttribute(STATE_CREATE_ALERTS);
+				if(alerts.isEmpty())
+				{
+					pop = true;
+				}
+			}
+		}
 		else if(flow.equals("create"))
 		{
 			captureMultipleValues(state, params, true);
@@ -3074,6 +3123,15 @@ public class ResourcesAction
 		}
 
 	}	// doCreateitem
+
+	/**
+     * @param state
+     */
+    private static void createCitationList(SessionState state)
+    {
+	    // TODO Auto-generated method stub
+	    
+    }
 
 	private static void createLink(RunData data, SessionState state)
 	{
@@ -4810,6 +4868,8 @@ public class ResourcesAction
 		context.put("tlang",rb);
 		// find the ContentTypeImage service
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
+		
+		buildItemTypeContext(portlet, context, data, state);
 
 		context.put("TYPE_FOLDER", TYPE_FOLDER);
 		context.put("TYPE_UPLOAD", TYPE_UPLOAD);
@@ -4817,6 +4877,7 @@ public class ResourcesAction
 		context.put("TYPE_TEXT", TYPE_TEXT);
 		context.put("TYPE_URL", TYPE_URL);
 		context.put("TYPE_FORM", TYPE_FORM);
+		context.put("TYPE_CITE_LIST", TYPE_CITE_LIST);
 		
 		context.put("SITE_ACCESS", AccessMode.SITE.toString());
 		context.put("GROUP_ACCESS", AccessMode.GROUPED.toString());
@@ -9588,7 +9649,6 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canDelete())
 			{
-				// canDelete = contentService.allowRemoveResource(collectionId);
 				canDelete = contentService.allowRemoveCollection(collectionId);
 			}
 			else
@@ -9597,7 +9657,6 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canRevise())
 			{
-				// canRevise = contentService.allowUpdateResource(collectionId);
 				canRevise = contentService.allowUpdateCollection(collectionId);
 			}
 			else
@@ -9637,8 +9696,11 @@ public class ResourcesAction
 			{
 				state.setAttribute(STATE_PASTE_ALLOWED_FLAG, Boolean.TRUE.toString());
 			}
-			boolean hasDeletableChildren = canDelete;
-			boolean hasCopyableChildren = canRead;
+			// each child will have it's own delete status based on: delete.own or delete.any
+			boolean hasDeletableChildren = true; 
+         
+			// may have perms to copy in another folder, even if no perms in this folder
+			boolean hasCopyableChildren = canRead; 
 
 			String homeCollectionId = (String) state.getAttribute(STATE_HOME_COLLECTION_ID);
 
@@ -9797,7 +9859,7 @@ public class ResourcesAction
 				List newMembers = collection.getMemberResources ();
 
 				Collections.sort (newMembers, ContentHostingService.newContentHostingComparator (sortedBy, Boolean.valueOf (sortedAsc).booleanValue ()));
-				// loop thru the (possibly) new members and add to the list
+				// loop thru the (possibly new) members and add to the list
 				Iterator it = newMembers.iterator();
 				while(it.hasNext())
 				{

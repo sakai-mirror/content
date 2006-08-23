@@ -1183,6 +1183,8 @@
 					$tlang.getString("gen.folder1")
 				#elseif("$itemType" == "$TYPE_FORM")
 					$tlang.getString("addi.meta")
+				#elseif("$itemType" == "$TYPE_CITE_LIST")
+					$tlang.getString("addi.cites")
 				#end
 				#if($numberOfItems > 1)
 					 ($n of $numberOfItems)
@@ -1269,6 +1271,23 @@
 					#end
 					#getPropertyValues($item.properties)
 				#end
+			#elseif("$itemType" == "$TYPE_CITE_LIST")
+				<div id="CitationListFrame">
+					<iframe 
+						name="$citationsFrameId"
+						id="$citationsFrameId"
+						title="Enter this frame to create the citation list"
+						class ="portletMainIframe"
+						height="1000"
+						width="100%"
+						frameborder="0"
+						marginwidth="0"
+						marginheight="0"
+						scrolling="auto"
+						src="#contentLink("$!{citationsFrameId}")"
+						##onload="updateMainFrameHeight('$mainFrameId');>
+					</iframe>
+				</div>
 			#else
 				#if("$!{item.Filename}" == "")
 					#if($!{item.isMissing("fileName")})

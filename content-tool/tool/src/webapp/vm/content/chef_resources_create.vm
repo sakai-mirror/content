@@ -101,6 +101,7 @@
 				#if($show_form_items)
 					<option value="$TYPE_FORM" id="$validator.escapeJavascript("$TYPE_FORM")"#if("$itemType" == "$TYPE_FORM") selected="selected"#end>$tlang.getString("addi.meta")</option>
 				#end
+				<option value="$TYPE_CITE_LIST" id="$validator.escapeJavascript("$TYPE_CITE_LIST")"#if("$itemType" == "$TYPE_CITE_LIST") selected="selected"#end>$tlang.getString("addi.cites")</option>
 			</select>
 		</p>
 	</form>

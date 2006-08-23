@@ -1195,7 +1195,9 @@
 		<input type="hidden" name="index" id="index" value="0" />
 		
 		<p class="shorttext">
-			<span class="reqStar">*</span>
+			#if (! $atHome)						 
+				<span class="reqStar">*</span>
+			#end
 			<label for="name">
 				$tlang.getString("gen.title") 
 			</label>
