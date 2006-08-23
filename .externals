@@ -5,7 +5,7 @@ authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
 courier			-r13762	https://source.sakaiproject.org/svn/courier/tags/sakai_2-2-1
 event			-r13762	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1
 entity			-r13762	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1
-velocity		-r13762	https://source.sakaiproject.org/svn/velocity/tags/sakai_2-2-1
+velocity		-r13671 https://source.sakaiproject.org/svn/velocity/trunk
 user			-r13762	https://source.sakaiproject.org/svn/user/tags/sakai_2-2-1
 memory			-r13762	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1
 db			-r13762	https://source.sakaiproject.org/svn/db/tags/sakai_2-2-1
