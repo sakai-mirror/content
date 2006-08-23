@@ -16,7 +16,7 @@ master			-r13762	https://source.sakaiproject.org/svn/master/tags/sakai_2-2-1
 reference		-r13762 https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1
 login			-r13762	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1
 access			-r13762	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1
-content			-r13762	https://source.sakaiproject.org/svn/content/tags/sakai_2-2-1
+content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-citation
 metaobj			-r13762	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1
 presence		-r13762	https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1
 calendar		-r13762	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-2-1
@@ -53,3 +53,4 @@ textarea		-r13762	https://source.sakaiproject.org/svn/textarea/tags/sakai_2-2-1
 msgcntr			-r13762	https://source.sakaiproject.org/svn/msgcntr/tags/sakai_2-2-1
 postem			-r13762	https://source.sakaiproject.org/svn/postem/tags/sakai_2-2-1
 cluster			-r13762	https://source.sakaiproject.org/svn/cluster/tags/sakai_2-2-1
+citation			https://source.sakaiproject.org/contrib/citation/trunk
