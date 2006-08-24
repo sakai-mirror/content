@@ -1,8 +1,165 @@
-Skipped merges:
-Revision: 13042
-Author: jimeng@umich.edu
-Date: 9:21:21 PM, Thursday, July 27, 2006
+Revision: 13500
+
+Author: bkirschn@umich.edu
+
+Date: 4:21:34 PM, Thursday, August 10, 2006
+
 Message:
-SAK-5739 First baby steps toward release/retract dates
-Modified : /content/trunk/content-tool/tool/src/bundle/content.properties
+
+SAK-2677
+Add finer grained permissions to content/resources (revise.any, revise.own, delete.any, delete.own)
+
+----
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentHostingService.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/cover/ContentHostingService.java
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/BaseContentService.java
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/SiteEmailNotificationContent.java
+
+Modified : /content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java
+
+
+
+
+
+Revision: 13424
+
+Author: jimeng@umich.edu
+
+Date: 8:12:15 AM, Monday, August 07, 2006
+
+Message:
+
+SAK-5739
+Dealt with issue that shows up in "public" view of resources, where userId is null.
+
+----
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/BaseContentService.java
+
+
+
+
+
+Revision: 13391
+
+Author: jimeng@umich.edu
+
+Date: 3:38:29 PM, Friday, August 04, 2006
+
+Message:
+
+SAK-5739
+Added new permission for access to hidden entities.
+Revised tool interactions.
+
+----
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentHostingService.java
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/BaseContentService.java
+
+Modified : /content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java
+
 Modified : /content/trunk/content-tool/tool/src/webapp/vm/content/chef_resources_edit.vm
+
+Modified : /content/trunk/content-tool/tool/src/webapp/vm/content/chef_resources_itemtype.vm
+
+
+
+
+
+Revision: 13362
+
+Author: jimeng@umich.edu
+
+Date: 11:49:42 PM, Thursday, August 03, 2006
+
+Message:
+
+SAK-5739
+Set reasonable defaults for release and retract dates.
+
+
+----
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/BaseContentService.java
+
+Modified : /content/trunk/content-tool/.classpath
+
+Modified : /content/trunk/content-tool/tool/project.xml
+
+Modified : /content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java
+
+
+
+
+
+Revision: 13360
+
+Author: jimeng@umich.edu
+
+Date: 5:35:13 PM, Thursday, August 03, 2006
+
+Message:
+
+SAK-5739
+Adding support in ContentHostingService for hiding resources and scheduling release/retraction of resources.
+Added component property that can be used to turn these new availability features on/off.
+Still need to get the availability info when building edit context in tool.
+Still need to add availability to issues dealt with in determining whether to allow access to an entity.
+Not sure about notification.
+
+----
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentCollectionEdit.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentHostingService.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentResource.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/ContentResourceEdit.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/GroupAwareEdit.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/api/GroupAwareEntity.java
+
+Modified : /content/trunk/content-api/api/src/java/org/sakaiproject/content/cover/ContentHostingService.java
+
+Modified : /content/trunk/content-impl/impl/src/java/org/sakaiproject/content/impl/BaseContentService.java
+
+Modified : /content/trunk/content-impl/pack/src/webapp/WEB-INF/components.xml
+
+Modified : /content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java
+
+
+
+
+
+Revision: 13328
+
+Author: jimeng@umich.edu
+
+Date: 12:23:51 AM, Thursday, August 03, 2006
+
+Message:
+
+SAK-5739
+Added features in create and edit interfaces for dialog about availability (show/hide and release/retract dates)
+
+----
+
+Modified : /content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java
+
+Modified : /content/trunk/content-tool/tool/src/webapp/vm/content/chef_resources_edit.vm
+
+Modified : /content/trunk/content-tool/tool/src/webapp/vm/content/chef_resources_itemtype.vm
+
+
+
+
+
+
