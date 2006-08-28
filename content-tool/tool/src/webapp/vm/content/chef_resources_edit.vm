@@ -1208,6 +1208,7 @@
 				<input type="hidden" name="name" id="name" value="$validator.escapeUrl("$!item.name")" />
 			#end
 		</p>	
+
 		#if (! $item.isFolder()) 
 			#if ($item.isUrl())
 				<p class="shorttext">
@@ -1287,6 +1288,30 @@
 					#end	
 					#editPropertyValues($item.properties)
 				#end
+			#elseif($item.isCitationList())
+				<div class="longtext">
+					<table border="0"><tr><td>
+						<textarea name="content$i" id="content" rows="30" cols="80" wrap="virtual">$validator.escapeHtmlTextarea("$!{item.contentstring}")</textarea>
+						#chef_setupformattedtextarea("content$i")
+					</td></tr></table>
+				</div>
+				<div id="CitationListFrame">
+					<iframe 
+						name="$citationsFrameId"
+						id="$citationsFrameId"
+						title="Enter this frame to create the citation list"
+						class ="portletMainIframe"
+						height="1000"
+						width="100%"
+						frameborder="0"
+						marginwidth="0"
+						marginheight="0"
+						scrolling="auto"
+						src="#contentLink("$!{citationsFrameId}")&sakai_action=doList&collectionId=$item.citationCollectionId"
+						##onload="updateMainFrameHeight('$mainFrameId');>
+					</iframe>
+				</div>
+			
 			#else
 				<table class="itemSummary" border="0" style="clear:both;margin:left:.7em">
 					<tr> 

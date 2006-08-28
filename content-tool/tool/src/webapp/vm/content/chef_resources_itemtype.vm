@@ -1272,6 +1272,27 @@
 					#getPropertyValues($item.properties)
 				#end
 			#elseif("$itemType" == "$TYPE_CITE_LIST")
+				#if($!{item.isMissing("name")})
+					<p class="shorttext validFail">
+				#else
+					<p class="shorttext">
+				#end
+					<span class="reqStar">*</span>
+					<label for="name$i">
+						$tlang.getString("gen.title") 
+					</label>
+					<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
+				</p>	
+				#if($!{item.isMissing("content")})
+					<div class="longtext validation">
+				#else
+					<div class="longtext">
+				#end
+					<table border="0"><tr><td>
+						<textarea name="content$i" id="content$i" rows="30" cols="80" wrap="virtual">$validator.escapeHtmlTextarea("$!{item.contentstring}")</textarea>
+						#chef_setupformattedtextarea("content$i")
+					</td></tr></table>
+				</div>
 				<div id="CitationListFrame">
 					<iframe 
 						name="$citationsFrameId"
@@ -1314,18 +1335,21 @@
 			<p class="discTria">
 				$tlang.getString("add.props")
 			</p>
-			#if(! $item.isFolder())
-				#if($!{item.isMissing("name")})
-					<p class="shorttext validFail">
-				#else
-					<p class="shorttext">
+			
+			#if("$itemType" != "$TYPE_CITE_LIST")
+				#if(! $item.isFolder())
+					#if($!{item.isMissing("name")})
+						<p class="shorttext validFail">
+					#else
+						<p class="shorttext">
+					#end
+						<span class="reqStar">*</span>
+						<label for="name$i">
+							$tlang.getString("gen.title") 
+						</label>
+						<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
+					</p>	
 				#end
-					<span class="reqStar">*</span>
-					<label for="name$i">
-						$tlang.getString("gen.title") 
-					</label>
-					<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
-				</p>	
 			#end
 			<p class="shorttext">
 				<label for="description$i">
@@ -1333,9 +1357,10 @@
 				</label>
 				<textarea id="description$i" name="description$i" rows="2" cols="40" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
 			</p>	
-			#if ($item.isFileUpload() || $item.isHtml() || $item.isPlaintext())
-				##getRightsAssignment($item.rights)
-				
+			#if("$itemType" != "$TYPE_CITE_LIST")
+				#if ($item.isFileUpload() || $item.isHtml() || $item.isPlaintext())
+					##getRightsAssignment($item.rights)
+					
 					#if ($!copyrightTypes)
 						<p class="shorttext">
 							<span class="reqStar">*</span>
@@ -1371,7 +1396,8 @@
 							$tlang.getString("edit.display3")
 					</div>
 					#end
-				
+					
+				#end
 			#end
 			######### begin access section ##########
 			## Should initial access to this resource or collection be determined

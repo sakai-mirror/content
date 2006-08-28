@@ -64,7 +64,9 @@ import org.sakaiproject.cheftool.PortletConfig;
 import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
+import org.sakaiproject.citation.api.CitationCollection;
 import org.sakaiproject.citation.api.CitationHelper;
+import org.sakaiproject.citation.cover.CitationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
@@ -296,6 +298,7 @@ public class ResourcesAction
 	public static final String TYPE_HTML = MIME_TYPE_DOCUMENT_HTML;
 	public static final String TYPE_TEXT = MIME_TYPE_DOCUMENT_PLAINTEXT;
 	public static final String TYPE_CITE_LIST = "CitationList";
+	private static final String MIME_TYPE_CITE_LIST = "text/citationList";
 
 	private static final int CREATE_MAX_ITEMS = 10;
 
@@ -576,6 +579,7 @@ public class ResourcesAction
 
 	/** string used to represent "public" access mode in UI elements */
 	protected static final String PUBLIC_ACCESS = "public";
+
 	/**
 	* Build the context for normal display
 	*/
@@ -2237,6 +2241,7 @@ public class ResourcesAction
 		context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 		context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
 
+		context.put("citationsFrameId", CitationHelper.CITATION_FRAME_ID);
 
 		String collectionId = (String) current_stack_frame.get(STATE_STACK_EDIT_COLLECTION_ID);
 		context.put ("collectionId", collectionId);
@@ -2299,7 +2304,8 @@ public class ResourcesAction
 		}
 		
 		// put the item into context
-		EditItem item = (EditItem) current_stack_frame.get(STATE_STACK_EDIT_ITEM);
+		Object obj = current_stack_frame.get(STATE_STACK_EDIT_ITEM);
+		EditItem item = (EditItem) obj;
 		if(item == null)
 		{
 			item = getEditItem(id, collectionId, data);
@@ -3129,8 +3135,210 @@ public class ResourcesAction
      */
     private static void createCitationList(SessionState state)
     {
-	    // TODO Auto-generated method stub
-	    
+		String citationCollectionId = (String) state.getAttribute(CitationHelper.CITATION_COLLECTION_ID);
+		
+		Set alerts = (Set) state.getAttribute(STATE_CREATE_ALERTS);
+		if(alerts == null)
+		{
+			alerts = new HashSet();
+			state.setAttribute(STATE_CREATE_ALERTS, alerts);
+		}
+
+		Map current_stack_frame = peekAtStack(state);
+
+		String collectionId = (String) current_stack_frame.get(STATE_STACK_CREATE_COLLECTION_ID);
+		if(collectionId == null || collectionId.trim().length() == 0)
+		{
+			collectionId = (String) state.getAttribute(STATE_CREATE_COLLECTION_ID);
+			if(collectionId == null || collectionId.trim().length() == 0)
+			{
+				collectionId = ContentHostingService.getSiteCollection(ToolManager.getCurrentPlacement().getContext());
+			}
+			current_stack_frame.put(STATE_STACK_CREATE_COLLECTION_ID, collectionId);
+		}
+
+		List new_items = (List) current_stack_frame.get(STATE_STACK_CREATE_ITEMS);
+		if(new_items == null)
+		{
+			String defaultCopyrightStatus = (String) state.getAttribute(DEFAULT_COPYRIGHT);
+			if(defaultCopyrightStatus == null || defaultCopyrightStatus.trim().equals(""))
+			{
+				defaultCopyrightStatus = ServerConfigurationService.getString("default.copyright");
+				state.setAttribute(DEFAULT_COPYRIGHT, defaultCopyrightStatus);
+			}
+
+			String encoding = (String) state.getAttribute(STATE_ENCODING);
+			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
+			
+			new_items = newEditItems(collectionId, TYPE_FOLDER, encoding, defaultCopyrightStatus, preventPublicDisplay.booleanValue(), CREATE_MAX_ITEMS);
+
+			current_stack_frame.put(STATE_STACK_CREATE_ITEMS, new_items);
+
+		}
+		Integer number = (Integer) current_stack_frame.get(STATE_STACK_CREATE_NUMBER);
+		if(number == null)
+		{
+			number = (Integer) state.getAttribute(STATE_CREATE_NUMBER);
+			current_stack_frame.put(STATE_STACK_CREATE_NUMBER, number);
+		}
+		if(number == null)
+		{
+			number = new Integer(1);
+			current_stack_frame.put(STATE_STACK_CREATE_NUMBER, number);
+		}
+
+		int numberOfItems = 1;
+		numberOfItems = number.intValue();
+		outerloop: for(int i = 0; i < numberOfItems; i++)
+		{
+			EditItem item = (EditItem) new_items.get(i);
+			if(item.isBlank())
+			{
+				continue;
+			}
+
+			ResourcePropertiesEdit resourceProperties = ContentHostingService.newResourceProperties ();
+
+			resourceProperties.addProperty (ResourceProperties.PROP_DISPLAY_NAME, item.getName());
+			resourceProperties.addProperty (ResourceProperties.PROP_DESCRIPTION, item.getDescription());
+			
+			BasicRightsAssignment rightsObj = item.getRights();
+			rightsObj.addResourceProperties(resourceProperties);
+
+			resourceProperties.addProperty(ResourceProperties.PROP_IS_COLLECTION, Boolean.FALSE.toString());
+			resourceProperties.addProperty(ResourceProperties.PROP_CONTENT_ENCODING, "UTF-8");
+			List metadataGroups = (List) state.getAttribute(STATE_METADATA_GROUPS);
+			
+			saveMetadata(resourceProperties, metadataGroups, item);
+			String filename = Validator.escapeResourceName(item.getFilename().trim());
+			if("".equals(filename))
+			{
+				filename = Validator.escapeResourceName(item.getName().trim());
+			}
+
+			resourceProperties.addProperty(CitationHelper.PROP_CITATION_COLLECTION, citationCollectionId);
+			
+			resourceProperties.addProperty(ResourceProperties.PROP_ORIGINAL_FILENAME, filename);
+			
+			SortedSet groups = new TreeSet(item.getEntityGroupRefs());
+			groups.retainAll(item.getAllowedAddGroupRefs());
+
+			try
+			{
+				ContentResource resource = ContentHostingService.addResource (filename,
+																			collectionId,
+																			MAXIMUM_ATTEMPTS_FOR_UNIQUENESS,
+																			item.getMimeType(),
+																			item.getContent(),
+																			resourceProperties,
+																			groups,
+																			item.getNotification());
+
+				item.setAdded(true);
+
+				Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
+				if(preventPublicDisplay == null)
+				{
+					preventPublicDisplay = Boolean.FALSE;
+					state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, preventPublicDisplay);
+				}
+				
+				if(!preventPublicDisplay.booleanValue() && item.isPubview())
+				{
+					ContentHostingService.setPubView(resource.getId(), true);
+				}
+
+				String mode = (String) state.getAttribute(STATE_MODE);
+				if(MODE_HELPER.equals(mode))
+				{
+					String helper_mode = (String) state.getAttribute(STATE_RESOURCES_HELPER_MODE);
+					if(helper_mode != null && MODE_ATTACHMENT_NEW_ITEM_INIT.equals(helper_mode))
+					{
+						// add to the attachments vector
+						List attachments = EntityManager.newReferenceList();
+						Reference ref = EntityManager.newReference(ContentHostingService.getReference(resource.getId()));
+						attachments.add(ref);
+						cleanupState(state);
+						state.setAttribute(STATE_ATTACHMENTS, attachments);
+					}
+					else
+					{
+						Object attach_links = current_stack_frame.get(STATE_ATTACH_LINKS);
+						if(attach_links == null)
+						{
+							attach_links = state.getAttribute(STATE_ATTACH_LINKS);
+							if(attach_links != null)
+							{
+								current_stack_frame.put(STATE_ATTACH_LINKS, attach_links);
+							}
+						}
+
+						if(attach_links == null)
+						{
+							attachItem(resource.getId(), state);
+						}
+						else
+						{
+							attachLink(resource.getId(), state);
+						}
+					}
+				}
+			}
+			catch(PermissionException e)
+			{
+				alerts.add(rb.getString("notpermis12"));
+				continue outerloop;
+			}
+			catch(IdInvalidException e)
+			{
+				alerts.add(rb.getString("title") + " " + e.getMessage ());
+				continue outerloop;
+			}
+			catch(IdLengthException e)
+			{
+				alerts.add(rb.getString("toolong") + " " + e.getMessage());
+				continue outerloop;
+			}
+			catch(IdUniquenessException e)
+			{
+				alerts.add("Could not add this item to this folder");
+				continue outerloop;
+			}
+			catch(InconsistentException e)
+			{
+				alerts.add(RESOURCE_INVALID_TITLE_STRING);
+				continue outerloop;
+			}
+			catch(OverQuotaException e)
+			{
+				alerts.add(rb.getString("overquota"));
+				continue outerloop;
+			}
+			catch(ServerOverloadException e)
+			{
+				alerts.add(rb.getString("failed"));
+				continue outerloop;
+			}
+			catch(RuntimeException e)
+			{
+				logger.warn("ResourcesAction.createFiles ***** Unknown Exception ***** " + e.getMessage());
+				alerts.add(rb.getString("failed"));
+				continue outerloop;
+			}
+
+		}
+		SortedSet currentMap = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+		if(currentMap == null)
+		{
+			currentMap = new TreeSet();
+		}
+		currentMap.add(collectionId);
+		state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
+
+		// add this folder id into the set to be event-observed
+		addObservingPattern(collectionId, state);
+		
+		state.setAttribute(STATE_CREATE_ALERTS, alerts);	    
     }
 
 	private static void createLink(RunData data, SessionState state)
@@ -5811,6 +6019,23 @@ public class ResourcesAction
 
 		if (state.getAttribute(STATE_MESSAGE) == null)
 		{
+			if(item.isCitationList())
+			{
+				HttpServletRequest req = data.getRequest();
+				state.setAttribute(HELPER_ID + CitationHelper.CITATION_FRAME_ID, CitationHelper.CITATION_ID);
+
+				// the done URL - this url and the extra parameter to indicate done
+				// also make sure the panel is indicated - assume that it needs to be main, assuming that helpers are taking over the entire tool response
+				String doneUrl = req.getContextPath() + req.getServletPath() + (req.getPathInfo() == null ? "" : req.getPathInfo()) + "?"
+						+ HELPER_ID + CitationHelper.CITATION_FRAME_ID + "=done" + "&" + ActionURL.PARAM_PANEL + "=" + CitationHelper.CITATION_FRAME_ID;
+
+				state.setAttribute(CitationHelper.CITATION_ID + Tool.HELPER_DONE_URL, doneUrl);
+				state.setAttribute(CitationHelper.CITATION_COLLECTION_ID, item.getCitationCollectionId());
+				
+				// the following should replace what's above once this is not a static method
+				// startHelper(req, CitationHelper.CITATION_ID, CitationHelper.CITATION_FRAME_ID);
+			}
+			
 			// got resource and sucessfully populated item with values
 			// state.setAttribute (STATE_MODE, MODE_EDIT);
 			state.setAttribute(ResourcesAction.STATE_RESOURCES_HELPER_MODE, ResourcesAction.MODE_ATTACHMENT_EDIT_ITEM_INIT);
@@ -5873,6 +6098,20 @@ public class ResourcesAction
 			
 			BasicRightsAssignment rightsObj = new BasicRightsAssignment(item.getItemNum(), properties);
 			item.setRights(rightsObj);
+			
+			if(item.isCitationList())
+			{
+				String citationCollectionId = properties.getProperty(CitationHelper.PROP_CITATION_COLLECTION);
+				
+				if(citationCollectionId == null)
+				{
+					// should we create one here?  Or allow it to be created? 
+				}
+				else
+				{
+					item.setCitationCollectionId(citationCollectionId);
+				}
+			}
 
 			String encoding = data.getRequest().getCharacterEncoding();
 			if(encoding != null)
@@ -7279,7 +7518,7 @@ public class ResourcesAction
 			}
 			item.setMimeType(MIME_TYPE_DOCUMENT_PLAINTEXT);
 		}
-		else if(item.isHtml())
+		else if(item.isHtml() || item.isCitationList())
 		{
 			// check for input from editor (textarea)
 			String content = params.getCleanString("content" + index);
@@ -7295,7 +7534,14 @@ public class ResourcesAction
 				item.setContentHasChanged(true);
 				blank_entry = false;
 			}
-			item.setMimeType(MIME_TYPE_DOCUMENT_HTML);
+			if(item.isHtml())
+			{
+				item.setMimeType(MIME_TYPE_DOCUMENT_HTML);
+			}
+			else
+			{
+				item.setMimeType(MIME_TYPE_CITE_LIST);
+			}
 		}
 		else if(item.isUrl())
 		{
@@ -7992,6 +8238,11 @@ public class ResourcesAction
 					{
 						redit.setContentType(item.getMimeType());
 						redit.setContent(item.getContent());
+					}
+					else if(item.isCitationList())
+					{
+						String citationCollectionId = (String) state.getAttribute(CitationHelper.CITATION_COLLECTION_ID);
+						pedit.addProperty(CitationHelper.PROP_CITATION_COLLECTION, citationCollectionId);
 					}
 					else if(item.contentHasChanged())
 					{
@@ -12185,6 +12436,7 @@ public class ResourcesAction
 		protected String m_ccModification;
 		protected String m_ccRightsOwner;
 		protected String m_ccRightsYear;
+		private String m_citationCollectionId;
 
 		/**
 		 * @param id
@@ -12216,10 +12468,27 @@ public class ResourcesAction
 			m_instruction = "";
 			m_ccRightsownership = "";
 			m_ccLicense = "";
+			m_citationCollectionId = "";
 			// m_copyrightStatus = ServerConfigurationService.getString("default.copyright");
 			
 		}
 		
+		/**
+         * @param citationCollectionId
+         */
+        public void setCitationCollectionId(String citationCollectionId)
+        {
+	        m_citationCollectionId = citationCollectionId;
+        }
+        
+        /**
+         * @return
+         */
+        public String getCitationCollectionId()
+        {
+        	return m_citationCollectionId;
+        }
+
 		public SortedSet convertToRefs(Collection groupIds) 
 		{
 			SortedSet groupRefs = new TreeSet();
@@ -12462,8 +12731,16 @@ public class ResourcesAction
 		 */
 		public boolean isFileUpload()
 		{
-			return !isFolder() && !isUrl() && !isHtml() && !isPlaintext() && !isStructuredArtifact();
+			return !isFolder() && !isUrl() && !isHtml() && !isPlaintext() && !isStructuredArtifact() && !isCitationList();
 		}
+
+		/**
+         * @return
+         */
+        public boolean isCitationList()
+        {
+	        return MIME_TYPE_CITE_LIST.equals(this.m_mimetype) || MIME_TYPE_CITE_LIST.equals(this.m_type) || TYPE_CITE_LIST.equals(this.m_type);
+        }
 
 		/**
 		 * @param type
