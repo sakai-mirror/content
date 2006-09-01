@@ -100,6 +100,7 @@ import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.metaobj.shared.control.SchemaBean;
 import org.sakaiproject.metaobj.shared.mgt.HomeFactory;
+import org.sakaiproject.metaobj.shared.mgt.ReadableObjectHome;
 import org.sakaiproject.metaobj.shared.mgt.StructuredArtifactValidationService;
 import org.sakaiproject.metaobj.shared.mgt.home.StructuredArtifactHomeInterface;
 import org.sakaiproject.metaobj.shared.model.ElementBean;
@@ -2246,7 +2247,6 @@ public class ResourcesAction
 
 		String collectionId = (String) current_stack_frame.get(STATE_STACK_EDIT_COLLECTION_ID);
 		context.put ("collectionId", collectionId);
-		
 		String id = (String) current_stack_frame.get(STATE_STACK_EDIT_ID);
 		if(id == null)
 		{
@@ -7162,50 +7162,57 @@ public class ResourcesAction
 			String release_min = params.getString("release_minute");
 			String release_ampm = params.getString("release_ampm");
 			
-			String release_time = params.getString("release_time");
-			String retract_month = params.getString("retract_month");
-			String retract_day = params.getString("retract_day");
-			String retract_year = params.getString("retract_year");
-			String retract_time = params.getString("retract_time");
-			String retract_hour = params.getString("retract_hour");
-			String retract_min = params.getString("retract_minute");
-			String retract_ampm = params.getString("retract_ampm");
-			
-			item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
-			item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
-			item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
-			
-			int begin_year = Integer.parseInt(release_year);
-			int begin_month = Integer.parseInt(release_month);
-			int begin_day = Integer.parseInt(release_day);
-			int begin_hour = Integer.parseInt(release_hour);
-			int begin_min = Integer.parseInt(release_min);
-			if("pm".equals(release_ampm))
+			try
 			{
-				begin_hour += 12;
+				String release_time = params.getString("release_time");
+				String retract_month = params.getString("retract_month");
+				String retract_day = params.getString("retract_day");
+				String retract_year = params.getString("retract_year");
+				String retract_time = params.getString("retract_time");
+				String retract_hour = params.getString("retract_hour");
+				String retract_min = params.getString("retract_minute");
+				String retract_ampm = params.getString("retract_ampm");
+				
+				int begin_year = Integer.parseInt(release_year);
+				int begin_month = Integer.parseInt(release_month);
+				int begin_day = Integer.parseInt(release_day);
+				int begin_hour = Integer.parseInt(release_hour);
+				int begin_min = Integer.parseInt(release_min);
+				if("pm".equals(release_ampm))
+				{
+					begin_hour += 12;
+				}
+				else if(begin_hour == 12)
+				{
+					begin_hour = 0;
+				}
+				Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
+				item.setReleaseDate(releaseDate);
+				
+				int end_year = Integer.parseInt(retract_year);
+				int end_month = Integer.parseInt(retract_month);
+				int end_day = Integer.parseInt(retract_day);
+				int end_hour = Integer.parseInt(retract_hour);
+				int end_min = Integer.parseInt(retract_min);
+				if("pm".equals(retract_ampm))
+				{
+					end_hour += 12;
+				}
+				else if(begin_hour == 12)
+				{
+					end_hour = 0;
+				}
+				Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
+				item.setRetractDate(retractDate);
+				
+				item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
+				item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
+				item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
 			}
-			else if(begin_hour == 12)
+			catch(NumberFormatException e)
 			{
-				begin_hour = 0;
+				// no values retrieved from date widget, or values are not numbers 
 			}
-			Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
-			item.setReleaseDate(releaseDate);
-			
-			int end_year = Integer.parseInt(retract_year);
-			int end_month = Integer.parseInt(retract_month);
-			int end_day = Integer.parseInt(retract_day);
-			int end_hour = Integer.parseInt(retract_hour);
-			int end_min = Integer.parseInt(retract_min);
-			if("pm".equals(retract_ampm))
-			{
-				end_hour += 12;
-			}
-			else if(begin_hour == 12)
-			{
-				end_hour = 0;
-			}
-			Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
-			item.setRetractDate(retractDate);
 			
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			if(preventPublicDisplay == null)
@@ -7709,41 +7716,48 @@ public class ResourcesAction
 			String retract_min = params.getString("retract" + index + "_minute");
 			String retract_ampm = params.getString("retract" + index + "_ampm");
 			
-			item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
-			item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
-			item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
-			
-			int begin_year = Integer.parseInt(release_year);
-			int begin_month = Integer.parseInt(release_month);
-			int begin_day = Integer.parseInt(release_day);
-			int begin_hour = Integer.parseInt(release_hour);
-			int begin_min = Integer.parseInt(release_min);
-			if("pm".equals(release_ampm))
+			try
 			{
-				begin_hour += 12;
+				int begin_year = Integer.parseInt(release_year);
+				int begin_month = Integer.parseInt(release_month);
+				int begin_day = Integer.parseInt(release_day);
+				int begin_hour = Integer.parseInt(release_hour);
+				int begin_min = Integer.parseInt(release_min);
+				if("pm".equals(release_ampm))
+				{
+					begin_hour += 12;
+				}
+				else if(begin_hour == 12)
+				{
+					begin_hour = 0;
+				}
+				Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
+				item.setReleaseDate(releaseDate);
+				
+				int end_year = Integer.parseInt(retract_year);
+				int end_month = Integer.parseInt(retract_month);
+				int end_day = Integer.parseInt(retract_day);
+				int end_hour = Integer.parseInt(retract_hour);
+				int end_min = Integer.parseInt(retract_min);
+				if("pm".equals(retract_ampm))
+				{
+					end_hour += 12;
+				}
+				else if(begin_hour == 12)
+				{
+					end_hour = 0;
+				}
+				Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
+				item.setRetractDate(retractDate);
+	
+				item.setHidden(Boolean.TRUE.toString().equalsIgnoreCase(hidden));
+				item.setUseReleaseDate(Boolean.TRUE.toString().equalsIgnoreCase(use_start_date));
+				item.setUseRetractDate(Boolean.TRUE.toString().equalsIgnoreCase(use_end_date));
 			}
-			else if(begin_hour == 12)
+			catch(NumberFormatException e)
 			{
-				begin_hour = 0;
+				// no values retrieved from date widget, or values are not numbers
 			}
-			Time releaseDate = TimeService.newTimeLocal(begin_year, begin_month, begin_day, begin_hour, begin_min, 0, 0);
-			item.setReleaseDate(releaseDate);
-			
-			int end_year = Integer.parseInt(retract_year);
-			int end_month = Integer.parseInt(retract_month);
-			int end_day = Integer.parseInt(retract_day);
-			int end_hour = Integer.parseInt(retract_hour);
-			int end_min = Integer.parseInt(retract_min);
-			if("pm".equals(retract_ampm))
-			{
-				end_hour += 12;
-			}
-			else if(begin_hour == 12)
-			{
-				end_hour = 0;
-			}
-			Time retractDate = TimeService.newTimeLocal(end_year, end_month, end_day, end_hour, end_min, 0, 0);
-			item.setRetractDate(retractDate);
 			
 			Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 			if(preventPublicDisplay == null)
@@ -9986,7 +10000,6 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canDelete())
 			{
-				// canDelete = contentService.allowRemoveResource(collectionId);
 				canDelete = contentService.allowRemoveCollection(collectionId);
 			}
 			else
@@ -9995,7 +10008,6 @@ public class ResourcesAction
 			}
 			if(parent == null || ! parent.canRevise())
 			{
-				// canRevise = contentService.allowUpdateResource(collectionId);
 				canRevise = contentService.allowUpdateCollection(collectionId);
 			}
 			else
@@ -10035,8 +10047,11 @@ public class ResourcesAction
 			{
 				state.setAttribute(STATE_PASTE_ALLOWED_FLAG, Boolean.TRUE.toString());
 			}
-			boolean hasDeletableChildren = canDelete;
-			boolean hasCopyableChildren = canRead;
+			// each child will have it's own delete status based on: delete.own or delete.any
+			boolean hasDeletableChildren = true; 
+         
+			// may have perms to copy in another folder, even if no perms in this folder
+			boolean hasCopyableChildren = canRead; 
 
 			String homeCollectionId = (String) state.getAttribute(STATE_HOME_COLLECTION_ID);
 
@@ -10275,10 +10290,11 @@ public class ResourcesAction
 						newItem.setContainer(collectionId);
 						newItem.setRoot(folder.getRoot());
 
-						newItem.setCanDelete(canDelete && ! isLocked);
-						newItem.setCanRevise(canRevise);
+						// delete and revise permissions based on item (not parent)
+						newItem.setCanDelete(contentService.allowRemoveResource(itemId) && ! isLocked);
+						newItem.setCanRevise(contentService.allowUpdateResource(itemId)); 
 						newItem.setCanRead(canRead);
-						newItem.setCanCopy(canRead);
+						newItem.setCanCopy(canRead); // may have perms to copy in another folder, even if no perms in this folder
 						newItem.setCanAddItem(canAddItem); // true means this user can add an item in the folder containing this item (used for "duplicate")
 
 						if(highlightedItems == null || highlightedItems.isEmpty())

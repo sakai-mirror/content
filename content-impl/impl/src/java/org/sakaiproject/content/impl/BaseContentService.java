@@ -143,6 +143,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	/** Number of times to attempt to find a unique resource id when copying or moving a resource */
 	protected static final int MAXIMUM_ATTEMPTS_FOR_UNIQUENESS = 100;
 	
+	protected static final long END_OF_TIME = 8000L * 365L * 24L * 60L * 60L * 1000L;
+	protected static final long START_OF_TIME = 365L * 24L * 60L * 60L * 1000L;
+	
 	/** The initial portion of a relative access point URL. */
 	protected String m_relativeAccessPoint = null;
 
@@ -8226,6 +8229,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			if(date0 != null && !date0.trim().equals(""))
 			{
 				m_releaseDate = TimeService.newTimeGmt(date0);
+				if(m_releaseDate.getTime() < START_OF_TIME)
+				{
+					m_releaseDate = null;
+				}
 			}
 			
 			// extract retract date
@@ -8234,6 +8241,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			if(date1 != null && !date1.trim().equals(""))
 			{
 				m_retractDate = TimeService.newTimeGmt(date1);
+				if(m_retractDate.getTime() > END_OF_TIME)
+				{
+					m_retractDate = null;
+				}
 			}
 			
 			String hidden = el.getAttribute(HIDDEN);
@@ -8570,6 +8581,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				m_access = AccessMode.INHERITED;
 			}
+			collection.setAttribute(ACCESS_MODE, m_access.toString());
+
 			collection.setAttribute(HIDDEN, Boolean.toString(m_hidden));
 			if(!m_hidden && m_releaseDate != null)
 			{
@@ -8936,6 +8949,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					if(date0 != null && !date0.trim().equals(""))
 					{
 						m_releaseDate = TimeService.newTimeGmt(date0);
+						if(m_releaseDate.getTime() <= START_OF_TIME)
+						{
+							m_releaseDate = null;
+						}
 					}
 					
 					// extract retract date
@@ -8943,6 +8960,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					if(date1 != null && !date1.trim().equals(""))
 					{
 						m_retractDate = TimeService.newTimeGmt(date1);
+						if(m_retractDate.getTime() >= END_OF_TIME)
+						{
+							m_retractDate = null;
+						}
 					}
 				}
 				
