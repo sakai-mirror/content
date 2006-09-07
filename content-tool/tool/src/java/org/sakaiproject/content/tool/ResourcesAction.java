@@ -2763,6 +2763,11 @@ public class ResourcesAction
 		Set missing = new HashSet();
 		if(flow == null || flow.equals("cancel"))
 		{
+			if(TYPE_CITE_LIST.equals(itemType))
+			{
+				// delete citations from db?
+				cleanupState(state, "citation.");
+			}
 			pop = true;
 		}
 		else if(flow.equals("updateNumber"))
@@ -2908,6 +2913,8 @@ public class ResourcesAction
 				{
 					pop = true;
 				}
+				// delete citations from db?
+				cleanupState(state, "citation.");
 			}
 		}
 		else if(flow.equals("create"))
@@ -3132,6 +3139,24 @@ public class ResourcesAction
 
 	/**
      * @param state
+     * @param string
+     */
+    protected static void cleanupState(SessionState state, String string)
+    {
+    	List names = state.getAttributeNames();
+	    Iterator it = names.iterator();
+	    while(it.hasNext())
+	    {
+	    	String name = (String) it.next();
+	    	if(name.startsWith(string))
+	    	{
+	    		state.removeAttribute(name);
+	    	}
+	    }
+    }
+
+	/**
+     * @param state
      */
     private static void createCitationList(SessionState state)
     {
@@ -3222,6 +3247,19 @@ public class ResourcesAction
 			
 			SortedSet groups = new TreeSet(item.getEntityGroupRefs());
 			groups.retainAll(item.getAllowedAddGroupRefs());
+			
+			byte[] content = item.getContent();
+			try
+			{
+			if(content == null)
+			{
+				content = " ".getBytes();
+			}
+			}
+			catch(Exception e)
+			{
+				logger.warn("createCitationList ", e);
+			}
 
 			try
 			{
@@ -3229,7 +3267,7 @@ public class ResourcesAction
 																			collectionId,
 																			MAXIMUM_ATTEMPTS_FOR_UNIQUENESS,
 																			item.getMimeType(),
-																			item.getContent(),
+																			content,
 																			resourceProperties,
 																			groups,
 																			item.getNotification());
