@@ -1272,6 +1272,8 @@
 					#getPropertyValues($item.properties)
 				#end
 			#elseif("$itemType" == "$TYPE_CITE_LIST")
+				<script type="text/javascript" src="#scriptLink('citationscript.js')">	
+				</script>
 				#if($!{item.isMissing("name")})
 					<p class="shorttext validFail">
 				#else
