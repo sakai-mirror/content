@@ -54,4 +54,4 @@ msgcntr			-r13762	https://source.sakaiproject.org/svn/msgcntr/tags/sakai_2-2-1
 postem			-r13762	https://source.sakaiproject.org/svn/postem/tags/sakai_2-2-1
 cluster			-r13762	https://source.sakaiproject.org/svn/cluster/tags/sakai_2-2-1
 citation			https://source.sakaiproject.org/contrib/citation/trunk
-xserver				https://source.sakaiproject.org/contrib/sakaibrary/xserver-mock/trunk
+xserver				https://source.sakaiproject.org/contrib/citation/branches/xserver-sakai
