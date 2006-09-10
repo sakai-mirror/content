@@ -1289,6 +1289,8 @@
 					#editPropertyValues($item.properties)
 				#end
 			#elseif($item.isCitationList())
+				<script type="text/javascript" src="#libraryLink('js/citationscript.js')">	
+				</script>
 				<div class="longtext">
 					<table border="0"><tr><td>
 						<textarea name="content$i" id="content" rows="30" cols="80" wrap="virtual">$validator.escapeHtmlTextarea("$!{item.contentstring}")</textarea>
