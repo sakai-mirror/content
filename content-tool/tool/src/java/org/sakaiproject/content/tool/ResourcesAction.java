@@ -2766,7 +2766,7 @@ public class ResourcesAction
 			if(TYPE_CITE_LIST.equals(itemType))
 			{
 				// delete citations from db?
-				cleanupState(state, "citation.");
+				cleanupState(state, CitationHelper.CITATION_PREFIX);
 			}
 			pop = true;
 		}
@@ -3226,6 +3226,7 @@ public class ResourcesAction
 
 			resourceProperties.addProperty (ResourceProperties.PROP_DISPLAY_NAME, item.getName());
 			resourceProperties.addProperty (ResourceProperties.PROP_DESCRIPTION, item.getDescription());
+			resourceProperties.addProperty(ContentHostingService.PROP_ALTERNATE_REFERENCE, CitationHelper.REFERENCE_ROOT);
 			
 			BasicRightsAssignment rightsObj = item.getRights();
 			rightsObj.addResourceProperties(resourceProperties);
