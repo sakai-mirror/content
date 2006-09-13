@@ -1,57 +1,29 @@
-component		-r13762	https://source.sakaiproject.org/svn/component/tags/sakai_2-2-1
-util			-r13762	https://source.sakaiproject.org/svn/util/tags/sakai_2-2-1
-tool			-r13762	https://source.sakaiproject.org/svn/tool/tags/sakai_2-2-1
+access			-r13762	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1
+alias			-r13762	https://source.sakaiproject.org/svn/alias/tags/sakai_2-2-1
 authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
+citation			https://source.sakaiproject.org/contrib/citation/trunk
+component		-r13762	https://source.sakaiproject.org/svn/component/tags/sakai_2-2-1
+content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-citation
 courier			-r13762	https://source.sakaiproject.org/svn/courier/tags/sakai_2-2-1
-event			-r13762	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1
-entity			-r13762	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1
-velocity		 	https://source.sakaiproject.org/svn/velocity/trunk
-user			-r13762	https://source.sakaiproject.org/svn/user/tags/sakai_2-2-1
-memory			-r13762	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1
 db			-r13762	https://source.sakaiproject.org/svn/db/tags/sakai_2-2-1
 email			-r13762	https://source.sakaiproject.org/svn/email/tags/sakai_2-2-1
-alias			-r13762	https://source.sakaiproject.org/svn/alias/tags/sakai_2-2-1
-site			-r13762	https://source.sakaiproject.org/svn/site/tags/sakai_2-2-1
-master			-r13762	https://source.sakaiproject.org/svn/master/tags/sakai_2-2-1
-reference			https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1
-login			-r13762	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1
-access			-r13762	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1
-content				https://source.sakaiproject.org/svn/content/branches/content_2-2-1-citation
-metaobj			-r13762	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1
-presence		-r13762	https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1
-calendar		-r13762	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-2-1
-portal			-r13762	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1
+entity			-r13762	https://source.sakaiproject.org/svn/entity/tags/sakai_2-2-1
+event			-r13762	https://source.sakaiproject.org/svn/event/tags/sakai_2-2-1
 jsf			-r13762	https://source.sakaiproject.org/svn/jsf/tags/sakai_2-2-1
-sections		-r13762	https://source.sakaiproject.org/svn/sections/tags/sakai_2-2-1
-gradebook		-r13762	https://source.sakaiproject.org/svn/gradebook/tags/sakai_2-2-1
-course-management	-r13762	https://source.sakaiproject.org/svn/course-management/tags/sakai_2-2-1
-test-harness		-r13762	https://source.sakaiproject.org/svn/test-harness/tags/sakai_2-2-1
-help			-r13762	https://source.sakaiproject.org/svn/help/tags/sakai_2-2-1
-archive			-r13762	https://source.sakaiproject.org/svn/archive/tags/sakai_2-2-1
-rwiki			-r13762	https://source.sakaiproject.org/svn/rwiki/tags/sakai_2-2-1
-search			-r13762	https://source.sakaiproject.org/svn/search/tags/sakai_2-2-1
-site-manage		-r13762	https://source.sakaiproject.org/svn/site-manage/tags/sakai_2-2-1
-announcement		-r13762	https://source.sakaiproject.org/svn/announcement/tags/sakai_2-2-1
-mailarchive		-r13762	https://source.sakaiproject.org/svn/mailarchive/tags/sakai_2-2-1
-chat			-r13762	https://source.sakaiproject.org/svn/chat/tags/sakai_2-2-1
-discussion		-r13762	https://source.sakaiproject.org/svn/discussion/tags/sakai_2-2-1
+login			-r13762	https://source.sakaiproject.org/svn/login/tags/sakai_2-2-1
+mailarchive             -r13762 https://source.sakaiproject.org/svn/mailarchive/tags/sakai_2-2-1
+master			-r13762	https://source.sakaiproject.org/svn/master/tags/sakai_2-2-1
+memory			-r13762	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1
 message			-r13762	https://source.sakaiproject.org/svn/message/tags/sakai_2-2-1
-web			-r13762	https://source.sakaiproject.org/svn/web/tags/sakai_2-2-1
-osid			-r13762	https://source.sakaiproject.org/svn/osid/tags/sakai_2-2-1
-webservices		-r13762	https://source.sakaiproject.org/svn/webservices/tags/sakai_2-2-1
-assignment		-r13762	https://source.sakaiproject.org/svn/assignment/tags/sakai_2-2-1
-profile			-r13762	https://source.sakaiproject.org/svn/profile/tags/sakai_2-2-1
-dav			-r13762	https://source.sakaiproject.org/svn/dav/tags/sakai_2-2-1
-roster			-r13762	https://source.sakaiproject.org/svn/roster/tags/sakai_2-2-1
-syllabus		-r13762	https://source.sakaiproject.org/svn/syllabus/tags/sakai_2-2-1
-presentation		-r13762	https://source.sakaiproject.org/svn/presentation/tags/sakai_2-2-1
-sam			-r13762	https://source.sakaiproject.org/svn/sam/tags/sakai_2-2-1
-osp			-r13762	https://source.sakaiproject.org/svn/osp/tags/sakai_2-2-1
-jobscheduler		-r13762	https://source.sakaiproject.org/svn/jobscheduler/tags/sakai_2-2-1
-providers		-r13762	https://source.sakaiproject.org/svn/providers/tags/sakai_2-2-1
+metaobj			-r13762	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1
+portal			-r13762	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1
+reference			https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1
+site			-r13762	https://source.sakaiproject.org/svn/site/tags/sakai_2-2-1
+site-manage		-r13762	https://source.sakaiproject.org/svn/site-manage/tags/sakai_2-2-1
+test-harness		-r13762	https://source.sakaiproject.org/svn/test-harness/tags/sakai_2-2-1
 textarea		-r13762	https://source.sakaiproject.org/svn/textarea/tags/sakai_2-2-1
-msgcntr			-r13762	https://source.sakaiproject.org/svn/msgcntr/tags/sakai_2-2-1
-postem			-r13762	https://source.sakaiproject.org/svn/postem/tags/sakai_2-2-1
-cluster			-r13762	https://source.sakaiproject.org/svn/cluster/tags/sakai_2-2-1
-citation			https://source.sakaiproject.org/contrib/citation/trunk
+tool			-r13762	https://source.sakaiproject.org/svn/tool/tags/sakai_2-2-1
+user			-r13762	https://source.sakaiproject.org/svn/user/tags/sakai_2-2-1
+util			-r13762	https://source.sakaiproject.org/svn/util/tags/sakai_2-2-1
+velocity		 	https://source.sakaiproject.org/svn/velocity/trunk
 xserver				https://source.sakaiproject.org/contrib/citation/branches/xserver-sakai
