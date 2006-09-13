@@ -1,5 +1,7 @@
 access			-r13762	https://source.sakaiproject.org/svn/access/tags/sakai_2-2-1
 alias			-r13762	https://source.sakaiproject.org/svn/alias/tags/sakai_2-2-1
+announcement			https://source.sakaiproject.org/svn/announcement/tags/sakai_2-2-1
+archive				https://source.sakaiproject.org/svn/archive/sakai_2-2-1
 authz			-r13762	https://source.sakaiproject.org/svn/authz/tags/sakai_2-2-1
 citation			https://source.sakaiproject.org/contrib/citation/trunk
 component		-r13762	https://source.sakaiproject.org/svn/component/tags/sakai_2-2-1
@@ -17,6 +19,7 @@ memory			-r13762	https://source.sakaiproject.org/svn/memory/tags/sakai_2-2-1
 message			-r13762	https://source.sakaiproject.org/svn/message/tags/sakai_2-2-1
 metaobj			-r13762	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-2-1
 portal			-r13762	https://source.sakaiproject.org/svn/portal/tags/sakai_2-2-1
+presence			https://source.sakaiproject.org/svn/presence/tags/sakai_2-2-1
 reference			https://source.sakaiproject.org/svn/reference/tags/sakai_2-2-1
 site			-r13762	https://source.sakaiproject.org/svn/site/tags/sakai_2-2-1
 site-manage		-r13762	https://source.sakaiproject.org/svn/site-manage/tags/sakai_2-2-1
