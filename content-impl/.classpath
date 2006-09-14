@@ -25,5 +25,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
 	<classpathentry kind="src" path="/velocity"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/db-impl"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

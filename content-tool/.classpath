@@ -19,6 +19,5 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/memory-impl"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/metaobj-tool"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
