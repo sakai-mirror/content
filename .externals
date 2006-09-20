@@ -41,3 +41,5 @@ user/user-impl					https://source.sakaiproject.org/svn/user/trunk/user-impl
 user/user-util					https://source.sakaiproject.org/svn/user/trunk/user-util
 util							https://source.sakaiproject.org/svn/util/trunk
 velocity						https://source.sakaiproject.org/svn/velocity/trunk
+citation						https://source.sakaiproject.org/contrib/citation/trunk 
+xserver/impl						https://source.sakaiproject.org/contrib/citation/branches/xserver-sakai/impl
