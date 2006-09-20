@@ -27,7 +27,7 @@ metaobj/metaobj-api				https://source.sakaiproject.org/svn/metaobj/trunk/metaobj
 metaobj/metaobj-impl			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl
 metaobj/metaobj-util			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util
 portal					https://source.sakaiproject.org/svn/portal/trunk
-reference/library				https://source.sakaiproject.org/svn/content/branches/reference_mini_citation/library
+reference				https://source.sakaiproject.org/svn/content/branches/reference_mini_citation
 site/site-api					https://source.sakaiproject.org/svn/site/trunk/site-api
 site/site-impl					https://source.sakaiproject.org/svn/site/trunk/site-impl
 site-manage/site-manage-api		https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-api
