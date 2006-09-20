@@ -28,7 +28,7 @@ metaobj/metaobj-impl			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj
 metaobj/metaobj-util			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util
 portal/portal-mercury			https://source.sakaiproject.org/svn/portal/trunk/portal-mercury
 portal/portal-util				https://source.sakaiproject.org/svn/portal/trunk/portal-util
-reference/library				https://source.sakaiproject.org/svn/reference/trunk/library
+reference/library				https://source.sakaiproject.org/svn/content/branches/reference_mini_citation/library
 site/site-api					https://source.sakaiproject.org/svn/site/trunk/site-api
 site/site-impl					https://source.sakaiproject.org/svn/site/trunk/site-impl
 site-manage/site-manage-api		https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-api
@@ -45,3 +45,4 @@ util							https://source.sakaiproject.org/svn/util/trunk
 velocity						https://source.sakaiproject.org/svn/velocity/trunk
 citation						https://source.sakaiproject.org/contrib/citation/trunk 
 xserver/impl						https://source.sakaiproject.org/contrib/citation/branches/xserver-sakai/impl
+
