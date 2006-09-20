@@ -26,8 +26,7 @@ memory/memory-impl				https://source.sakaiproject.org/svn/memory/trunk/memory-im
 metaobj/metaobj-api				https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-api
 metaobj/metaobj-impl			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl
 metaobj/metaobj-util			https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util
-portal/portal-mercury			https://source.sakaiproject.org/svn/portal/trunk/portal-mercury
-portal/portal-util				https://source.sakaiproject.org/svn/portal/trunk/portal-util
+portal					https://source.sakaiproject.org/svn/portal/trunk
 reference/library				https://source.sakaiproject.org/svn/content/branches/reference_mini_citation/library
 site/site-api					https://source.sakaiproject.org/svn/site/trunk/site-api
 site/site-impl					https://source.sakaiproject.org/svn/site/trunk/site-impl
