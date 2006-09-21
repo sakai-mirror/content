@@ -1395,6 +1395,32 @@
 					#end	
 					#editPropertyValues($item.properties)
 				#end
+			#elseif($item.isCitationList())
+				<script type="text/javascript" src="#libraryLink('js/citationscript.js')">	
+				</script>
+				<p class="shorttext">
+					<label for="description">
+						$tlang.getString("gen.description")
+					</label>
+					<textarea id="description" name="description" rows="2" cols="40" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
+				</p>	
+				<div id="CitationListFrame">
+					<iframe 
+						name="$citationsFrameId"
+						id="$citationsFrameId"
+						title="Enter this frame to create the citation list"
+						class ="portletMainIframe"
+						height="1000"
+						width="100%"
+						frameborder="0"
+						marginwidth="0"
+						marginheight="0"
+						scrolling="auto"
+						src="#contentLink("$!{citationsFrameId}")&sakai_action=doList&collectionId=$item.citationCollectionId"
+						##onload="updateMainFrameHeight('$mainFrameId');>
+					</iframe>
+				</div>
+			
 			#else
 				<table class="itemSummary" border="0" style="clear:both;margin:left:.7em">
 					<tr> 
@@ -1417,12 +1443,14 @@
 		<p class="discTria">
 			$tlang.getString("add.props")
 		</p>
-		<p class="shorttext">
-			<label for="description">
-				$tlang.getString("gen.description")
-			</label>
-			<textarea id="description" name="description" rows="2" cols="40" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
-		</p>	
+		#if(!$item.isCitationList())
+			<p class="shorttext">
+				<label for="description">
+					$tlang.getString("gen.description")
+				</label>
+				<textarea id="description" name="description" rows="4" cols="50" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
+			</p>
+		#end	
 		#if ($item.isFileUpload() || $item.isHtml() || $item.isPlaintext()) 
 			##getRightsAssignment($item.rights)
 			

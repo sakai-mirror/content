@@ -1291,6 +1291,8 @@
 					$tlang.getString("gen.folder1")
 				#elseif("$itemType" == "$TYPE_FORM")
 					$tlang.getString("addi.meta")
+				#elseif("$itemType" == "$TYPE_CITE_LIST")
+					$tlang.getString("addi.cites")
 				#end
 				#if($numberOfItems > 1)
 					 ($n of $numberOfItems)
@@ -1377,6 +1379,42 @@
 					#end
 					#getPropertyValues($item.properties)
 				#end
+			#elseif("$itemType" == "$TYPE_CITE_LIST")
+				<script type="text/javascript" src="#scriptLink('citationscript.js')">	
+				</script>
+				#if($!{item.isMissing("name")})
+					<p class="shorttext validFail">
+				#else
+					<p class="shorttext">
+				#end
+					<span class="reqStar">*</span>
+					<label for="name$i">
+						$tlang.getString("gen.title") 
+					</label>
+					<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
+				</p>	
+				<p class="shorttext">
+					<label for="description$i">
+						$tlang.getString("gen.description")
+					</label>
+					<textarea id="description$i" name="description$i" rows="4" cols="50" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
+				</p>	
+				<div id="CitationListFrame">
+					<iframe 
+						name="$citationsFrameId"
+						id="$citationsFrameId"
+						title="Enter this frame to create the citation list"
+						class ="portletMainIframe"
+						height="1000"
+						width="100%"
+						frameborder="0"
+						marginwidth="0"
+						marginheight="0"
+						scrolling="auto"
+						src="#contentLink("$!{citationsFrameId}")"
+						##onload="updateMainFrameHeight('$mainFrameId');>
+					</iframe>
+				</div>
 			#else
 				#if("$!{item.Filename}" == "")
 					#if($!{item.isMissing("fileName")})
@@ -1403,27 +1441,29 @@
 			<p class="discTria">
 				$tlang.getString("add.props")
 			</p>
-			#if(! $item.isFolder())
-				#if($!{item.isMissing("name")})
-					<p class="shorttext validFail">
-				#else
-					<p class="shorttext">
+			
+			#if("$itemType" != "$TYPE_CITE_LIST")
+				#if(! $item.isFolder())
+					#if($!{item.isMissing("name")})
+						<p class="shorttext validFail">
+					#else
+						<p class="shorttext">
+					#end
+						<span class="reqStar">*</span>
+						<label for="name$i">
+							$tlang.getString("gen.title") 
+						</label>
+						<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
+					</p>
 				#end
-					<span class="reqStar">*</span>
-					<label for="name$i">
-						$tlang.getString("gen.title") 
+				<p class="shorttext">
+					<label for="description$i">
+						$tlang.getString("gen.description")
 					</label>
-					<input type="text" size="40" id="name$i" name="name$i" value="$validator.escapeHtml("$!item.name")" />
+					<textarea id="description$i" name="description$i" rows="2" cols="40" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
 				</p>	
-			#end
-			<p class="shorttext">
-				<label for="description$i">
-					$tlang.getString("gen.description")
-				</label>
-				<textarea id="description$i" name="description$i" rows="2" cols="40" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
-			</p>	
-			#if ($item.isFileUpload() || $item.isHtml() || $item.isPlaintext())
-				##getRightsAssignment($item.rights)
+				#if ($item.isFileUpload() || $item.isHtml() || $item.isPlaintext())
+					##getRightsAssignment($item.rights)
 				
 					#if ($!copyrightTypes)
 						<p class="shorttext">
@@ -1460,125 +1500,125 @@
 							$tlang.getString("edit.display3")
 					</div>
 					#end
-				
+				#end
 			#end
 			######### begin availability section ##########
 			#if($availability_is_enabled &&  !$item.isInWorkspace())
-			<h4>$tlang.getString("avail.title")</h4>
-			<div  class="labelindnt">
-				<table>
-					<tr>
-						<td>
-							<input type="radio" name="hidden$i" id="hidden_false$i" value="false" #if(!$item.isHidden())checked="checked" #end/>
-						</td>
-						<td colspan="4">
-							<label for="hidden_false$i">
-								$tlang.getString("avail.show")
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td>
-						</td>
-						<td>
-							<input type="checkbox" name="use_start_date$i" id="use_start_date$i" value="true" #if($item.useReleaseDate())checked="checked" #end/>
-						</td>
-						<td colspan="3">
-							<label for="use_start_date$i">
-								$tlang.getString("avail.start")
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-							<label for="release_year$i">Date:</label>
-						</td>
-						<td>
-							<label for="release_time$i">Time:</label>
-						</td>
-					</tr>
-					#set($yearX = $item.releaseDate.breakdownLocal().year)
-					#set($year0 = $yearX - 4)
-					#set($yearN = $yearX + 4)
-					#set($monthX = $item.releaseDate.breakdownLocal().month)
-					#set($dayX = $item.releaseDate.breakdownLocal().day)
-					<tr>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-							#custom_dateselectionwidget("release_year$i" "release_month$i" "release_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_start_date$i').checked=true;")
-						</td>
-						<td>
-							#custom_timeSelectionWidget("release$i" $item.releaseDate "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_start_date$i').checked=true;")
-						</td>
-					</tr>
-					<tr>
-						<td>
-						</td>
-						<td>
-							<input type="checkbox" name="use_end_date$i" id="use_end_date$i" value="true" #if($item.useRetractDate())checked="checked" #end/>
-						</td>
-						<td colspan="4">
-							<label for="use_end_date$i">
-								$tlang.getString("avail.end")
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-							<label for="retract_year$i">Date:</label>
-						</td>
-						<td>
-							<label for="retract_time$i">Time:</label>
-						</td>
-					</tr>
-					#set($yearX = $item.retractDate.breakdownLocal().year)
-					#set($year0 = $yearX - 4)
-					#set($yearN = $yearX + 4)
-					#set($monthX = $item.retractDate.breakdownLocal().month)
-					#set($dayX = $item.retractDate.breakdownLocal().day)
-					<tr>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-						</td>
-						<td>
-							#custom_dateselectionwidget("retract_year$i" "retract_month$i" "retract_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")
-						</td>
-						<td>
-							#custom_timeSelectionWidget("retract$i" $item.retractDate "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<input type="radio" name="hidden$i" id="hidden_true$i" value="true" #if($item.isHidden())checked="checked" #end/>
-						</td>
-						<td colspan="4">
-							<label for="hidden_true$i">
-								$tlang.getString("avail.hide")
-							</label>
-						</td>
-					</tr>
-				</table>
-			</div>
+				<h4>$tlang.getString("avail.title")</h4>
+				<div  class="labelindnt">
+					<table>
+						<tr>
+							<td>
+								<input type="radio" name="hidden$i" id="hidden_false$i" value="false" #if(!$item.isHidden())checked="checked" #end/>
+							</td>
+							<td colspan="4">
+								<label for="hidden_false$i">
+									$tlang.getString("avail.show")
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td>
+							</td>
+							<td>
+								<input type="checkbox" name="use_start_date$i" id="use_start_date$i" value="true" #if($item.useReleaseDate())checked="checked" #end/>
+							</td>
+							<td colspan="3">
+								<label for="use_start_date$i">
+									$tlang.getString("avail.start")
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+								<label for="release_year$i">Date:</label>
+							</td>
+							<td>
+								<label for="release_time$i">Time:</label>
+							</td>
+						</tr>
+						#set($yearX = $item.releaseDate.breakdownLocal().year)
+						#set($year0 = $yearX - 4)
+						#set($yearN = $yearX + 4)
+						#set($monthX = $item.releaseDate.breakdownLocal().month)
+						#set($dayX = $item.releaseDate.breakdownLocal().day)
+						<tr>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+								#custom_dateselectionwidget("release_year$i" "release_month$i" "release_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_start_date$i').checked=true;")
+							</td>
+							<td>
+								#custom_timeSelectionWidget("release$i" $item.releaseDate "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_start_date$i').checked=true;")
+							</td>
+						</tr>
+						<tr>
+							<td>
+							</td>
+							<td>
+								<input type="checkbox" name="use_end_date$i" id="use_end_date$i" value="true" #if($item.useRetractDate())checked="checked" #end/>
+							</td>
+							<td colspan="4">
+								<label for="use_end_date$i">
+									$tlang.getString("avail.end")
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+								<label for="retract_year$i">Date:</label>
+							</td>
+							<td>
+								<label for="retract_time$i">Time:</label>
+							</td>
+						</tr>
+						#set($yearX = $item.retractDate.breakdownLocal().year)
+						#set($year0 = $yearX - 4)
+						#set($yearN = $yearX + 4)
+						#set($monthX = $item.retractDate.breakdownLocal().month)
+						#set($dayX = $item.retractDate.breakdownLocal().day)
+						<tr>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+								#custom_dateselectionwidget("retract_year$i" "retract_month$i" "retract_day$i" $year0 $yearN $yearX $monthX $dayX "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")
+							</td>
+							<td>
+								#custom_timeSelectionWidget("retract$i" $item.retractDate "document.getElementById('hidden_true$i').checked=false;document.getElementById('hidden_false$i').checked=true;document.getElementById('use_end_date$i').checked=true;")
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="radio" name="hidden$i" id="hidden_true$i" value="true" #if($item.isHidden())checked="checked" #end/>
+							</td>
+							<td colspan="4">
+								<label for="hidden_true$i">
+									$tlang.getString("avail.hide")
+								</label>
+							</td>
+						</tr>
+					</table>
+				</div>
 			#end
 			######### end availability section ##########
 		

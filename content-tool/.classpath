@@ -17,8 +17,10 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/content-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/metaobj-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/memory-impl"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/metaobj"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/metaobj-util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/citation-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/citation-tool"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
