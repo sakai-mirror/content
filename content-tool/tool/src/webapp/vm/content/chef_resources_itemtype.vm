@@ -1397,7 +1397,7 @@
 					<label for="description$i">
 						$tlang.getString("gen.description")
 					</label>
-					<textarea id="description$i" name="description$i" rows="4" cols="50" wrap="virtual">$validator.escapeHtmlTextarea("$!item.description")</textarea>
+					<textarea id="content$i" name="content$i" rows="8" cols="60" wrap="virtual">$validator.escapeHtmlTextarea("$!item.contentstring")</textarea>
 				</p>	
 				<div id="CitationListFrame">
 					<iframe 

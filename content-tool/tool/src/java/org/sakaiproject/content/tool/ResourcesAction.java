@@ -3998,6 +3998,11 @@ public class ResourcesAction
 			}
 		}
 		
+		if(item.getType() != null)
+		{
+			state.setAttribute(STATE_CREATE_TYPE, item.getType());
+		}
+		
 		item.setPossibleGroups(groups);
 
 		context.put("item", item);
@@ -5451,7 +5456,7 @@ public class ResourcesAction
 
 			}
 		}
-		else if(item.isPlaintext())
+		else if(item.isPlaintext() || item.isCitationList())
 		{
 			// check for input from editor (textarea)
 			String content = params.getString("content" + index);
@@ -5461,9 +5466,16 @@ public class ResourcesAction
 				item.setContent(content);
 				blank_entry = false;
 			}
-			item.setMimeType(MIME_TYPE_DOCUMENT_PLAINTEXT);
+			if(item.isPlaintext())
+			{
+				item.setMimeType(MIME_TYPE_DOCUMENT_PLAINTEXT);
+			}
+			else
+			{
+				item.setMimeType(MIME_TYPE_CITE_LIST);
+			}
 		}
-		else if(item.isHtml() || item.isCitationList())
+		else if(item.isHtml())
 		{
 			// check for input from editor (textarea)
 			String content = params.getCleanString("content" + index);
@@ -5479,14 +5491,7 @@ public class ResourcesAction
 				item.setContentHasChanged(true);
 				blank_entry = false;
 			}
-			if(item.isHtml())
-			{
 			item.setMimeType(MIME_TYPE_DOCUMENT_HTML);
-		}
-			else
-			{
-				item.setMimeType(MIME_TYPE_CITE_LIST);
-			}
 		}
 		else if(item.isUrl())
 		{
@@ -6697,7 +6702,19 @@ public class ResourcesAction
 
 			if(item.isCitationList())
 			{
-				resourceProperties.addProperty(CitationHelper.PROP_CITATION_COLLECTION, item.getCitationCollectionId());
+				String citationCollectionId = (String) state.getAttribute(CitationHelper.CITATION_COLLECTION_ID);
+				if(citationCollectionId == null)
+				{
+					citationCollectionId = item.getCitationCollectionId();
+				}
+				if(citationCollectionId == null)
+				{
+					logger.debug("No citation collection id");
+				}
+				else
+				{
+					resourceProperties.addProperty(CitationHelper.PROP_CITATION_COLLECTION, citationCollectionId);
+				}
 			}
 			
 			resourceProperties.addProperty(ResourceProperties.PROP_ORIGINAL_FILENAME, filename);
@@ -8370,6 +8387,12 @@ public class ResourcesAction
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
+		
+		String itemType = (String) state.getAttribute(STATE_CREATE_TYPE);
+		if(itemType != null && TYPE_CITE_LIST.equals(itemType))
+		{
+			cleanupState(state, CitationHelper.CITATION_PREFIX);
+		}
 
 		if(!isStackEmpty(state))
 		{
