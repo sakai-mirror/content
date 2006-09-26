@@ -111,9 +111,15 @@ tr.selectedMove .itemAction a:link,tr.selectedMove .itemAction a:visited{
 
 /*links in citations - highlighted as Added */
 tr.highlightAdded {
-	background: #ffa;
+	background: #afa;
 	text-decoration: none;
-	border-bottom: none;
+	border: none !important;
+}
+/*links in citations - highlighted as Added */
+tr.highlightAdded:hover{
+	background: #8e8;
+	text-decoration: none;
+	border: none !important;
 }
 
 /*links for the generic toolbar  - inline-block is there to make IE behave
