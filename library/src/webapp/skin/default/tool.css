@@ -109,6 +109,13 @@ tr.selectedMove .itemAction a:link,tr.selectedMove .itemAction a:visited{
 	border-bottom: none;
 }
 
+/*links in citations - highlighted as Added */
+tr.highlightAdded {
+	background: #ffa;
+	text-decoration: none;
+	border-bottom: none;
+}
+
 /*links for the generic toolbar  - inline-block is there to make IE behave
 see: http://www.quirksmode.org/bugreports/archives/2005/07/Wrapped_inlinenowrap_elements_lose_padding_left_in.html*/
 .navIntraTool a, .navIntraTool a:link{
@@ -642,6 +649,18 @@ textarea:focus{
 /*inline blob used to indicate progress (see: upload a resource say)
 visibility gets toggled*/
 #submitnotif{
+	background: #fff url(../images/warn.gif) .3em .3em no-repeat;
+	border: 1px solid #b11;
+	font-family: Verdana,Arial,Helvetica,sans-serif;
+	clear: none;
+	color: #b11;
+	font-size: small;
+	text-decoration: blink;
+	vertical-align: text-top;
+	margin: 0;
+	padding: 5px 5px 5px 25px;
+}
+.submitnotif{
 	background: #fff url(../images/warn.gif) .3em .3em no-repeat;
 	border: 1px solid #b11;
 	font-family: Verdana,Arial,Helvetica,sans-serif;

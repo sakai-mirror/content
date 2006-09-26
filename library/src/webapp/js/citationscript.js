@@ -103,9 +103,11 @@ function addCitation(citationId)
 	sendMessage('add');
 	
 	var removeLabel = document.getElementById('removeLabel').value;
-	var span = document.getElementById("save_" + citationId);
-	var span_str = "<a href=\"#\" onclick=\"removeCitation('" + citationId + "');\">" + removeLabel + "\n</a>\n";
-	span.innerHTML = span_str;
+	var cell = document.getElementById("save_" + citationId);
+	var cell_str = "<input type=\"button\" id=\"remove_" + citationId + "\" onclick=\"removeCitation('" + citationId + "');\" value=\"" + removeLabel + "\" />";
+	cell.innerHTML = cell_str;
+	var row = document.getElementById("row_" + citationId);
+	row.className="highlightAdded";
 }
 function removeCitation(citationId)
 {
@@ -113,9 +115,11 @@ function removeCitation(citationId)
 	sendMessage('remove');
 	
 	var addLabel = document.getElementById('addLabel').value;
-	var span = document.getElementById("save_" + citationId);
-	var span_str = "<a href=\"#\" onclick=\"addCitation('" + citationId + "');\">" + addLabel + "\n</a>\n";
-	span.innerHTML = span_str;
+	var cell = document.getElementById("save_" + citationId);
+	var cell_str = "<input type=\"button\" id=\"add_" + citationId + "\" onclick=\"addCitation('" + citationId + "');\" value=\"" + addLabel + "\" />";
+	cell.innerHTML = cell_str;
+	var row = document.getElementById("row_" + citationId);
+	row.className="";
 }
 function sendMessage(msg)
 {
