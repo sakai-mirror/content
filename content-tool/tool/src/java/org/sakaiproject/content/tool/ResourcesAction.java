@@ -64,7 +64,9 @@ import org.sakaiproject.cheftool.PortletConfig;
 import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
+import org.sakaiproject.citation.api.CitationCollection;
 import org.sakaiproject.citation.api.CitationHelper;
+import org.sakaiproject.citation.cover.CitationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
@@ -9569,6 +9571,28 @@ public class ResourcesAction
 
 				ContentResourceEdit copy = ContentHostingService.editResource(newItemId);
 				ResourcePropertiesEdit pedit = copy.getPropertiesEdit();
+				
+				if(MIME_TYPE_CITE_LIST.equals(copy.getContentType()) || TYPE_CITE_LIST.equals(copy.getContentType()))
+				{
+					String citationCollectionId = pedit.getProperty(CitationHelper.PROP_CITATION_COLLECTION);
+					if(citationCollectionId == null)
+					{
+						logger.warn("doPasteitem orgiginal has no citationCollectionId");
+					}
+					else
+					{
+						CitationCollection newCitationCollection = CitationService.copyAll(citationCollectionId);
+						if(newCitationCollection == null)
+						{
+							logger.warn("doPasteitem unable to create copy");
+						}
+						else
+						{
+							pedit.addProperty(CitationHelper.PROP_CITATION_COLLECTION, newCitationCollection.getId());
+						}
+					}
+				}
+				
 				pedit.addProperty(ResourceProperties.PROP_DISPLAY_NAME, displayName);
 				ContentHostingService.commitResource(copy, NotificationService.NOTI_NONE);
 
@@ -9670,6 +9694,31 @@ public class ResourcesAction
 			try
 			{
 				String id = ContentHostingService.copyIntoFolder(itemId, collectionId);
+				
+				ContentResourceEdit copy = ContentHostingService.editResource(id);
+				if(MIME_TYPE_CITE_LIST.equals(copy.getContentType()) || TYPE_CITE_LIST.equals(copy.getContentType()))
+				{
+					ResourcePropertiesEdit pedit = copy.getPropertiesEdit();
+					String citationCollectionId = pedit.getProperty(CitationHelper.PROP_CITATION_COLLECTION);
+					if(citationCollectionId == null)
+					{
+						logger.warn("doPasteitem orgiginal has no citationCollectionId");
+					}
+					else
+					{
+						CitationCollection newCitationCollection = CitationService.copyAll(citationCollectionId);
+						if(newCitationCollection == null)
+						{
+							logger.warn("doPasteitem unable to create copy");
+						}
+						else
+						{
+							pedit.addProperty(CitationHelper.PROP_CITATION_COLLECTION, newCitationCollection.getId());
+						}
+					}
+				}
+				ContentHostingService.commitResource(copy, NotificationService.NOTI_NONE);
+				
 				String mode = (String) state.getAttribute(STATE_MODE);
 				if(MODE_HELPER.equals(mode))
 				{
