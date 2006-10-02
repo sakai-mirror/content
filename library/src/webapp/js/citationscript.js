@@ -38,6 +38,10 @@ function closePopup(name)
 	{
 		window.opener.parent.popups[name].close();
 	}
+	else
+	{
+		window.close();
+	}
 }
 function setPopupHeight(name)
 {
