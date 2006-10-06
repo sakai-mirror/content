@@ -8,9 +8,9 @@ blog			-r15367	https://source.sakaiproject.org/svn/blog/tags/sakai_2-3-0-003-QA
 calendar		-r15367	https://source.sakaiproject.org/svn/calendar/tags/sakai_2-3-0-003-QA
 chat			-r15367	https://source.sakaiproject.org/svn/chat/tags/sakai_2-3-0-003-QA
 cluster			-r15367	https://source.sakaiproject.org/svn/cluster/tags/sakai_2-3-0-003-QA
-component		-r15367	https://source.sakaiproject.org/svn/component/tags/sakai_2-3-0-003-QA
-content/content-api           https://source.sakaiproject.org/svn/content/trunk/content-api
-content/content-impl          https://source.sakaiproject.org/svn/content/trunk/content-impl
+component			https://source.sakaiproject.org/svn/content/branches/component_mini_citation
+content/content-api     -r15367 https://source.sakaiproject.org/svn/content/trunk/content-api
+content/content-impl    -r15367 https://source.sakaiproject.org/svn/content/trunk/content-impl
 content/content-tool          https://source.sakaiproject.org/svn/content/branches/content_mini_citation/content-tool
 courier			-r15367	https://source.sakaiproject.org/svn/courier/tags/sakai_2-3-0-003-QA
 course-management	-r15367	https://source.sakaiproject.org/svn/course-management/tags/sakai_2-3-0-003-QA
@@ -27,7 +27,7 @@ jsf			-r15367	https://source.sakaiproject.org/svn/jsf/tags/sakai_2-3-0-003-QA
 linktool		-r15367	https://source.sakaiproject.org/svn/linktool/tags/sakai_2-3-0-003-QA
 login			-r15367	https://source.sakaiproject.org/svn/login/tags/sakai_2-3-0-003-QA
 mailarchive		-r15367	https://source.sakaiproject.org/svn/mailarchive/tags/sakai_2-3-0-003-QA
-master			-r15367	https://source.sakaiproject.org/svn/master/tags/sakai_2-3-0-003-QA
+master				https://source.sakaiproject.org/svn/content/branches/master_mini_citation
 memory			-r15367	https://source.sakaiproject.org/svn/memory/tags/sakai_2-3-0-003-QA
 message			-r15367	https://source.sakaiproject.org/svn/message/tags/sakai_2-3-0-003-QA
 metaobj			-r15367	https://source.sakaiproject.org/svn/metaobj/tags/sakai_2-3-0-003-QA
