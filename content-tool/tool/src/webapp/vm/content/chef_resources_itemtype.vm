@@ -1411,8 +1411,7 @@
 						marginwidth="0"
 						marginheight="0"
 						scrolling="auto"
-						src="#contentLink("$!{citationsFrameId}")"
-						##onload="updateMainFrameHeight('$mainFrameId');>
+						src="#contentLink("$!{citationsFrameId}")">
 					</iframe>
 				</div>
 			#else
