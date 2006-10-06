@@ -16,7 +16,7 @@ entity                        https://source.sakaiproject.org/svn/entity/trunk
 event                         https://source.sakaiproject.org/svn/event/trunk
 jsf                           https://source.sakaiproject.org/svn/jsf/trunk
 login                         https://source.sakaiproject.org/svn/login/trunk
-master                        https://source.sakaiproject.org/svn/master/trunk
+master                        https://source.sakaiproject.org/svn/content/branches/master_mini_citation
 message/message-api           https://source.sakaiproject.org/svn/message/trunk/message-api
 message/message-impl          https://source.sakaiproject.org/svn/message/trunk/message-impl
 mailarchive/mailarchive-api   https://source.sakaiproject.org/svn/mailarchive/trunk/mailarchive-api
