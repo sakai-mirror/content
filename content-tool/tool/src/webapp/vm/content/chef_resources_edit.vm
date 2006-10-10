@@ -1398,6 +1398,7 @@
 			#elseif($item.isCitationList())
 				<script type="text/javascript" src="#libraryLink('js/citationscript.js')">	
 				</script>
+				<input type="hidden" id="citations_parent_id" value="$mainFrameId" />
 				<p class="shorttext">
 					<label for="description">
 						$tlang.getString("gen.description")
