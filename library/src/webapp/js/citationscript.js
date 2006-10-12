@@ -81,9 +81,9 @@ function setPopupHeight(name)
 
 		// here we fudge to get a little bigger
 		var newHeight = height + 100;
-		if(newHeight > 1000)
+		if(newHeight > 720)
 		{
-			newHeight = 1000;
+			newHeight = 720;
 		}
 		frame.resizeTo(800, newHeight);
 	}
@@ -220,6 +220,12 @@ function checkinWithOpener(name)
 		//window.focus();
 		//document.getElementById("hiddenMessage").style.display = "block";
 	}
+}
+function resizeParent()
+{
+	var pwin = document.getElementById("citations_parent_id").value;
+	
+	setMainFrameHeight(pwin);
 }
 
 
