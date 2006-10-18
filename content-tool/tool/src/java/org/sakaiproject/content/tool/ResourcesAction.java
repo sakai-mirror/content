@@ -9928,6 +9928,10 @@ public class ResourcesAction
 
 		if(flow == null || "cancel".equals(flow))
 		{
+			if(state.getAttribute(CitationHelper.CITATION_COLLECTION_ID) != null)
+			{
+				cleanupState(state, CitationHelper.CITATION_PREFIX);
+			}
 			doCancel(data);
 			return;
 		}
