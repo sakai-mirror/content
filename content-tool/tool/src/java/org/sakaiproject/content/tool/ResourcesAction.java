@@ -5992,7 +5992,7 @@ public class ResourcesAction
 				}
 			}
 		}
-		else if(revise_file)
+		else if(revise_file || item.isCitationList())
 		{
 			// check for input from editor (textarea)
 			String content = params.getString("content");
@@ -10082,6 +10082,10 @@ public class ResourcesAction
 					}
 					else if(item.isCitationList())
 					{
+						if(item.getContent() != null)
+						{
+							redit.setContent(item.getContent());
+						}
 						pedit.addProperty(CitationHelper.PROP_CITATION_COLLECTION, item.getCitationCollectionId());
 						cleanupState(state, CitationHelper.CITATION_PREFIX);
 					}
