@@ -1759,7 +1759,7 @@
 					</td>
 				</tr>
 			#end
-			#if (! $item.isStructuredArtifact())
+			#if (! $item.isStructuredArtifact() && ! $item.isCitationList())
 				<tr> 
 					<td style="width:180px;padding-left:.7em"> 
 						<label>$tlang.getString("gen.stored")</label>
