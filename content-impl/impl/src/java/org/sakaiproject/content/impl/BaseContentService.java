@@ -573,7 +573,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			M_log.warn("init(): ", t);
 		}
-
+		
 	} // init
 
 	/**
@@ -2034,7 +2034,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				// add a default value that sorts new items after existing items, with new folders before new resources
 				ContentCollection container = edit.getContainingCollection();
-				int count = container.getMembers().size();
+				int count = container.getMemberCount();
 				props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, Integer.toString(count + 1));
 			}
 		}
