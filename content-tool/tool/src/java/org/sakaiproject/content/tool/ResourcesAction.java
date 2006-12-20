@@ -522,8 +522,11 @@ public class ResourcesAction
 	/** The default value for whether to show all sites in dropbox (used if global value can't be read from server config service) */
 	private static final boolean SHOW_ALL_SITES_IN_DROPBOX = false;
 
-	/** The number of members for a collection at which this tool should refuse to expand the collection */
+	/** The default number of members for a collection at which this tool should refuse to expand the collection. Used only if value can't be read from config service. */
 	protected static final int EXPANDABLE_FOLDER_SIZE_LIMIT = 256;
+	
+	/** Name of state attribute indicating number of members for a collection at which this tool should refuse to expand the collection. */
+	protected static final String STATE_EXPANDABLE_FOLDER_SIZE_LIMIT = "resources.expandable_folder_size_limit";
 
 	protected static final String STATE_SHOW_REMOVE_ACTION = "resources.show_remove_action";
 
@@ -9600,6 +9603,10 @@ public class ResourcesAction
 		/** This attribute indicates whether "Other Sites" twiggle should be open */
 		state.setAttribute(STATE_SHOW_OTHER_SITES, Boolean.FALSE.toString());
 
+		/** set attribute for the maximum size at which the resources tool will expand a collection. */
+		int expandableFolderSizeLimit = ServerConfigurationService.getInt("resources.expanded_folder_size_limit", EXPANDABLE_FOLDER_SIZE_LIMIT);
+		state.setAttribute(STATE_EXPANDABLE_FOLDER_SIZE_LIMIT, new Integer(expandableFolderSizeLimit));
+		
 		// set the home collection to the parameter, if present, or the default if not
 		String home = StringUtil.trimToNull(portlet.getPortletConfig().getInitParameter("home"));
 		state.setAttribute (STATE_HOME_COLLECTION_DISPLAY_NAME, home);
@@ -10538,13 +10545,18 @@ public class ResourcesAction
 			// get the "size' of the collection, meaning the number of members one level down
 			int collection_size = collection.getMemberCount(); // newMembers.size();
 			folder.setIsEmpty(collection_size < 1);
-			folder.setSortable(ContentHostingService.isSortByPriorityEnabled() && collection_size > 1 && collection_size < EXPANDABLE_FOLDER_SIZE_LIMIT);
-			folder.setIsTooBig(collection_size > EXPANDABLE_FOLDER_SIZE_LIMIT);
+			Integer expansionLimit = (Integer) state.getAttribute(STATE_EXPANDABLE_FOLDER_SIZE_LIMIT);
+			if(expansionLimit == null)
+			{
+				expansionLimit = new Integer(EXPANDABLE_FOLDER_SIZE_LIMIT);
+			}
+			folder.setSortable(ContentHostingService.isSortByPriorityEnabled() && collection_size > 1 && collection_size <= expansionLimit);
+			folder.setIsTooBig(collection_size > expansionLimit);
 				
 			folder.setDepth(depth);
 			newItems.add(folder);
 
-			if(!folder.isTooBig() && !folder.isEmpty() && (need_to_expand_all || expandedFolderSortMap.keySet().contains(collectionId)))
+			if(need_to_expand_all || expandedFolderSortMap.keySet().contains(collectionId))
 			{
 				// Get the collection members from the 'new' collection
 				List newMembers = collection.getMemberResources();
