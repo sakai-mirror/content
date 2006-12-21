@@ -573,7 +573,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			M_log.warn("init(): ", t);
 		}
-
+		
 	} // init
 
 	/**
@@ -2034,7 +2034,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				// add a default value that sorts new items after existing items, with new folders before new resources
 				ContentCollection container = edit.getContainingCollection();
-				int count = container.getMembers().size();
+				int count = container.getMemberCount();
 				props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, Integer.toString(count + 1));
 			}
 		}
@@ -4537,7 +4537,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		
 		if(this.m_prioritySortEnabled)
 		{
-			((BasicGroupAwareEdit) edit).setPriority();
+			// ((BasicGroupAwareEdit) edit).setPriority();
 		}
 		
 		// update the properties for update
@@ -5644,7 +5644,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		StringBuffer results = new StringBuffer();
 
 		// start with an element with our very own name
-		Element element = doc.createElement(APPLICATION_ID);
+		Element element = doc.createElement(ContentHostingService.class.getName());
 		((Element) stack.peek()).appendChild(element);
 		stack.push(element);
 
@@ -8412,7 +8412,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					m_properties = new BaseResourcePropertiesEdit(element);
 					if(m_prioritySortEnabled)
 					{
-						setPriority();
+						// setPriority();
 					}
 				}
 				// look for groups 
@@ -9006,6 +9006,12 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 		}
 
+		public int getMemberCount() 
+		{
+			int count = m_storage.getMemberCount(this.m_id);
+			return count;
+		}
+
 	} // class BaseCollection
 
 	/**********************************************************************************************************************************************************************************************************************************************************
@@ -9184,7 +9190,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					m_properties = new BaseResourcePropertiesEdit(element);
 					if(m_prioritySortEnabled)
 					{
-						setPriority();
+						// setPriority();
 					}
 				}
 				// look for groups
@@ -9662,6 +9668,14 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		 * Open and be ready to read / write.
 		 */
 		public void open();
+
+		/**
+		 * Get a count of all members of a collection, where 'member' means the collection
+		 * is the immediate parent of the item.  The count is not recursive and it will 
+		 * include all resources and collections whose immediate parent is the collection
+		 * identified by the parameter.
+		 */
+		public int getMemberCount(String collectionId);
 
 		/**
 		 * Close.
