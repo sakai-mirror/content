@@ -10550,8 +10550,8 @@ public class ResourcesAction
 			{
 				expansionLimit = new Integer(EXPANDABLE_FOLDER_SIZE_LIMIT);
 			}
-			folder.setSortable(ContentHostingService.isSortByPriorityEnabled() && collection_size > 1 && collection_size <= expansionLimit);
-			folder.setIsTooBig(collection_size > expansionLimit);
+			folder.setSortable(ContentHostingService.isSortByPriorityEnabled() && collection_size > 1 && collection_size <= expansionLimit.intValue());
+			folder.setIsTooBig(collection_size > expansionLimit.intValue());
 				
 			folder.setDepth(depth);
 			newItems.add(folder);
