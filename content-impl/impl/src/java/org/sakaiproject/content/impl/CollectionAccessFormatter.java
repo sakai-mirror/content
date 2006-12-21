@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
@@ -57,6 +58,18 @@ public class CollectionAccessFormatter
 		PrintWriter out = null;
 		// don't set the writer until we verify that
 		// getallresources is going to work.
+
+		if(ContentHostingService.isAttachmentResource(x.getId())) 
+		{
+			try
+			{
+				res.sendError(HttpServletResponse.SC_NOT_FOUND);
+				return;
+			} catch ( java.io.IOException e ) {
+				return;
+			}
+		}
+		
 		boolean printedHeader = false;
 		boolean printedDiv = false;
 
