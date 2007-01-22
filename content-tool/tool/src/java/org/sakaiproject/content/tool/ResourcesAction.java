@@ -700,6 +700,11 @@ public class ResourcesAction
 		
 		// save expanded folder lists
 		SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+		if(expandedCollections == null)
+		{
+			expandedCollections = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+		}
 		Map expandedFolderSortMap = (Map) state.getAttribute(STATE_EXPANDED_FOLDER_SORT_MAP);
 		String need_to_expand_all = (String) state.getAttribute(STATE_NEED_TO_EXPAND_ALL);
 
@@ -780,8 +785,6 @@ public class ResourcesAction
 										SessionState state)
 	{
 		context.put("tlang",rb);
-
-		context.put("expandedCollections", state.getAttribute(STATE_EXPANDED_COLLECTIONS));
 
 		// find the ContentTypeImage service
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
@@ -942,6 +945,12 @@ public class ResourcesAction
 			}
 
 			SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+			if(expandedCollections == null)
+			{
+				expandedCollections = new TreeSet();
+				state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+			}
+			context.put("expandedCollections", expandedCollections);
 			
 			//ContentCollection coll = contentService.getCollection(collectionId);
 			expandedCollections.add(collectionId);
@@ -977,7 +986,7 @@ public class ResourcesAction
 			context.put ("this_site", this_site);
 
 			boolean show_all_sites = false;
-			List other_sites = new Vector();
+			// List other_sites = new Vector();
 
 			String allowed_to_see_other_sites = (String) state.getAttribute(STATE_SHOW_ALL_SITES);
 			String show_other_sites = (String) state.getAttribute(STATE_SHOW_OTHER_SITES);
@@ -992,11 +1001,12 @@ public class ResourcesAction
 			{
 				state.setAttribute(STATE_HIGHLIGHTED_ITEMS, highlightedItems);
 				// TODO: see call to prepPage below.  That also calls readAllResources.  Are both calls necessary?
-				other_sites.addAll(readAllResources(state));
-				all_roots.addAll(other_sites);
+				// other_sites.addAll(readAllResources(state));
+				// all_roots.addAll(other_sites);
 
 				List messages = prepPage(state);
 				context.put("other_sites", messages);
+				all_roots.addAll(messages);
 
 				if (state.getAttribute(STATE_NUM_MESSAGES) != null)
 				{
@@ -2583,7 +2593,31 @@ public class ResourcesAction
 			addObservingPattern(collectionId, state);
 
 			state.setAttribute(STATE_COLLECTION_ID, collectionId);
-			state.setAttribute(STATE_EXPANDED_COLLECTIONS, new TreeSet());
+			SortedSet currentMap = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+			if(currentMap == null)
+			{
+				currentMap = new TreeSet();
+				state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
+			}
+			Iterator it = currentMap.iterator();
+			while(it.hasNext())
+			{
+				String id = (String) it.next();
+				if(id.startsWith(collectionId))
+				{
+					it.remove();
+					removeObservingPattern(id, state);
+				}
+			}
+			
+			if(!currentMap.contains(collectionId))
+			{
+				currentMap.add (collectionId);
+
+				// add this folder id into the set to be event-observed
+				addObservingPattern(collectionId, state);
+			}
+			state.setAttribute(STATE_EXPANDED_FOLDER_SORT_MAP, new Hashtable());
 		}
 
 	}	// doNavigate
@@ -3561,6 +3595,7 @@ public class ResourcesAction
 				if(currentMap == null)
 				{
 					currentMap = new TreeSet();
+					state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 				}
 				if(!currentMap.contains(collectionId))
 				{
@@ -3570,7 +3605,6 @@ public class ResourcesAction
 					// add this folder id into the set to be event-observed
 					addObservingPattern(collectionId, state);
 				}
-				state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 			}
 			else
 			{
@@ -3899,6 +3933,11 @@ public class ResourcesAction
 		}
 
 		SortedSet currentMap = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+		if(currentMap == null)
+		{
+			currentMap = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
+		}
 		if(!currentMap.contains(collectionId))
 		{
 			currentMap.add(collectionId);
@@ -3907,7 +3946,6 @@ public class ResourcesAction
 			// add this folder id into the set to be event-observed
 			addObservingPattern(collectionId, state);
 		}
-		state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 
 		state.setAttribute(STATE_CREATE_ALERTS, alerts);
 
@@ -4156,9 +4194,9 @@ public class ResourcesAction
 		if(currentMap == null)
 		{
 			currentMap = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 		}
 		currentMap.add(collectionId);
-		state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 
 		// add this folder id into the set to be event-observed
 		addObservingPattern(collectionId, state);
@@ -5089,6 +5127,11 @@ public class ResourcesAction
 		}
 
 		SortedSet currentMap = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+		if(currentMap == null)
+		{
+			currentMap = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
+		}
 		if(!currentMap.contains(collectionId))
 		{
 			currentMap.add (collectionId);
@@ -5096,7 +5139,6 @@ public class ResourcesAction
 			// add this folder id into the set to be event-observed
 			addObservingPattern(collectionId, state);
 		}
-		state.setAttribute(STATE_EXPANDED_COLLECTIONS, currentMap);
 
 		state.setAttribute(STATE_CREATE_ALERTS, alerts);
 
@@ -5875,12 +5917,12 @@ public class ResourcesAction
 			if(expandedCollections == null)
 			{
 				expandedCollections = new TreeSet();
+				state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
 			}
 			if(! expandedCollections.contains(collectionId))
 			{
 				expandedCollections.add(collectionId);
 			}
-			state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
 		}
 
 	}	// doHandlepaste
@@ -8933,7 +8975,9 @@ public class ResourcesAction
 					SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
 					if(expandedCollections == null)
 					{
-						expandedCollections = (SortedSet) new Hashtable();
+						expandedCollections = (SortedSet) new TreeSet();
+						state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+						
 					}
 					expandedCollections.add(folderId);
 					
@@ -10039,6 +10083,7 @@ public class ResourcesAction
 		if(expandedItems == null)
 		{
 			expandedItems = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedItems);
 		}
 
 		//get the ParameterParser from RunData
@@ -10056,8 +10101,6 @@ public class ResourcesAction
 		String id = params.getString("collectionId");
 		expandedItems.add(id);
 
-		state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedItems);
-
 		// add this folder id into the set to be event-observed
 		addObservingPattern(id, state);
 
@@ -10073,6 +10116,7 @@ public class ResourcesAction
 		if(expandedItems == null)
 		{
 			expandedItems = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedItems);
 		}
 		Map folderSortMap = (Map) state.getAttribute(STATE_EXPANDED_FOLDER_SORT_MAP);
 		if(folderSortMap == null)
@@ -10969,6 +11013,11 @@ public class ResourcesAction
 
 				// try to expand the collection
 				SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+				if(expandedCollections == null)
+				{
+					expandedCollections = new TreeSet();
+					state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+				}
 				if(! expandedCollections.contains(collectionId))
 				{
 					expandedCollections.add(collectionId);
@@ -11086,6 +11135,11 @@ public class ResourcesAction
 
 				// try to expand the collection
 				SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+				if(expandedCollections == null)
+				{
+					expandedCollections = new TreeSet();
+					state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+				}
 				if(! expandedCollections.contains(collectionId))
 				{
 					expandedCollections.add(collectionId);
@@ -11207,6 +11261,11 @@ public class ResourcesAction
 
 			// try to expand the collection
 			SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+			if(expandedCollections == null)
+			{
+				expandedCollections = new TreeSet();
+				state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+			}
 			if(! expandedCollections.contains(collectionId))
 			{
 				expandedCollections.add(collectionId);
@@ -14372,6 +14431,11 @@ public class ResourcesAction
 			collectionId = (String) state.getAttribute (STATE_COLLECTION_ID);
 		}
 		SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+		if(expandedCollections == null)
+		{
+			expandedCollections = new TreeSet();
+			state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+		}
 		
 		// set the sort values
 		String sortedBy = (String) state.getAttribute (STATE_SORT_BY);
