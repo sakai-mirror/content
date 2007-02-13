@@ -32,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentResource;
+// **QUICK Temporary PATCH - csev  - Wed Nov 29 00:06:07 EST 2006
+import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
@@ -48,6 +50,7 @@ import org.sakaiproject.util.Validator;
  */
 public class CollectionAccessFormatter
 {
+
 	/**
 	 * Format the collection as an HTML display.
 	 */
@@ -57,6 +60,20 @@ public class CollectionAccessFormatter
 		PrintWriter out = null;
 		// don't set the writer until we verify that
 		// getallresources is going to work.
+	
+		// **QUICK Temporary PATCH - csev  - Wed Nov 29 00:06:07 EST 2006
+		if(ContentHostingService.isAttachmentResource(x.getId())) 
+		{
+			try
+			{
+				res.sendError(HttpServletResponse.SC_NOT_FOUND);
+				return;
+			} catch ( java.io.IOException e ) {
+				return;  //  Whatever we do - do *not* list the directory contents
+			}
+		}
+		// **QUICK Temporary PATCH - csev  - Wed Nov 29 00:06:07 EST 2006
+
 		boolean printedHeader = false;
 		boolean printedDiv = false;
 
