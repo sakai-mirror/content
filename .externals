@@ -4,10 +4,7 @@ alias/alias-impl              https://source.sakaiproject.org/svn/alias/trunk/al
 authz/authz-api               https://source.sakaiproject.org/svn/authz/trunk/authz-api
 authz/authz-impl              https://source.sakaiproject.org/svn/authz/trunk/authz-impl
 component                     https://source.sakaiproject.org/svn/component/trunk
-content/content-api           https://source.sakaiproject.org/svn/content/trunk/content-api
-content/content-impl          https://source.sakaiproject.org/svn/content/trunk/content-impl
-content/content-util          https://source.sakaiproject.org/svn/content/trunk/content-util
-content/content-tool          https://source.sakaiproject.org/svn/content/branches/content_mini_citation/content-tool
+content                       https://source.sakaiproject.org/svn/content/trunk
 courier/courier-api           https://source.sakaiproject.org/svn/courier/trunk/courier-api
 courier/courier-impl          https://source.sakaiproject.org/svn/courier/trunk/courier-impl
 courier/courier-util          https://source.sakaiproject.org/svn/courier/trunk/courier-util
@@ -17,7 +14,7 @@ entity                        https://source.sakaiproject.org/svn/entity/trunk
 event                         https://source.sakaiproject.org/svn/event/trunk
 jsf                           https://source.sakaiproject.org/svn/jsf/trunk
 login                         https://source.sakaiproject.org/svn/login/trunk
-master                        https://source.sakaiproject.org/svn/content/branches/master_mini_citation
+master                        https://source.sakaiproject.org/svn/master/trunk
 message/message-api           https://source.sakaiproject.org/svn/message/trunk/message-api
 message/message-impl          https://source.sakaiproject.org/svn/message/trunk/message-impl
 mailarchive/mailarchive-api   https://source.sakaiproject.org/svn/mailarchive/trunk/mailarchive-api
@@ -28,7 +25,7 @@ metaobj/metaobj-api           https://source.sakaiproject.org/svn/metaobj/trunk/
 metaobj/metaobj-impl          https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl
 metaobj/metaobj-util          https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util
 portal                        https://source.sakaiproject.org/svn/portal/trunk
-reference                     https://source.sakaiproject.org/svn/content/branches/reference_mini_citation
+reference                     https://source.sakaiproject.org/svn/reference/trunk
 site/site-api                 https://source.sakaiproject.org/svn/site/trunk/site-api
 site/site-impl                https://source.sakaiproject.org/svn/site/trunk/site-impl
 site-manage/site-manage-api   https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-api
