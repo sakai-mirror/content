@@ -6,6 +6,7 @@ authz/authz-impl              https://source.sakaiproject.org/svn/authz/trunk/au
 component                     https://source.sakaiproject.org/svn/component/trunk
 content/content-api           https://source.sakaiproject.org/svn/content/trunk/content-api
 content/content-impl          https://source.sakaiproject.org/svn/content/trunk/content-impl
+content/content-util          https://source.sakaiproject.org/svn/content/trunk/content-util
 content/content-tool          https://source.sakaiproject.org/svn/content/branches/content_mini_citation/content-tool
 courier/courier-api           https://source.sakaiproject.org/svn/courier/trunk/courier-api
 courier/courier-impl          https://source.sakaiproject.org/svn/courier/trunk/courier-impl
