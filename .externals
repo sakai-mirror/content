@@ -50,7 +50,10 @@ user/user-util          https://source.sakaiproject.org/svn/user/trunk/user-util
 util            https://source.sakaiproject.org/svn/util/trunk
 velocity          https://source.sakaiproject.org/svn/velocity/trunk
 
-citation                      https://source.sakaiproject.org/contrib/citation/trunk 
+citations/citation-api        https://source.sakaiproject.org/svn/citations/citation-api/trunk
+citations/citation-impl       https://source.sakaiproject.org/contrib/citation/trunk/citation-impl
+citations/citation-servlet    https://source.sakaiproject.org/contrib/citation/trunk/citation-servlet
+citations/citation-tool       https://source.sakaiproject.org/contrib/citation/trunk/citation-tool
 sakaibrary-util               https://source.sakaiproject.org/contrib/sakaibrary/util/trunk
 web2bridge-osid               https://source.sakaiproject.org/contrib/sakaibrary/web2bridge/trunk
 xserver-osid                  https://source.sakaiproject.org/contrib/sakaibrary/xserver/trunk
