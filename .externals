@@ -50,7 +50,7 @@ user/user-util          https://source.sakaiproject.org/svn/user/trunk/user-util
 util            https://source.sakaiproject.org/svn/util/trunk
 velocity          https://source.sakaiproject.org/svn/velocity/trunk
 
-citations/citation-api        https://source.sakaiproject.org/svn/citations/citation-api/trunk
+citations/citation-api        https://source.sakaiproject.org/svn/citations/trunk/citations-api
 citations/citation-impl       https://source.sakaiproject.org/contrib/citation/trunk/citation-impl
 citations/citation-servlet    https://source.sakaiproject.org/contrib/citation/trunk/citation-servlet
 citations/citation-tool       https://source.sakaiproject.org/contrib/citation/trunk/citation-tool
