@@ -1,3 +1,5 @@
+citations     https://source.sakaiproject.org/svn/citations/trunk
+
 access            https://source.sakaiproject.org/svn/access/trunk
 alias           https://source.sakaiproject.org/svn/alias/trunk
 announcement          https://source.sakaiproject.org/svn/announcement/trunk
@@ -49,11 +51,3 @@ user/user-tool          https://source.sakaiproject.org/svn/user/trunk/user-tool
 user/user-util          https://source.sakaiproject.org/svn/user/trunk/user-util
 util            https://source.sakaiproject.org/svn/util/trunk
 velocity          https://source.sakaiproject.org/svn/velocity/trunk
-
-citations/citation-api        https://source.sakaiproject.org/svn/citations/trunk/citations-api
-citations/citation-impl       https://source.sakaiproject.org/contrib/citation/trunk/citation-impl
-citations/citation-servlet    https://source.sakaiproject.org/contrib/citation/trunk/citation-servlet
-citations/citation-tool       https://source.sakaiproject.org/contrib/citation/trunk/citation-tool
-sakaibrary-util               https://source.sakaiproject.org/contrib/sakaibrary/util/trunk
-web2bridge-osid               https://source.sakaiproject.org/contrib/sakaibrary/web2bridge/trunk
-xserver-osid                  https://source.sakaiproject.org/contrib/sakaibrary/xserver/trunk
