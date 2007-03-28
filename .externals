@@ -26,6 +26,7 @@ discussion          https://source.sakaiproject.org/svn/discussion/trunk
 email           https://source.sakaiproject.org/svn/email/trunk
 entity            https://source.sakaiproject.org/svn/entity/trunk
 event           https://source.sakaiproject.org/svn/event/trunk
+jobscheduler  https://source.sakaiproject.org/svn/jobscheduler/trunk
 jsf           https://source.sakaiproject.org/svn/jsf/trunk
 login           https://source.sakaiproject.org/svn/login/trunk
 master            https://source.sakaiproject.org/svn/master/trunk
