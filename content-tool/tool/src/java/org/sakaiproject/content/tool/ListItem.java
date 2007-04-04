@@ -73,6 +73,7 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.util.ParameterParser;
@@ -254,9 +255,6 @@ public class ListItem
 	protected ResourceType resourceTypeDef = null;
 	protected boolean isEmpty = true;
 	protected boolean isExpanded = false;
-	protected boolean isPubviewPossible;
-	protected boolean isPubviewInherited = false;
-	protected boolean isPubview = false;
 	protected boolean isSortable = false;
 	protected boolean isTooBig = false;
 	protected String size = "";
@@ -271,6 +269,13 @@ public class ListItem
 
 	protected boolean canSelect = false;
 
+	/** 
+	 * Access settings
+	 * Access mode can be "grouped" or "inherited". Inherited access mode
+	 * can be "site" or "grouped". Site access implies that the site's
+	 * permissions apply, possibly with changes due to custom folder 
+	 * permissions in the hierarchy.   
+	 */
 	protected ContentEntity entity;
 	protected AccessMode accessMode;
 	protected AccessMode inheritedAccessMode;
@@ -279,9 +284,12 @@ public class ListItem
 	protected Collection<Group> possibleGroups = new Vector<Group>();
 	protected Collection<Group> allowedRemoveGroups = new Vector<Group>();
 	protected Collection<Group> allowedAddGroups = new Vector<Group>();
+	protected Map<String,Group> siteGroupsMap = new HashMap<String, Group>();
 
-	protected Map<String,Group> possibleGroupsMap = new HashMap<String, Group>();
-	
+	protected boolean isPubviewPossible;
+	protected boolean isPubviewInherited = false;
+	protected boolean isPubview = false;
+
 	protected boolean hidden;
 	protected boolean isAvailable;
 	protected boolean useReleaseDate;
@@ -298,8 +306,6 @@ public class ListItem
 	protected ListItem parent;
 
 	protected String containingCollectionId;
-
-	//protected String displayName;
 
 	protected boolean isUserSite = false;
 	protected boolean isDropbox = false;
@@ -330,6 +336,8 @@ public class ListItem
 			isUserSite = SiteService.isUserSite(contextId);
 		}
 		setUserSite(isUserSite);
+		
+		this.isSiteCollection = this.siteCollection(refstr);
 
 		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
 		if(entity.getContainingCollection() == null)
@@ -508,6 +516,28 @@ public class ListItem
 		this.setModifiedTime(props.getPropertyFormatted(ResourceProperties.PROP_MODIFIED_DATE));
 		this.setCreatedTime(props.getPropertyFormatted(ResourceProperties.PROP_CREATION_DATE));
 		
+		Site site = null;
+		Collection<Group> site_groups = null;
+		
+		try 
+		{
+			site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
+		} 
+		catch (IdUnusedException e) 
+		{
+			logger.warn("resourcesAction.newEditItems() IdUnusedException ", e);
+		}
+		if(site != null)
+		{
+			site_groups = (Collection<Group>) site.getGroups();
+		}
+		else
+		{
+			site_groups = new Vector<Group>();
+		}
+				
+		setSiteGroups(site_groups);
+		
 		this.accessMode = entity.getAccess();
 		this.inheritedAccessMode = entity.getInheritedAccess();
 		//this.effectiveAccess = entity.getInheritedAccess();
@@ -520,17 +550,9 @@ public class ListItem
 		{
 			setPossibleGroups(this.inheritedGroups);
 		}
-		else if(contextId != null)
+		else 
 		{
-			try
-	        {
-		        Site site = SiteService.getSite(contextId);
-		        setPossibleGroups(site.getGroups());
-	        }
-	        catch (IdUnusedException e)
-	        {
-		        logger.warn("IdUnusedException for a site in resources: " + ref.getContext() + " (" + ref.getReference() + ")");
-	        }
+			setPossibleGroups(site_groups);
 		}
         
 		Collection<Group> groupsWithRemovePermission = null;
@@ -740,6 +762,7 @@ public class ListItem
 		this.setModifiedTime(now.getDisplay());
 		this.setCreatedTime(now.getDisplay());
 		
+		this.setSiteGroups(parent.siteGroupsMap.values());
 		this.accessMode = AccessMode.INHERITED;
 		this.inheritedAccessMode = parent.getEffectiveAccess();
 		//this.effectiveAccess = parent.getEffectiveAccess();
@@ -761,7 +784,7 @@ public class ListItem
 		this.allowedRemoveGroups = new Vector(parent.allowedRemoveGroups);		
 		this.allowedAddGroups = new Vector(parent.allowedAddGroups);
 		
-
+		this.isPubviewPossible = parent.isPubviewPossible;
         this.isPubviewInherited = parent.isPubviewInherited || parent.isPubview;
         if(this.isPubviewInherited)
         {
@@ -788,6 +811,10 @@ public class ListItem
 	{
 		this.id = entityId;
 		this.containingCollectionId = ContentHostingService.getContainingCollectionId(entityId);
+		
+		String refstr = ContentHostingService.getReference(id);
+		this.isSiteCollection = this.siteCollection(refstr);
+
 	}
 
 	/**
@@ -891,7 +918,7 @@ public class ListItem
 		}
 		else if(ResourcesAction.PUBLIC_ACCESS.equals(access_mode))
 		{
-			if(! isPubviewPossible && ! isPubviewInherited())
+			if(isPubviewPossible && ! isPubviewInherited())
 			{
 				setPubview(true);
 				setAccessMode(AccessMode.INHERITED);
@@ -1054,7 +1081,7 @@ public class ListItem
 		String displayName = params.getString("displayName" + index);
 		if(displayName == null)
 		{
-			String[] delimiters = {"/", "\\", ":"};
+			String[] delimiters = {"/", "\\"};
 			displayName = this.id;
 			if(displayName != null)
 			{
@@ -1108,7 +1135,7 @@ public class ListItem
 		SortedSet<String> groupRefs = new TreeSet<String>();
 		for(String groupId : groupIds)
 		{
-			Group group = (Group) this.possibleGroupsMap.get(groupId);
+			Group group = (Group) this.siteGroupsMap.get(groupId);
 			if(group != null)
 			{
 				groupRefs.add(group.getReference());
@@ -1890,7 +1917,7 @@ public class ListItem
     	{
 	    	for(String groupId : groupIds)
 	    	{
-	    		Group group = this.possibleGroupsMap.get(groupId);
+	    		Group group = this.siteGroupsMap.get(groupId);
 	    		this.groups.add(group);
 	     	}
     	}
@@ -2054,9 +2081,15 @@ public class ListItem
     {
     	this.possibleGroups.clear();
     	this.possibleGroups.addAll(possibleGroups);
-        for(Group group : this.possibleGroups)
+    	// TODO remove site itself?
+    }
+    
+    public void setSiteGroups(Collection<Group> siteGroups)
+    {
+    	this.siteGroupsMap.clear();
+        for(Group group : siteGroups)
         {
-        	this.possibleGroupsMap.put(group.getId(), group);
+        	this.siteGroupsMap.put(group.getId(), group);
         }
     }
 
@@ -2437,6 +2470,19 @@ public class ListItem
     	this.inheritedAccessMode = inheritedAccessMode;
     }
 
-
+	protected boolean siteCollection(String refStr)
+	{
+		boolean site = false;
+		
+		Reference ref = EntityManager.newReference(refStr);
+		String context = ref.getContext();
+		String siteCollection = ContentHostingService.getSiteCollection(context);
+		if(ref.getId().equals(siteCollection))
+		{
+			site = true;
+		}
+		
+		return site;
+	}
 }
 

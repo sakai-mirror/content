@@ -1394,7 +1394,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			catch (IdInvalidException e)
 			{
 				// TODO Auto-generated catch block
-				logger.warn("IdInvalidException ", e);
+				logger.warn("IdInvalidException " + collectionId + name, e);
 			}
 			catch (IdUsedException e)
 			{
@@ -1405,19 +1405,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			catch (IdUnusedException e)
 			{
 				// TODO Auto-generated catch block
-				logger.warn("IdUnusedException ", e);
+				logger.warn("IdUnusedException " + collectionId + name, e);
 				break;
 			}
 			catch (IdLengthException e)
 			{
 				String[] args = { name };
 				addAlert(state, trb.getFormattedMessage("alert.toolong", args));
-				logger.warn("IdLengthException ", e);
+				logger.warn("IdLengthException " + collectionId + name, e);
 			}
 			catch (TypeException e)
 			{
 				// TODO Auto-generated catch block
-				logger.warn("TypeException id=" + collectionId + name, e);
+				logger.warn("TypeException id = " + collectionId + name, e);
 			}
 		}
 		return (new_collections.isEmpty() ? null : new_collections);
@@ -4204,10 +4204,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			String typeId = pipe.getAction().getTypeId();
 			
 			ListItem parent = new ListItem(pipe.getContentEntity());
-
+			parent.setPubviewPossible(! preventPublicDisplay);
 			ListItem item = new ListItem(pipe, parent, defaultRetractDate);
-			
-			item.setPubviewPossible(! preventPublicDisplay);
+			//item.setPubviewPossible(! preventPublicDisplay);
 			
 			context.put("item", item);
 			
@@ -5501,7 +5500,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				{ 	 
 					String pname = (String) valueIt.next(); 	 
 					String pvalue = (String) values.get(pname); 	 
-					resourceProperties.addProperty(pname, pvalue); 	 
+					resourceProperties.addProperty(pname, pvalue); 
+				
 				} 	 
 
 				// notification
@@ -5804,6 +5804,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					{
 						items_to_be_copied.add(selectedItemId);
 					}
+					state.removeAttribute(STATE_ITEMS_TO_BE_MOVED);
 					state.setAttribute(STATE_ITEMS_TO_BE_COPIED, items_to_be_copied);
 					break;
 				case DUPLICATE:
@@ -5818,6 +5819,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 						reference = EntityManager.newReference(ContentHostingService.getReference(newId));
 						sAction.finalizeAction(reference);
 					}
+					state.removeAttribute(STATE_ITEMS_TO_BE_MOVED);
 					break;
 				case DELETE:
 					sAction.initializeAction(reference);
@@ -5835,6 +5837,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					{
 						items_to_be_moved.add(selectedItemId);
 					}
+					state.removeAttribute(STATE_ITEMS_TO_BE_COPIED);
 					state.setAttribute(STATE_ITEMS_TO_BE_MOVED, items_to_be_moved);
 					break;
 				case VIEW_METADATA:
@@ -6263,6 +6266,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			
 			state.setAttribute(STATE_ITEMS_TO_BE_COPIED, selectedSet);
+			state.removeAttribute(STATE_ITEMS_TO_BE_MOVED);
 		}
 		else if(ResourceToolAction.MOVE.equals(actionId))
 		{
@@ -6274,6 +6278,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			
 			state.setAttribute(STATE_ITEMS_TO_BE_MOVED, selectedSet);
+			state.removeAttribute(STATE_ITEMS_TO_BE_COPIED);
 		}
 		else if(ResourceToolAction.DELETE.equals(actionId))
 		{

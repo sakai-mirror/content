@@ -42,6 +42,7 @@ import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.api.MultiFileUploadPipe;
 import org.sakaiproject.content.api.ResourceToolAction;
 import org.sakaiproject.content.api.ResourceToolActionPipe;
@@ -187,6 +188,12 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		context.put("validator", new Validator());
 		
+		if(state.getAttribute(ResourcesAction.STATE_MESSAGE) != null)
+		{
+			context.put("itemAlertMessage", state.getAttribute(ResourcesAction.STATE_MESSAGE));
+			state.removeAttribute(ResourcesAction.STATE_MESSAGE);
+		}
+		
 		ContentTypeImageService contentTypeImageService = (ContentTypeImageService) state.getAttribute(STATE_CONTENT_TYPE_IMAGE_SERVICE);
 		context.put("contentTypeImageService", contentTypeImageService);
 		
@@ -205,6 +212,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		}
 
 		String actionId = pipe.getAction().getId();
+		
+		context.put("GROUP_ACCESS", AccessMode.GROUPED);
+		context.put("SITE_ACCESS", AccessMode.SITE);
+		context.put("INHERITED_ACCESS", AccessMode.INHERITED);
 		
 		String template = "";
 
@@ -261,7 +272,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
-		model.setPubviewPossible(! preventPublicDisplay);
+		// model.setPubviewPossible(! preventPublicDisplay);
 				
 		context.put("model", model);
 		
@@ -313,7 +324,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
-		model.setPubviewPossible(! preventPublicDisplay);
+		// model.setPubviewPossible(! preventPublicDisplay);
 		
 		context.put("model", model);
 		
@@ -428,7 +439,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
-		model.setPubviewPossible(! preventPublicDisplay);
+		// model.setPubviewPossible(! preventPublicDisplay);
 				
 		context.put("model", model);
 		
@@ -760,6 +771,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		List<ResourceToolActionPipe> pipes = mfp.getPipes();
 		
+		int uploadCount = 0;
+		
 		for(int i = 1, c = 0; i <= lastIndex && c < count; i++)
 		{
 			String exists = params.getString("exists." + i);
@@ -803,7 +816,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			}
 			else if (fileitem.getFileName() == null || fileitem.getFileName().length() == 0)
 			{
-				addAlert(state, rb.getString("choosefile7"));
+				// no file selected -- skip this one
 			}
 			else if (fileitem.getFileName().length() > 0)
 			{
@@ -831,16 +844,26 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
     			
     			pipe.setRevisedListItem(newFile);
     			
+    			uploadCount++;
+    			
 			}
 			c++;
 			
 		}
-
-		mfp.setActionCanceled(false);
-		mfp.setErrorEncountered(false);
-		mfp.setActionCompleted(true);
 		
-		toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+		if(uploadCount < 1 && state.getAttribute(ResourcesAction.STATE_MESSAGE) == null)
+		{
+			addAlert(state, rb.getString("choosefile7"));
+		}
+
+		if(state.getAttribute(ResourcesAction.STATE_MESSAGE) == null)
+		{
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(false);
+			mfp.setActionCompleted(true);
+			
+			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+		}
 
 	}
 	
