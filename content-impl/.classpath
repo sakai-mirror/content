@@ -26,5 +26,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
 	<classpathentry kind="src" path="/velocity"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/db-impl"/>
+	<classpathentry kind="var" path="MAVEN_REPO/commons-codec/jars/commons-codec-1.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
