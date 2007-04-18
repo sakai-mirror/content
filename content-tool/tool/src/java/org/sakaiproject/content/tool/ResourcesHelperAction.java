@@ -387,6 +387,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		//Reference reference = (Reference) toolSession.getAttribute(ResourceToolAction.COLLECTION_REFERENCE);
 		String typeId = pipe.getAction().getTypeId();
+		String mimetype = pipe.getMimeType();
 		
 		context.put("pipe", pipe);
 
@@ -401,6 +402,14 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		else if(ResourceType.TYPE_URL.equals(typeId))
 		{
 			template = REVISE_URL_TEMPLATE;
+		}
+		else if(ResourceType.TYPE_UPLOAD.equals(typeId) && mimetype != null && ResourceType.MIME_TYPE_HTML.equals(mimetype))
+		{
+			template = REVISE_HTML_TEMPLATE;
+		}
+		else if(ResourceType.TYPE_UPLOAD.equals(typeId) && mimetype != null && ResourceType.MIME_TYPE_TEXT.equals(mimetype))
+		{
+			template = REVISE_TEXT_TEMPLATE;
 		}
 		else // assume ResourceType.TYPE_UPLOAD
 		{
@@ -512,13 +521,14 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		
 		String resourceType = pipe.getAction().getTypeId();
+		String mimetype = pipe.getMimeType();
 		
 		pipe.setRevisedMimeType(pipe.getMimeType());
-		if(ResourceType.TYPE_TEXT.equals(resourceType))
+		if(ResourceType.TYPE_TEXT.equals(resourceType) || ResourceType.MIME_TYPE_TEXT.equals(mimetype))
 		{
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_TEXT);
 		}
-		else if(ResourceType.TYPE_HTML.equals(resourceType))
+		else if(ResourceType.TYPE_HTML.equals(resourceType) || ResourceType.MIME_TYPE_HTML.equals(mimetype))
 		{
 			StringBuffer alertMsg = new StringBuffer();
 			content = FormattedText.processHtmlDocument(content, alertMsg);
