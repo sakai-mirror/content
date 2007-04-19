@@ -5732,6 +5732,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doDispatchAction(RunData data)
 	{
+		try
+		{
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		// get the parameter-parser
@@ -5890,14 +5892,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				case REPLACE_CONTENT:
 					break;
 				case PASTE_MOVED:
-					sAction.initializeAction(reference);
+					//sAction.initializeAction(reference);
 					pasteItem(state, selectedItemId);
-					sAction.finalizeAction(reference);
+					//sAction.finalizeAction(reference);
 					break;
 				case PASTE_COPIED:
-					sAction.initializeAction(reference);
+					//sAction.initializeAction(reference);
 					pasteItem(state, selectedItemId);
-					sAction.finalizeAction(reference);
+					//sAction.finalizeAction(reference);
 					break;
 				case REVISE_ORDER:
 					sAction.initializeAction(reference);
@@ -5914,6 +5916,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// For example, with delete, this should be after the confirmation and actual deletion
 			// Need mechanism to remember to do it later
 			
+		}
+		}
+		catch(Exception e)
+		{
+			logger.warn("doDispatchAction ", e);
 		}
 	}
 

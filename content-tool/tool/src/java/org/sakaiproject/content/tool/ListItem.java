@@ -535,7 +535,7 @@ public class ListItem
 		this.setCreatedTime(props.getPropertyFormatted(ResourceProperties.PROP_CREATION_DATE));
 		
 		Site site = null;
-		Collection<Group> site_groups = null;
+		Collection<Group> site_groups = new Vector<Group>();
 		
 		try 
 		{
@@ -547,11 +547,17 @@ public class ListItem
 		}
 		if(site != null)
 		{
-			site_groups = (Collection<Group>) site.getGroups();
-		}
-		else
-		{
-			site_groups = new Vector<Group>();
+			for(Group gr : (Collection<Group>) site.getGroups())
+			{
+				if(gr.getId().equals(site.getId()))
+				{
+					// ignore
+				}
+				else
+				{
+					site_groups.add(gr);
+				}
+			}
 		}
 				
 		setSiteGroups(site_groups);

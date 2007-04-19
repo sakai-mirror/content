@@ -2219,6 +2219,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					}
 					// addLiveUpdateResourceProperties(edit);
 					m_storage.commitResource(edit);
+					// close the edit object
+					((BaseResourceEdit) edit).closeEdit();
 				} 
 				catch (InconsistentException e) 
 				{
@@ -4236,9 +4238,12 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				ContentResourceEdit edit = addResource(new_id);
 				edit.setContentType(thisResource.getContentType());
-				edit.setContent(thisResource.getContent());
+				edit.setContent(thisResource.streamContent());
 				edit.setResourceType(thisResource.getResourceType());
 				edit.setAvailability(thisResource.isHidden(), thisResource.getReleaseDate(), thisResource.getRetractDate());
+				
+				//((BaseResourceEdit) edit).m_filePath = ((BaseResourceEdit) thisResource).m_filePath;
+				//((BaseResourceEdit) thisResource).m_filePath = null;
 //				Collection groups = thisResource.getGroups();
 //				if(groups == null || groups.isEmpty())
 //				{
@@ -4250,20 +4255,32 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 //				}
 				
 				ResourcePropertiesEdit props = edit.getPropertiesEdit();
-				addProperties(props, properties);
-				String creator = properties.getProperty(ResourceProperties.PROP_CREATOR);
-				if (creator != null && !creator.trim().equals(""))
+				Iterator<String> nameIt = properties.getPropertyNames();
+				while(nameIt.hasNext())
 				{
-					props.addProperty(ResourceProperties.PROP_CREATOR, creator);
+					String name = nameIt.next();
+					props.addProperty(name, properties.getProperty(name));
 				}
-				String created = properties.getProperty(ResourceProperties.PROP_CREATION_DATE);
-				if (created != null)
-				{
-					props.addProperty(ResourceProperties.PROP_CREATION_DATE, created);
-				}
-				m_storage.commitResource(edit);
+				//addProperties(props, properties);
+//				String creator = properties.getProperty(ResourceProperties.PROP_CREATOR);
+//				if (creator != null && !creator.trim().equals(""))
+//				{
+//					props.addProperty(ResourceProperties.PROP_CREATOR, creator);
+//				}
+//				String created = properties.getProperty(ResourceProperties.PROP_CREATION_DATE);
+//				if (created != null)
+//				{
+//					props.addProperty(ResourceProperties.PROP_CREATION_DATE, created);
+//				}
 				props.addProperty(ResourceProperties.PROP_DISPLAY_NAME, new_displayName);
 				
+				String oldUuid = getUuid(thisResource.getId());
+				setUuidInternal(new_id, oldUuid);
+
+				m_storage.commitResource(edit);
+				// close the edit object
+				((BaseResourceEdit) edit).closeEdit();
+
 				m_storage.removeResource(thisResource);
 
 				if (M_log.isDebugEnabled()) M_log.debug("moveResource successful");
@@ -4297,9 +4314,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 		}
 
-		String oldUuid = getUuid(thisResource.getId());
-		setUuidInternal(new_id, oldUuid);
-		removeResource(thisResource);
+		//removeResource(thisResource);
 
 		return new_id;
 
@@ -4466,9 +4481,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		while (still_trying && attempt < MAXIMUM_ATTEMPTS_FOR_UNIQUENESS)
 		{
 			// copy the resource to the new location
+			ContentResourceEdit edit = null;
 			try
 			{
-				ContentResourceEdit edit = addResource(new_id);
+				edit = addResource(new_id);
 				edit.setContentType(resource.getContentType());
 				edit.setContent(resource.getContent());
 				edit.setResourceType(resource.getResourceType());
@@ -4488,6 +4504,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				edit.setAvailability(resource.isHidden(), resource.getReleaseDate(), resource.getRetractDate());
 				
 				commitResource(edit,NotificationService.NOTI_NONE);
+				// close the edit object
+				((BaseResourceEdit) edit).closeEdit();
+
 				if (M_log.isDebugEnabled()) M_log.debug("copyResource successful");
 				still_trying = false;
 			}
@@ -9369,8 +9388,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 							ContentResourceEdit entity = editResource(name);
 							ResourcePropertiesEdit props = entity.getPropertiesEdit();
 							props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, priority.toString());
+							
 							// Soo Il Kim (kimsooil@bu.edu): added parameter to eliminate notifications
 							commitResource(entity, NotificationService.NOTI_NONE);
+							// close the edit object
+							((BaseResourceEdit) entity).closeEdit();
 						}
 					}
 					catch(TypeException e)
