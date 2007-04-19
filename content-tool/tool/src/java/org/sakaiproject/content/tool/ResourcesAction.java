@@ -4756,6 +4756,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		context.put("copyright_alert_url", COPYRIGHT_ALERT_URL);
 		context.put("ACTION_DELIMITER", ResourceToolAction.ACTION_DELIMITER);
+		context.put("DOT", ListItem.DOT);
 		
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
@@ -5444,8 +5445,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		else if(user_action.equals("save"))
 		{
-			item.captureProperties(params, ".0");
-			String name = params.getString("name.0");
+			item.captureProperties(params, ListItem.DOT + "0");
+			String name = params.getString("name" + ListItem.DOT + "0");
 			if(name != null)
 			{
 				item.setName(name);
@@ -6521,7 +6522,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				
 			}
-			item.captureProperties(params, ".0");
+			item.captureProperties(params, ListItem.DOT + "0");
 			
 //			String name = params.getString("name");
 //			String description = params.getString("description");

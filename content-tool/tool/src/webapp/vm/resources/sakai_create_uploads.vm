@@ -1,5 +1,4 @@
 <!-- resources/sakai_create_uploads.vm, use with org.sakaiproject.tool.content.ResourcesHelperAction.java -->
-#set($DOT = ".")
 <div class="portletBody">
 	<h4>
 		$tlang.getString("create.uploads")
@@ -33,7 +32,6 @@
 					<input type="hidden" name="exists${DOT}$i" id="exists${DOT}$i" value="true" />
 					<p class="shorttext">
 						<label for="content${DOT}$i">$tlang.getString("label.upload")</label>
-						## TODO add onchange event handler to seed file-name into displayName field
 						<input type="file" name="content${DOT}$i" id="content${DOT}$i" class="upload" />
 					</p>
 					<p class="shorttext"> 
@@ -76,4 +74,5 @@
 		</p>
 	</form>
 </div>
+##<textarea id="debugger" rows="40" cols="100"></textarea>
 #parse("/vm/resources/sakai_properties_scripts.vm")

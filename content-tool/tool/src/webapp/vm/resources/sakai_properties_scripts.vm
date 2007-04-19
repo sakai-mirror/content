@@ -29,25 +29,11 @@
 			{
 				if(link.id.match(/^propsTrigger${DOT}\d+$/))
 				{
-					if(link.attachEvent)
-					{
-						link.attachEvent("onclick", togglePropertiesDiv);
-					}
-					else if(link.addEventListener)
-					{
-						link.addEventListener("click", togglePropertiesDiv, true);
-					}
+					link.onclick = togglePropertiesDiv;
 				}
 				else if(link.id.match(/^removeTrigger${DOT}\d+$/))
 				{
-					if(link.attachEvent)
-					{
-						link.attachEvent("onclick", handleRemoveFileItem);
-					}
-					else if(link.addEventListener)
-					{
-						link.addEventListener("click", handleRemoveFileItem, true);
-					}
+					link.onclick = handleRemoveFileItem;
 				}
 			}
 		}
@@ -66,48 +52,38 @@
 			var tag = inputTags[i];
 			if(tag.id && hasDisplayNameTag && tag.id.match(/^content${DOT}\d+$/))
 			{
-				if(tag.attachEvent)
-				{
-					tag.attachEvent("onchange", seedDisplayNameValue);
-				}
-				else if(tag.addEventListener)
-				{
-					tag.addEventListener("change", seedDisplayNameValue, true);
-				}
-			}
-			else if(tag.id && tag.id.match(/^copyright${DOT}\d+$/))
-			{
-				if(tag.attachEvent)
-				{
-					tag.attachEvent("onchange", handleCopyrightChange);
-				}
-				else if(tag.addEventListener)
-				{
-					tag.addEventListener("change", handleCopyrightChange, true);
-				}
+				tag.onchange = seedDisplayNameValue;
 			}
 			else if(tag.id && tag.id.match(/^changeMimetype${DOT}\d+$/))
 			{
-				if(tag.attachEvent)
-				{
-					tag.attachEvent("onclick", handleMimetypeChange);
-				}
-				else if(tag.addEventListener)
-				{
-					tag.addEventListener("click", handleMimetypeChange, true);
-				}
+				tag.onclick = handleMimetypeChange;
 			}
 			else if(tag.id && tag.id.match(/^mime_category${DOT}\d+$/))
 			{
-				if(tag.attachEvent)
-				{
-					tag.attachEvent("onchange", handleMimeCategoryChange);
-				}
-				else if(tag.addEventListener)
-				{
-					tag.addEventListener("change", handleMimeCategoryChange, true);
-				}
+				tag.onchange = handleMimeCategoryChange;
 			}
+			else if(tag.id && tag.id.match(/^hidden_true${DOT}\d+$/))
+			{
+				tag.onclick = handleSetToHidden;
+			}
+#if($model.isGroupPossible())
+			else if(tag.id && tag.id.match(/^access_mode_inherited${DOT}\d+$/))
+			{
+				tag.onclick = handleAccessNotGroup;
+			}
+			else if(tag.id && tag.id.match(/^access_mode_public${DOT}\d+$/))
+			{
+				tag.onclick = handleAccessNotGroup;
+			}
+			else if(tag.id && tag.id.match(/^access_mode_groups${DOT}\d+$/))
+			{
+				tag.onclick = handleAccessIsGroup;
+			}
+			else if(tag.id && tag.id.match(/^selectall${DOT}\d+$/))
+			{
+				tag.onclick = handleSelectAllChange;
+			}
+#end
 		}
 		
 		var selectTags = document.getElementsByTagName("select");
@@ -116,17 +92,22 @@
 			var tag = selectTags[i];
 			if(tag.id && tag.id.match(/^mime_category${DOT}\d+$/))
 			{
-				if(tag.attachEvent)
-				{
-					tag.attachEvent("onchange", handleMimeCategoryChange);
-				}
-				else if(tag.addEventListener)
-				{
-					tag.addEventListener("change", handleMimeCategoryChange, true);
-				}
+				tag.onchange = handleMimeCategoryChange;
+			}
+			else if(tag.id && tag.id.match(/^copyright${DOT}\d+$/))
+			{
+				tag.onchange = handleCopyrightChange;
+			}
+			else if(tag.id && tag.id.match(/^release_\w+${DOT}\d+$/))
+			{
+				tag.onchange = handleReleaseDateChange;
+			}
+			else if(tag.id && tag.id.match(/^retract_\w+${DOT}\d+$/))
+			{
+				tag.onchange = handleRetractDateChange;
 			}
 		}
-		
+	  return false;
 	}
 	function handleEnterKey (field, event) 
 	{
@@ -160,6 +141,7 @@
 				}
 			}
 		}
+		return false;
 	}
 	function handleMimeCategoryChange(evt)
 	{
@@ -206,13 +188,15 @@
 		evt = (evt) ? evt : ((event) ? event : null);
 		if(evt)
 		{
-			var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
-			if(elem)
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
 			{
-				elem = (elem.nodeType == 1 || elem.nodeType == 9) ? elem : elem.parentNode;
-				deleteFileItem(elem);
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				deleteFileItem(element);
 			}
 		}
+		return false;
 	}
 	function togglePropertiesDiv(evt)
 	{
@@ -220,14 +204,15 @@
 		if(evt)
 		{
 			evt.cancelBubble = true;
-			var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
-			if(elem)
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
 			{
-				elem = (elem.nodeType == 1 || elem.nodeType == 9) ? elem : elem.parentNode;
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
 				
-				toggleProperties(elem);
+				toggleProperties(element);
 			}
 		}
+		return false;
 	}
 	function seedDisplayNameValue(evt)
 	{
@@ -256,10 +241,12 @@
 				}
 			}
 		}
+		return false;
 	}
+	
+	
 	function addFileInput()
 	{
-//alert("addFileInput");
 		var counter = document.getElementById("fileCount");
 		var indexer = document.getElementById("lastIndex");
 		var fileInputDiv = document.getElementById("fileInputDiv");
@@ -289,6 +276,20 @@
 				var newText = document.createTextNode("$tlang.getString("edit.show")");
 				addDetailsLink.appendChild(newText);
 			}
+			var inheritedChoice = document.getElementById("access_mode_inherited${DOT}" + index);
+			if(inheritedChoice)
+			{
+				inheritedChoice.checked = true;
+				var selectAllGroups = document.getElementById("selectall${DOT}" + index);
+				if(selectAllGroups)
+				{
+					if(selectAllGroups.checked)
+					{
+						toggleAllGroups(index);
+					}
+					hideGroupsTable(index);
+				}
+			}
 		}
 		
 		var prevNext = document.getElementById("next$DOT" + prevIndex);
@@ -304,13 +305,15 @@
 		}
 		
 		attachEventHandlers();
-		
-##		var debug_guy = document.getElementById("debug_guy");
-##		debug_guy.value = fileInputDiv.innerHTML;
-		
+#*
+		var debug_guy = document.getElementById("debugger");
+		if(debug_guy)
+		{
+			debug_guy.value = fileInputDiv.innerHTML;
+		}
+*#
 		resizeFrame('grow');
-##		focus_path = [ "content" + DOT + index ];
-##		setFocus(focus_path);
+		return false;
 	}
 	function removeFileItem(index)
 	{
@@ -393,6 +396,7 @@
 		}
 		
 		resizeFrame('grow');
+		return false;
 	}
 	function removeTree(nodeRef)
 	{
@@ -404,6 +408,7 @@
 				nodeRef.removeChild(nodeRef.childNodes[i]);
 			}
 		}
+		return false;
 	}
 	function deleteFileItem(element)
 	{
@@ -420,6 +425,7 @@
 		{
 			deleteFileItem(element.parentNode);
 		}
+		return false;
 	}
 	function toggleProperties(element)
 	{
@@ -435,6 +441,7 @@
 				}
 			}
 		}
+		return false;
 	}
 	function showHide(element, index)
 	{
@@ -449,7 +456,6 @@
 				removeTextNodes(element);
 				var newText = document.createTextNode("$tlang.getString("edit.hide")");
 				element.appendChild(newText);
-##				focus_path = [ "content$DOT" + index ];
 			}
 			else
 			{
@@ -457,10 +463,8 @@
 				removeTextNodes(element);
 				var newText = document.createTextNode("$tlang.getString("edit.show")");
 				element.appendChild(newText);
-##				focus_path = [ "description$DOT" + index ];
 			}
 			resizeFrame('grow');
-##			setFocus(focus_path);
 		}
 	}
 	function removeTextNodes(element)
@@ -476,8 +480,31 @@
 	function deepCopy(element, index)
 	{
 		var newElement = element.cloneNode(false);
+		if(newElement && element.childNodes)
+		{
+			for(var i = 0; i < element.childNodes.length; i++)
+			{
+				var newChild = deepCopy(element.childNodes[i], index);
+				newElement.appendChild(newChild);
+			}
+		}
+		if(newElement && newElement.name)
+		{
+			var dotPos = newElement.name.lastIndexOf(DOT);
+			if(dotPos >= 0)
+			{
+				var baseName = newElement.name.substr(0,dotPos);
+				newElement.name = baseName + DOT + index;
+			}
+		}
 		if(newElement && newElement.id)
 		{
+			var dotPos = element.id.lastIndexOf(DOT);
+			if(dotPos >= 0)
+			{
+				var baseName = element.id.substr(0,dotPos);
+				newElement.id = baseName + DOT + index;
+			}
 			if(element.id.match(/^displayName${DOT}\d+$/))
 			{
 				newElement.value = "";
@@ -515,6 +542,10 @@
 					}
 				}
 			}
+			else if(element.id.match(/^description${DOT}\d+$/))
+			{
+				newElement.value = "";
+			}
 			else if(element.id.match(/^hidden_true${DOT}\d+$/))
 			{
 				newElement.checked = false;
@@ -531,21 +562,13 @@
 			{
 				newElement.checked = false;
 			}
-			var dotPos = element.id.lastIndexOf(DOT);
-			if(dotPos >= 0)
+			else if(element.id.match(/^copyright_status${DOT}\d+$/))
 			{
-				var baseName = element.id.substr(0,dotPos);
-				newElement.setAttribute("id", baseName + DOT + index);
-				newElement.setAttribute("name", baseName + DOT + index);
+				newElement.style.display = "none";
 			}
-			if(element.name && element.name != element.id)
+			else if(element.id.match(/^copyright${DOT}\d+$/))
 			{
-				var dotPosInName = element.name.lastIndexOf(DOT);
-				if(dotPosInName >= 0)
-				{
-					var baseName2 = element.name.substr(0,dotPosInName);
-					newElement.setAttribute("name", baseName2 + DOT + index);
-				}
+				newElement.selectedIndex = 4;
 			}
 		}
 		if(newElement && newElement.htmlFor)
@@ -557,12 +580,13 @@
 				newElement.htmlFor = baseName + DOT + index;
 			}
 		}
-		if(newElement && element.childNodes)
+		if(newElement && newElement.headers)
 		{
-			for(var i = 0; i < element.childNodes.length; i++)
+			var dotPos = element.headers.lastIndexOf(DOT);
+			if(dotPos >= 0)
 			{
-				var newChild = deepCopy(element.childNodes[i], index);
-				newElement.appendChild(newChild);
+				var baseName = element.headers.substr(0,dotPos);
+				newElement.htmlFor = baseName + DOT + index;
 			}
 		}
 		
@@ -570,6 +594,7 @@
 	}
 	function seedValue(src_element, target_element, trim)
 	{
+##alert("seedValue(" + src_element + ", " + target_element + ", " + trim + ")");
 		if(target_element && src_element && src_element.value)
 		{
 			var nonWhitespaceChar = /\S/;
@@ -601,15 +626,13 @@
 		if(selectElement && selectElement.value)
 		{
 			var selection = selectElement.value;
-			if(selection == "${USE_THIS_COPYRIGHT}")
+			var copyrightDiv = document.getElementById("copyright_status${DOT}" + index );
+			if(copyrightDiv)
 			{
-				var copyrightDiv = document.getElementById("copyright_status${DOT}" + index );
-				if(copyrightDiv)
+				if(selection == "${USE_THIS_COPYRIGHT}")
 				{
 					copyrightDiv.style.display="block";
 					resizeFrame('grow');
-##					focus_path = [ "newcopyright${DOT}" + index ];
-##					setFocus(focus_path);
 				}
 				else
 				{
@@ -617,7 +640,6 @@
 				}
 			}
 		}
-		
 	}
 	function changeMimeType(index)
 	{
@@ -678,7 +700,6 @@
 		{
 			select_category.addEventListener("change", handleMimeCategoryChange, true);
 		}
-		
 	}
 	function changeMimeCategory(index)
 	{
@@ -738,6 +759,215 @@
 		else 
 		{
 			throw( "resizeFrame did not get the frame (using name=" + window.name + ")" );
+		}
+	}
+	function handleAccessNotGroup(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						hideGroupsTable(index);
+					}
+				}
+			}
+		}
+	}
+	function handleAccessIsGroup(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						showGroupsTable(index);
+					}
+				}
+			}
+		}
+	}
+	function hideGroupsTable(index)
+	{
+		var element = document.getElementById("groupTable$DOT" + index);
+		if(element)
+		{
+			element.style.display = "none";
+		}		
+	}
+	function showGroupsTable(index)
+	{
+		var element = document.getElementById("groupTable$DOT" + index);
+		if(element && element.style)
+		{
+			element.style.display = "block";
+		}
+		resizeFrame('grow');		
+	}
+	function handleReleaseDateChange(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						selectReleaseDate(index);
+					}
+				}
+			}
+		}
+	}
+	function handleRetractDateChange(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						selectRetractDate(index);
+					}
+				}
+			}
+		}
+	}
+	function handleSetToHidden(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						selectHideOption(index);
+					}
+				}
+			}
+		}
+	}
+	function selectReleaseDate(index)
+	{
+		var hidden_true = document.getElementById("hidden_true${DOT}" + index);
+		if(hidden_true)
+		{
+			hidden_true.checked = false;
+		}
+		var hidden_false = document.getElementById("hidden_false${DOT}" + index);
+		if(hidden_false)
+		{
+			hidden_false.checked = true;
+		}
+		var use_start_date = document.getElementById("use_start_date${DOT}" + index);
+		if(use_start_date)
+		{
+			use_start_date.checked = true;
+		}
+	}
+	function selectRetractDate(index)
+	{
+		var hidden_true = document.getElementById("hidden_true${DOT}" + index);
+		if(hidden_true)
+		{
+			hidden_true.checked = false;
+		}
+		var hidden_false = document.getElementById("hidden_false${DOT}" + index);
+		if(hidden_false)
+		{
+			hidden_false.checked = true;
+		}
+		var use_end_date = document.getElementById("use_end_date${DOT}" + index);
+		if(use_end_date)
+		{
+			use_end_date.checked = true;
+		}
+	}
+	function selectHideOption(index)
+	{
+		var use_start_date = document.getElementById("use_start_date${DOT}" + index);
+		if(use_start_date)
+		{
+			use_start_date.checked = false;
+		}
+		var use_end_date = document.getElementById("use_end_date${DOT}" + index);
+		if(use_end_date)
+		{
+			use_end_date.checked = false;
+		}	
+	}
+	function handleSelectAllChange(evt)
+	{
+		evt = (evt) ? evt : ((event) ? event : null);
+		if(evt)
+		{
+			evt.cancelBubble = true;
+			var element = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null)
+			if(element)
+			{
+				element = (element.nodeType == 1 || element.nodeType == 9) ? element : element.parentNode;
+				if(element.id)
+				{
+					var dot = element.id.lastIndexOf("$DOT");
+					if(dot >= 0)
+					{
+						var index = element.id.substr(dot + 1);
+						toggleAllGroups(index);
+					}
+				}
+			}
+		}
+	}
+	
+	function toggleAllGroups(index)
+	{
+		var selectAll = document.getElementById("selectall${DOT}" + index);
+		var newSetting = selectAll.checked;
+		var checkboxes = document.getElementsByName("access_groups$DOT" + index);
+		for(var i = 0; i < checkboxes.length; i++)
+		{
+			checkboxes[i].checked = newSetting;
 		}
 	}
 	
