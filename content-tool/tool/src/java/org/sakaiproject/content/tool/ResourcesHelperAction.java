@@ -52,6 +52,7 @@ import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.content.api.ContentTypeImageService;
 import org.sakaiproject.entity.api.Entity;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Site;
@@ -553,12 +554,15 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		if(ResourceType.TYPE_TEXT.equals(resourceType) || ResourceType.MIME_TYPE_TEXT.equals(mimetype))
 		{
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_TEXT);
+			pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+
 		}
 		else if(ResourceType.TYPE_HTML.equals(resourceType) || ResourceType.MIME_TYPE_HTML.equals(mimetype))
 		{
 			StringBuffer alertMsg = new StringBuffer();
 			content = FormattedText.processHtmlDocument(content, alertMsg);
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_HTML);
+			pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
 			if (alertMsg.length() > 0)
 			{
 				addAlert(state, alertMsg.toString());
@@ -741,6 +745,15 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
             //pipe.setRevisedContent(bytes);
             pipe.setRevisedMimeType(contentType);
             pipe.setFileName(filename);
+            
+            if(ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType))
+            {
+            	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+            }
+            else if(pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) != null)
+            {
+            	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, (String) pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING));
+            }
             
 			ListItem newFile = new ListItem(filename);
 			
@@ -965,6 +978,16 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
                 String contentType = fileitem.getContentType();
                 //pipe.setRevisedContent(bytes);
                 pipe.setRevisedMimeType(contentType);
+                
+//                if(ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType))
+//                {
+//                	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+//                }
+//                else if(pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) != null)
+//                {
+//                	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, (String) pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING));
+//                }
+                
                 pipe.setFileName(filename);
                 
     			ListItem newFile = (ListItem) pipe.getRevisedListItem();
