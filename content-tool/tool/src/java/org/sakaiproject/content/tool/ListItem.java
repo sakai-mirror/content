@@ -1117,22 +1117,29 @@ public class ListItem
 	protected void captureDisplayName(ParameterParser params, String index) 
 	{
 		String displayName = params.getString("displayName" + index);
-		if(displayName == null)
+		if(displayName == null || displayName.trim().equals(""))
 		{
-			String[] delimiters = {"/", "\\"};
-			displayName = this.id;
-			if(displayName != null)
+			if(this.name == null || this.name.trim().equals(""))
 			{
-				for(int i = 0; i < delimiters.length; i++)
+				String[] delimiters = {"/", "\\"};
+				displayName = this.id;
+				if(displayName != null)
 				{
-					if(displayName.lastIndexOf(delimiters[i]) >= 0)
+					for(int i = 0; i < delimiters.length; i++)
 					{
-						displayName = displayName.substring(displayName.lastIndexOf(delimiters[i]) + 1);
+						if(displayName.lastIndexOf(delimiters[i]) >= 0)
+						{
+							displayName = displayName.substring(displayName.lastIndexOf(delimiters[i]) + 1);
+						}
 					}
 				}
+				this.setName(displayName);
 			}
 		}
-		this.setName(displayName);
+		else
+		{
+			this.setName(displayName);
+		}
 	}
 
 	/**
@@ -2629,6 +2636,18 @@ public class ListItem
 	public boolean isSelectedForMove()
     {
     	return selectedForMove;
+    }
+
+	public List<String> checkRequiredProperties()
+    {
+		List<String> alerts = new Vector<String>();
+		String name = getName();
+		if(name == null || name.trim().equals(""))
+		{
+			setNameIsMissing(true);
+			alerts.add(rb.getString("edit.missing"));
+		}
+	    return alerts;
     }
 	
 }
