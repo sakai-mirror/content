@@ -4,24 +4,21 @@
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007 The Sakai Foundation.
- * 
- * Licensed under the Educational Community License, Version 1.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
+ *
+ * Licensed under the Educational Community License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.opensource.org/licenses/ecl1.php
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  *
  **********************************************************************************/
-
-
 // TODO: check against 15608
-
 package org.sakaiproject.content.impl;
 
 import java.io.ByteArrayOutputStream;
@@ -37,6 +34,7 @@ import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.logging.Log;
@@ -46,6 +44,7 @@ import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.ContentServiceSql;
 import org.sakaiproject.content.api.LockManager;
 import org.sakaiproject.db.api.SqlReader;
 import org.sakaiproject.db.api.SqlService;
@@ -121,7 +120,7 @@ public class DbContentService extends BaseContentService
 
 	/** Table name for resources delete. */
 	protected String m_resourceBodyDeleteTableName = "CONTENT_RESOURCE_BODY_BINARY_DELETE";
-	
+
 	/** The chunk size used when streaming (100k). */
 	protected static final int STREAM_BUFFER_SIZE = 102400;
 
@@ -134,7 +133,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Dependency: LockManager
-	 * 
+	 *
 	 * @param service
 	 *        The LockManager
 	 */
@@ -148,7 +147,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Dependency: SqlService.
-	 * 
+	 *
 	 * @param service
 	 *        The SqlService.
 	 */
@@ -159,7 +158,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: set the table name for collections.
-	 * 
+	 *
 	 * @param path
 	 *        The table name for collections.
 	 */
@@ -170,7 +169,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: set the table name for resources.
-	 * 
+	 *
 	 * @param path
 	 *        The table name for resources.
 	 */
@@ -181,7 +180,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: set the table name for resource body.
-	 * 
+	 *
 	 * @param path
 	 *        The table name for resource body.
 	 */
@@ -192,7 +191,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: set the locks-in-db
-	 * 
+	 *
 	 * @param value
 	 *        The locks-in-db value.
 	 */
@@ -206,7 +205,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: run the to-file conversion.
-	 * 
+	 *
 	 * @param value
 	 *        The conversion desired value.
 	 */
@@ -223,7 +222,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Configuration: to run the ddl on init or not.
-	 * 
+	 *
 	 * @param value
 	 *        the auto ddl value.
 	 */
@@ -250,6 +249,24 @@ public class DbContentService extends BaseContentService
 		m_groupTableName = name;
 	}
 
+   protected Map<String, ContentServiceSql> databaseBeans;       // contains a map of the database dependent beans injected by spring
+   protected ContentServiceSql              contentServiceSql;   // contains database dependent code
+
+   public void setDatabaseBeans(Map databaseBeans) {
+     this.databaseBeans = databaseBeans;
+   }
+
+   public ContentServiceSql getContentServiceSql() {
+      return contentServiceSql;
+   }
+
+   /**
+    * sets which bean containing database dependent code should be used depending on the database vendor.
+    */
+   public void setContentServiceSql(String vendor) {
+      this.contentServiceSql = (databaseBeans.containsKey(vendor) ? databaseBeans.get(vendor) : databaseBeans.get("default"));
+   }
+
 	/***************************************************************************
 	 * Init and Destroy
 	 **************************************************************************/
@@ -259,21 +276,20 @@ public class DbContentService extends BaseContentService
 	 */
 	public void init()
 	{
+      setContentServiceSql(m_sqlService.getVendor());
+
 		try
 		{
 			// if we are auto-creating our schema, check and create
 			if (m_autoDdl)
 			{
-				m_sqlService.ddl(this.getClass().getClassLoader(),
-						"sakai_content");
+            m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content");
 
 				// add the delete table
-				m_sqlService.ddl(this.getClass().getClassLoader(),
-				"sakai_content_delete");
+            m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_delete");
 
 				// do the 2.1.0 conversions
-				m_sqlService.ddl(this.getClass().getClassLoader(),
-				"sakai_content_2_1_0");
+            m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_2_1_0");
 			}
 
 			super.init();
@@ -297,7 +313,7 @@ public class DbContentService extends BaseContentService
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private int countQuery(String sql, String param) throws IdUnusedException
 	{
@@ -346,13 +362,9 @@ public class DbContentService extends BaseContentService
 			wildcard = id + "/%";
 		}
 
-		int fileCount = countQuery(
-				"select count(IN_COLLECTION) from CONTENT_RESOURCE where IN_COLLECTION like ?",
-				wildcard);
-		int folderCount = countQuery(
-				"select count(IN_COLLECTION) from CONTENT_COLLECTION where IN_COLLECTION like ?",
-				wildcard);;
-				return fileCount + folderCount;
+      int fileCount   = countQuery(contentServiceSql.getNumContentResources1Sql(), wildcard);
+      int folderCount = countQuery(contentServiceSql.getNumContentResources2Sql(), wildcard);
+      return fileCount + folderCount;
 	}
 
 	/***************************************************************************
@@ -417,13 +429,13 @@ public class DbContentService extends BaseContentService
 			connection.setAutoCommit(false);
 
 			// set any existing one to null
-			String sql = "update CONTENT_RESOURCE set RESOURCE_UUID = ? where RESOURCE_UUID = ?";
+         String sql = contentServiceSql.getUpdateContentResource1Sql();
 			Object[] fields = new Object[2];
 			fields[0] = null;
 			fields[1] = uuid;
 			m_sqlService.dbWrite(connection, sql, fields);
 
-			sql = "update CONTENT_RESOURCE set RESOURCE_UUID = ? where RESOURCE_ID = ?";
+         sql = contentServiceSql.getUpdateContentResource2Sql();
 			fields = new Object[2];
 			fields[0] = uuid;
 			fields[1] = id;
@@ -445,7 +457,7 @@ public class DbContentService extends BaseContentService
 
 	private String findUuid(String id)
 	{
-		String sql = "select RESOURCE_UUID from CONTENT_RESOURCE where RESOURCE_ID=?";
+      String sql = contentServiceSql.getResourceUuidSql();
 		Object[] fields = new Object[1];
 		fields[0] = id;
 
@@ -475,7 +487,7 @@ public class DbContentService extends BaseContentService
 
 		try
 		{
-			String sql = "select RESOURCE_ID from CONTENT_RESOURCE where RESOURCE_UUID=?";
+         String sql = contentServiceSql.getResourceId1Sql();
 			Object[] fields = new Object[1];
 			fields[0] = uuid;
 
@@ -503,7 +515,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Construct a Storage object.
-	 * 
+	 *
 	 * @return The new storage object.
 	 */
 	protected Storage newStorage()
@@ -534,7 +546,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Construct.
-		 * 
+		 *
 		 * @param collectionUser
 		 *        The StorageUser class to call back for creation of collection objects.
 		 * @param resourceUser
@@ -543,7 +555,7 @@ public class DbContentService extends BaseContentService
 		public DbStorage(StorageUser collectionUser, StorageUser resourceUser, boolean bodyInFile,
 				BaseContentHostingHandlerResolver resolver)
 		{
-			this.resolver = resolver; 
+			this.resolver = resolver;
 			this.resolver.setResourceUser(resourceUser);
 			this.resolver.setCollectionUser(collectionUser);
 
@@ -589,7 +601,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * increase the stack counter and return true if this is the top of the stack
-		 * 
+		 *
 		 * @return
 		 */
 		private boolean in()
@@ -1029,7 +1041,7 @@ public class DbContentService extends BaseContentService
 									throw new ServerOverloadException("failed to write file");
 								}
 							}
-	
+
 							// otherwise use the database
 							else
 							{
@@ -1037,11 +1049,11 @@ public class DbContentService extends BaseContentService
 							}
 						}
 					}
-					else 
+					else
 					{
 						byte[] body = ((BaseResourceEdit) edit).m_body;
 						((BaseResourceEdit) edit).m_body = null;
-	
+
 						// update the resource body
 						if (body != null)
 						{
@@ -1056,7 +1068,7 @@ public class DbContentService extends BaseContentService
 									throw new ServerOverloadException("failed to write file");
 								}
 							}
-	
+
 							// otherwise use the database
 							else
 							{
@@ -1066,7 +1078,7 @@ public class DbContentService extends BaseContentService
 					}
 					m_resourceStore.commitResource(edit);
 				}
-				
+
 			}
 			finally
 			{
@@ -1166,7 +1178,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Read the resource's body.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is desired.
 		 * @return The resources's body content as a byte array.
@@ -1213,7 +1225,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Read the resource's body from the database.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is desired.
 		 * @return The resources's body content as a byte array.
@@ -1221,7 +1233,7 @@ public class DbContentService extends BaseContentService
 		protected byte[] getResourceBodyDb(ContentResource resource)
 		{
 			// get the resource from the db
-			String sql = "select BODY from " + m_resourceBodyTableName + " where ( RESOURCE_ID = ? )";
+         String sql = contentServiceSql.getBodySql(m_resourceBodyTableName);
 
 			Object[] fields = new Object[1];
 			fields[0] = resource.getId();
@@ -1236,7 +1248,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Read the resource's body from the external file system.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is desired.
 		 * @return The resources's body content as a byte array.
@@ -1316,7 +1328,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Return an input stream.
-		 * 
+		 *
 		 * @param resource -
 		 *        the resource for the stream It is a non-fatal error for the file not to be readible as long as the resource's expected length is zero. A zero length body is indicated by returning null. We check for the body length *after* we try to read
 		 *        the file. If the file is readible, we simply read it and return it as the body.
@@ -1355,7 +1367,7 @@ public class DbContentService extends BaseContentService
 		protected InputStream streamResourceBodyDb(ContentResource resource) throws ServerOverloadException
 		{
 			// get the resource from the db
-			String sql = "select BODY from " + m_resourceBodyTableName + " where ( RESOURCE_ID = ? )";
+         String sql = contentServiceSql.getBodySql(m_resourceBodyTableName);
 
 			Object[] fields = new Object[1];
 			fields[0] = resource.getId();
@@ -1368,7 +1380,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Write the resource body to the database table.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is being written.
 		 * @param body
@@ -1380,7 +1392,7 @@ public class DbContentService extends BaseContentService
 			if ((body == null) || (body.length == 0)) return;
 
 			// delete the old
-			String statement = "delete from " + m_resourceBodyTableName + " where resource_id = ? ";
+         String statement = contentServiceSql.getDeleteContentSql(m_resourceBodyTableName);
 
 			Object[] fields = new Object[1];
 			fields[0] = resource.getId();
@@ -1388,7 +1400,7 @@ public class DbContentService extends BaseContentService
 			m_sqlService.dbWrite(statement, fields);
 
 			// add the new
-			statement = "insert into " + m_resourceBodyTableName + " (RESOURCE_ID, BODY)" + " values (? , ? )";
+         statement = contentServiceSql.getInsertContentSql(m_resourceBodyTableName);
 
 			m_sqlService.dbWriteBinary(statement, fields, body, 0, body.length);
 
@@ -1397,7 +1409,7 @@ public class DbContentService extends BaseContentService
 			 * ((BaseResource)resource).m_body);
 			 */
 		}
-		
+
 		/**
          * @param edit
          * @param stream
@@ -1406,9 +1418,9 @@ public class DbContentService extends BaseContentService
         {
 			// Do not create the files for resources with zero length bodies
 			if ((stream == null)) return;
-       	
+
 			ByteArrayOutputStream bstream = new ByteArrayOutputStream();
-			
+
 			int byteCount = 0;
 
 			// chunk
@@ -1421,7 +1433,7 @@ public class DbContentService extends BaseContentService
 	            	bstream.write(chunk, 0, lenRead);
 	            	byteCount += lenRead;
 	            }
-	            
+
 	            edit.setContentLength(byteCount);
 				ResourcePropertiesEdit props = edit.getPropertiesEdit();
 				props.addProperty(ResourceProperties.PROP_CONTENT_LENGTH, Long.toString(byteCount));
@@ -1479,7 +1491,7 @@ public class DbContentService extends BaseContentService
 			}
 
 			FileOutputStream out = null;
-			
+
 			// add the new
 			try
 			{
@@ -1492,7 +1504,7 @@ public class DbContentService extends BaseContentService
 
 				// write the file
 				out = new FileOutputStream(file);
-				
+
 				int byteCount = 0;
 				// chunk
 				byte[] chunk = new byte[STREAM_BUFFER_SIZE];
@@ -1502,7 +1514,7 @@ public class DbContentService extends BaseContentService
 					out.write(chunk, 0, lenRead);
 					byteCount += lenRead;
 				}
-				
+
 				resource.setContentLength(byteCount);
 				ResourcePropertiesEdit props = resource.getPropertiesEdit();
 				props.addProperty(ResourceProperties.PROP_CONTENT_LENGTH, Long.toString(byteCount));
@@ -1535,7 +1547,7 @@ public class DbContentService extends BaseContentService
 	                    M_log.warn("IOException ", e);
                     }
 				}
-				
+
 				if(out != null)
 				{
 					try
@@ -1555,7 +1567,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Write the resource body to the external file system. The file name is the m_bodyPath with the resource id appended.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is being written.
 		 * @param body
@@ -1601,14 +1613,14 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Delete the resource body from the database table.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is being deleted.
 		 */
 		protected void delResourceBodyDb(ContentResourceEdit resource)
 		{
 			// delete the record
-			String statement = "delete from " + m_resourceBodyTableName + " where resource_id = ?";
+         String statement = contentServiceSql.getDeleteContentSql(m_resourceBodyTableName);
 
 			Object[] fields = new Object[1];
 			fields[0] = resource.getId();
@@ -1618,7 +1630,7 @@ public class DbContentService extends BaseContentService
 
 		/**
 		 * Delete the resource body from the external file system. The file name is the m_bodyPath with the resource id appended.
-		 * 
+		 *
 		 * @param resource
 		 *        The resource whose body is being written.
 		 */
@@ -1652,8 +1664,7 @@ public class DbContentService extends BaseContentService
 					int fileCount = 0;
 					try
 					{
-						fileCount = countQuery("select count(IN_COLLECTION) from CONTENT_RESOURCE where IN_COLLECTION = ?",
-								collectionId);
+                  fileCount = countQuery(contentServiceSql.getNumContentResources3Sql(), collectionId);
 					}
 					catch (IdUnusedException e)
 					{
@@ -1662,8 +1673,7 @@ public class DbContentService extends BaseContentService
 					int folderCount = 0;
 					try
 					{
-						folderCount = countQuery("select count(IN_COLLECTION) from CONTENT_COLLECTION where IN_COLLECTION = ?",
-								collectionId);
+                  folderCount = countQuery(contentServiceSql.getNumContentResources4Sql(), collectionId);
 					}
 					catch (IdUnusedException e)
 					{
@@ -1683,7 +1693,7 @@ public class DbContentService extends BaseContentService
 			List list = null;
 			try
 			{
-				String sql = "select COLLECTION_ID from " + m_collectionTableName + " where IN_COLLECTION = ?";
+            String sql = contentServiceSql.getCollectionIdSql(m_collectionTableName);
 				Object[] fields = new Object[1];
 				fields[0] = collectionId;
 
@@ -1701,7 +1711,7 @@ public class DbContentService extends BaseContentService
 			List list = null;
 			try
 			{
-				String sql = "select RESOURCE_ID from " + m_resourceTableName + " where IN_COLLECTION = ?";
+            String sql = contentServiceSql.getResourceId3Sql(m_resourceTableName);
 				Object[] fields = new Object[1];
 				fields[0] = collectionId;
 
@@ -1718,7 +1728,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Form the full file path+name used to store the resource body in an external file system.
-	 * 
+	 *
 	 * @param resource
 	 *        The resource.
 	 * @return The resource external file name.
@@ -1733,7 +1743,7 @@ public class DbContentService extends BaseContentService
 
 	/**
 	 * Return file system safe escaped name, that's also unique if the initial id is unique. * Use only the name, not the path part of the id
-	 * 
+	 *
 	 * @param value
 	 *        The id to escape.
 	 * @return value escaped.
@@ -1795,7 +1805,7 @@ public class DbContentService extends BaseContentService
 			final Counter count = new Counter();
 
 			// read content_resource records that have null file path
-			String sql = "select RESOURCE_ID, XML from CONTENT_RESOURCE where FILE_PATH IS NULL";
+         String sql = contentServiceSql.getResourceIdXmlSql();
 			m_sqlService.dbRead(sql, null, new SqlReader()
 			{
 				public Object readSqlResultRecord(ResultSet result)
@@ -1834,23 +1844,19 @@ public class DbContentService extends BaseContentService
 						// zero length?
 						if (edit.getContentLength() == 0)
 						{
-							M_log.warn("convertToFile: zero length body : "
-									+ id);
+                     M_log.warn("convertToFile: zero length body : " + id);
 							return null;
 						}
 
 						// is it there?
-						String sql = "select RESOURCE_ID from CONTENT_RESOURCE_BODY_BINARY where (RESOURCE_ID = ?)";
+                  String sql = contentServiceSql.getResourceId2Sql();
 						Object[] fields = new Object[1];
 						fields[0] = id;
-						List found = m_sqlService.dbRead(sourceConnection, sql,
-								fields, null);
+                  List found = m_sqlService.dbRead(sourceConnection, sql, fields, null);
 						if ((found == null) || (found.size() == 0))
 						{
 							// not found
-							M_log
-							.warn("convertToFile: body not found in source : "
-									+ id);
+                     M_log.warn("convertToFile: body not found in source : " + id);
 							return null;
 						}
 
@@ -1878,18 +1884,16 @@ public class DbContentService extends BaseContentService
 						edit.setFilePath(created);
 
 						// read the body from the source
-						sql = "select BODY from CONTENT_RESOURCE_BODY_BINARY where (RESOURCE_ID = ?)";
+                  sql = contentServiceSql.getBodySql(m_resourceBodyTableName);
 						byte[] body = new byte[edit.m_contentLength];
 						m_sqlService.dbReadBinary(sourceConnection, sql,
 								fields, body);
 
 						// write the body to the file
-						boolean ok = ((DbStorage) m_storage)
-						.putResourceBodyFilesystem(edit, body);
+                  boolean ok = ((DbStorage) m_storage).putResourceBodyFilesystem(edit, body);
 						if (!ok)
 						{
-							M_log.warn("convertToFile: body file failure : "
-									+ id + " file: " + edit.m_filePath);
+                     M_log.warn("convertToFile: body file failure : " + id + " file: " + edit.m_filePath);
 							return null;
 						}
 
@@ -1899,7 +1903,7 @@ public class DbContentService extends BaseContentService
 						xml = Xml.writeDocumentToString(doc);
 
 						// update the record
-						sql = "update CONTENT_RESOURCE set FILE_PATH = ?, XML = ? where RESOURCE_ID = ?";
+                  sql = contentServiceSql.getUpdateContentResource3Sql();
 						fields = new Object[3];
 						fields[0] = edit.m_filePath;
 						fields[1] = xml;
