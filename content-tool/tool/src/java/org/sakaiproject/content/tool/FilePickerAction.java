@@ -111,10 +111,13 @@ import org.sakaiproject.util.Validator;
 public class FilePickerAction extends PagedResourceHelperAction
 {
 	/** Resource bundle using current language locale */
-	private static ResourceLoader rb = new ResourceLoader("helper");
+	private static ResourceLoader hrb = new ResourceLoader("helper");
 
 	/** Resource bundle using current language locale */
 	private static ResourceLoader trb = new ResourceLoader("types");
+
+	/** Resource bundle using current language locale */
+	private static ResourceLoader crb = new ResourceLoader("content");
 
     private static final Log logger = LogFactory.getLog(FilePickerAction.class);
 
@@ -431,7 +434,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 						{
 							ResourceProperties props = resource.getProperties();
 							String displayName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
-							addAlert(state, (String) rb.getFormattedMessage("filter", new Object[]{displayName}));
+							addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
 							continue;
 						}
 					}
@@ -487,7 +490,7 @@ public class FilePickerAction extends PagedResourceHelperAction
      */
     protected String buildSelectAttachmentContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
     {
-		context.put("tlang",rb);
+		context.put("tlang",hrb);
 
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
@@ -881,7 +884,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		catch (IdUnusedException e)
 		{
-			addAlert(state, rb.getString("cannotfind"));
+			addAlert(state, crb.getString("cannotfind"));
 			context.put ("collectionFlag", Boolean.FALSE.toString());
 		}
 		catch(TypeException e)
@@ -891,7 +894,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		catch(PermissionException e)
 		{
-			addAlert(state, rb.getString("notpermis1"));
+			addAlert(state, crb.getString("notpermis1"));
 			context.put ("collectionFlag", Boolean.FALSE.toString());
 		}
 
@@ -1237,11 +1240,11 @@ public class FilePickerAction extends PagedResourceHelperAction
 		if(fileitem == null)
 		{
 			// "The user submitted a file to upload but it was too big!"
-			addAlert(state, rb.getString("size") + " " + max_file_size_mb + "MB " + rb.getString("exceeded2"));
+			addAlert(state, hrb.getString("size") + " " + max_file_size_mb + "MB " + hrb.getString("exceeded2"));
 		}
 		else if (fileitem.getFileName() == null || fileitem.getFileName().length() == 0)
 		{
-			addAlert(state, rb.getString("choosefile7"));
+			addAlert(state, hrb.getString("choosefile7"));
 		}
 		else if (fileitem.getFileName().length() > 0)
 		{
@@ -1251,7 +1254,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 
 			if(bytes.length >= max_bytes)
 			{
-				addAlert(state, rb.getString("size") + " " + max_file_size_mb + "MB " + rb.getString("exceeded2"));
+				addAlert(state, hrb.getString("size") + " " + max_file_size_mb + "MB " + hrb.getString("exceeded2"));
 			}
 			else if(bytes.length > 0)
 			{
@@ -1287,7 +1290,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					}
 					else
 					{
-						addAlert(state, (String) rb.getFormattedMessage("filter", new Object[]{name}));
+						addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{name}));
 						return;
 					}
 
@@ -1314,15 +1317,15 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				catch (PermissionException e)
 				{
-					addAlert(state, rb.getString("notpermis4"));
+					addAlert(state, hrb.getString("notpermis4"));
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(state, rb.getString("overquota"));
+					addAlert(state, hrb.getString("overquota"));
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(state, rb.getString("failed"));
+					addAlert(state, hrb.getString("failed"));
 				}
 				catch(IdInvalidException ignore)
 				{
@@ -1339,12 +1342,12 @@ public class FilePickerAction extends PagedResourceHelperAction
 				catch(RuntimeException e)
 				{
 					logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
-					addAlert(state, rb.getString("failed"));
+					addAlert(state, hrb.getString("failed"));
 				}
 			}
 			else
 			{
-				addAlert(state, rb.getString("choosefile7"));
+				addAlert(state, hrb.getString("choosefile7"));
 			}
 		}
 
@@ -1419,19 +1422,19 @@ public class FilePickerAction extends PagedResourceHelperAction
 		catch(MalformedURLException e)
 		{
 			// invalid url
-			addAlert(state, rb.getString("validurl") + " \"" + url + "\" " + rb.getString("invalid"));
+			addAlert(state, hrb.getString("validurl") + " \"" + url + "\" " + hrb.getString("invalid"));
 		}
 		catch (PermissionException e)
 		{
-			addAlert(state, rb.getString("notpermis4"));
+			addAlert(state, hrb.getString("notpermis4"));
 		}
 		catch(OverQuotaException e)
 		{
-			addAlert(state, rb.getString("overquota"));
+			addAlert(state, hrb.getString("overquota"));
 		}
 		catch(ServerOverloadException e)
 		{
-			addAlert(state, rb.getString("failed"));
+			addAlert(state, hrb.getString("failed"));
 		}
 		catch(IdInvalidException ignore)
 		{
@@ -1448,7 +1451,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		catch(RuntimeException e)
 		{
 			logger.debug("ResourcesAction.doAttachurl ***** Unknown Exception ***** " + e.getMessage());
-			addAlert(state, rb.getString("failed"));
+			addAlert(state, hrb.getString("failed"));
 		}
 
 		toolSession.setAttribute(STATE_FILEPICKER_MODE, MODE_ATTACHMENT_SELECT_INIT);
@@ -1722,7 +1725,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					if(! filter.allowSelect(resource))
 					{
 						String displayName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
-						addAlert(state, (String) rb.getFormattedMessage("filter", new Object[]{displayName}));
+						addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
 						return;
 					}
 				}
@@ -1759,15 +1762,15 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch (PermissionException e)
 			{
-				addAlert(state, rb.getString("notpermis4"));
+				addAlert(state, hrb.getString("notpermis4"));
 			}
 			catch(OverQuotaException e)
 			{
-				addAlert(state, rb.getString("overquota"));
+				addAlert(state, hrb.getString("overquota"));
 			}
 			catch(ServerOverloadException e)
 			{
-				addAlert(state, rb.getString("failed"));
+				addAlert(state, hrb.getString("failed"));
 			}
 			catch(IdInvalidException ignore)
 			{
@@ -1792,7 +1795,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			catch(RuntimeException e)
 			{
 				logger.debug("ResourcesAction.attachItem ***** Unknown Exception ***** " + e.getMessage());
-				addAlert(state, rb.getString("failed"));
+				addAlert(state, hrb.getString("failed"));
 			}
 			finally
 			{
@@ -1877,7 +1880,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					if(! filter.allowSelect(res))
 					{
 						String displayName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
-						addAlert(state, (String) rb.getFormattedMessage("filter", new Object[]{displayName}));
+						addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
 						return;
 					}
 				}
@@ -1899,7 +1902,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch (PermissionException e)
 			{
-				addAlert(state, rb.getString("notpermis4"));
+				addAlert(state, hrb.getString("notpermis4"));
 			}
 			catch(TypeException ignore)
 			{
@@ -1912,7 +1915,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			catch(RuntimeException e)
 			{
 				logger.debug("ResourcesAction.attachItem ***** Unknown Exception ***** " + e.getMessage());
-				addAlert(state, rb.getString("failed"));
+				addAlert(state, hrb.getString("failed"));
 			}
 		}
 		toolSession.setAttribute(STATE_ADDED_ITEMS, new_items);
@@ -2149,7 +2152,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				else
 				{
-					addAlert(state, (String) rb.getFormattedMessage("filter", new Object[]{displayName}));
+					addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
 				}
 				
 				toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
