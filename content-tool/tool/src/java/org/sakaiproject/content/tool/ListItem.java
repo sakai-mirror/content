@@ -984,11 +984,14 @@ public class ListItem
 			int begin_month = params.getInt("release_month" + index);
 			int begin_day = params.getInt("release_day" + index);
 			int begin_hour = params.getInt("release_hour" + index);
-			int begin_min = params.getInt("release_min" + index);
+			int begin_min = params.getInt("release_minute" + index);
 			String release_ampm = params.getString("release_ampm" + index);
 			if("pm".equals(release_ampm))
 			{
-				begin_hour += 12;
+				if( begin_hour < 12)
+				{
+					begin_hour += 12;
+				}
 			}
 			else if(begin_hour == 12)
 			{
@@ -1008,11 +1011,14 @@ public class ListItem
 			int end_month = params.getInt("retract_month" + index);
 			int end_day = params.getInt("retract_day" + index);
 			int end_hour = params.getInt("retract_hour" + index);
-			int end_min = params.getInt("retract_min" + index);
+			int end_min = params.getInt("retract_minute" + index);
 			String retract_ampm = params.getString("retract_ampm" + index);
 			if("pm".equals(retract_ampm))
 			{
-				end_hour += 12;
+				if(end_hour < 12)
+				{
+					end_hour += 12;
+				}
 			}
 			else if(end_hour == 12)
 			{
