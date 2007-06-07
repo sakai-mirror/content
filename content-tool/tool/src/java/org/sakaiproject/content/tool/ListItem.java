@@ -298,7 +298,7 @@ public class ListItem
 	protected Map<String, ResourceToolAction> multipleItemActions = new HashMap<String, ResourceToolAction>();
 
 	protected boolean canSelect = true;
-
+	
 	/** 
 	 * Access settings
 	 * Access mode can be "grouped" or "inherited". Inherited access mode
@@ -607,7 +607,7 @@ public class ListItem
 		{
 			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(ref.getContainer());
 		}
-		else if(contentService.getSiteCollection(ref.getContext()) != null)
+		else if(ref.getContext() != null && contentService.getSiteCollection(ref.getContext()) != null)
 		{
 			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(contentService.getSiteCollection(ref.getContext()));
 		}
@@ -885,6 +885,32 @@ public class ListItem
 			this.permissions = new TreeSet<ContentPermissions>();
 		}
 		this.permissions.add(permission);
+	}
+	
+	public boolean canChangeDisplayName()
+	{
+		// don't allow changing name of site collections
+		boolean allowed = ! this.isSiteCollection();
+		
+		if(allowed && id != null)
+		{
+			// don't allow changing name of root collections
+			if(org.sakaiproject.content.api.ContentHostingService.ROOT_COLLECTIONS.contains(this.id))
+			{
+				allowed = false;
+			}
+			
+			// don't allow changing names of system-provided dropbox folders 
+			// (maintainer's dropbox root and access-user's dropbox root)
+			// but do allow changing subfolders within access-user's dropbox.
+			if(allowed && this.isDropbox())
+			{
+				int depth = ContentHostingService.getDepth(this.id, org.sakaiproject.content.api.ContentHostingService.COLLECTION_DROPBOX);
+				allowed = (depth > 2);
+			}
+		}
+		
+		return allowed;
 	}
 	
 	/**
@@ -2617,6 +2643,7 @@ public class ListItem
 		
 		Reference ref = EntityManager.newReference(refStr);
 		String context = ref.getContext();
+		// what happens if context is null??
 		String siteCollection = ContentHostingService.getSiteCollection(context);
 		if(ref.getId().equals(siteCollection))
 		{
