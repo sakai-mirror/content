@@ -27,5 +27,7 @@
 	<classpathentry kind="src" path="/velocity"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/db-impl"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-codec/jars/commons-codec-1.3.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/javax.jcr/jars/jcr-1.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/sakaiproject/jars/sakai-jcr-api-dev.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -185,4 +185,5 @@ public interface BaseContentHostingHandlerResolver extends ContentHostingHandler
 	int getMemberCount(Storage storage, String collectionId);
 
 
+
 }

@@ -133,6 +133,18 @@
 			<artifactId>sakai-util</artifactId>
 			<version>${sakai.version}</version>
 		</dependency>
+  
+		<dependency>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>sakaiproject</groupId>
+			<artifactId>sakai-jcr-api</artifactId>
+			<version>${sakai.version}</version>
+		</dependency>
+               
 	    <dependency>      
     	  <groupId>commons-codec</groupId>
       	  <artifactId>commons-codec</artifactId>

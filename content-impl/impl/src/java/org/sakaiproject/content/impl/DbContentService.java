@@ -219,7 +219,7 @@ public class DbContentService extends BaseContentService
 	protected boolean m_autoDdl = false;
 
 	/* Virtual Content Hosting Handler -- handler which resolves virtual entities to real ones */
-	private ContentHostingHandlerResolverImpl contentHostingHandlerResolver = null;
+	protected ContentHostingHandlerResolverImpl contentHostingHandlerResolver = null;
 
 	/**
 	 * Configuration: to run the ddl on init or not.
@@ -299,7 +299,7 @@ public class DbContentService extends BaseContentService
 	/**
 	 * 
 	 */
-	private int countQuery(String sql, String param) throws IdUnusedException
+	int countQuery(String sql, String param) throws IdUnusedException
 	{
 
 		Object[] fields = new Object[1];
