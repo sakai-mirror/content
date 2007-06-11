@@ -63,6 +63,7 @@ import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.ExpandableResourceType;
 import org.sakaiproject.content.api.GroupAwareEntity;
 import org.sakaiproject.content.api.InteractionAction;
 import org.sakaiproject.content.api.MultiFileUploadPipe;
@@ -919,6 +920,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			ResourceProperties properties = service.getProperties (id);
 			context.put ("properties", properties);
 
+			// TODO: Should Use ResourceType
 			String isCollection = properties.getProperty (ResourceProperties.PROP_IS_COLLECTION);
 			if ((isCollection != null) && isCollection.equals (Boolean.FALSE.toString()))
 			{
@@ -1922,22 +1924,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static List<ResourceToolAction> getActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry)
     {
-	    String resourceType = ResourceType.TYPE_UPLOAD;
 	    Reference ref = EntityManager.newReference(selectedItem.getReference());
 	    List<ResourceToolAction> actions = new Vector<ResourceToolAction>();
-	    if(selectedItem.isCollection())
-	    {
-	    	resourceType = ResourceType.TYPE_FOLDER;
-	    }
-	    else
-	    {
-	    	ContentResource resource = (ContentResource) selectedItem;
-	    	// String mimetype = resource.getContentType();
-	    	resourceType = resource.getResourceType();
-	    }
 	    
-	    // get the registration for the current item's type 
-	    ResourceType typeDef = registry.getType(resourceType);
+	    ResourceType typeDef = getResourceType(selectedItem, registry);
 	    
 	    // if user has content.read, user can view content, view metadata and/or copy
 	    if(permissions.contains(ContentPermissions.READ))
@@ -2001,10 +1991,34 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	    }
 	    return actions;
     }
+
+	/**
+     * @param selectedItem
+     * @param registry
+     * @return
+     */
+    protected static ResourceType getResourceType(ContentEntity selectedItem, ResourceTypeRegistry registry)
+    {
+	    String resourceType = selectedItem.getResourceType();
+	    if(resourceType == null)
+	    {
+	    	if(selectedItem.isCollection())
+	    	{
+	    		resourceType = ResourceType.TYPE_FOLDER;
+	    	}
+		    else 
+		    {
+		    	resourceType = ResourceType.TYPE_UPLOAD;
+		    }
+	    }
+	    
+	    // get the registration for the current item's type 
+	    ResourceType typeDef = registry.getType(resourceType);
+	    return typeDef;
+    }
 	
     public static List<ResourceToolAction> getPasteActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry, List<String> items_to_be_moved, List<String> items_to_be_copied)
     {
-	    String resourceType = ResourceType.TYPE_UPLOAD;
 	    Reference ref = EntityManager.newReference(selectedItem.getReference());
 	    
 	    List<ResourceToolAction> actions = new Vector<ResourceToolAction>();
@@ -2012,20 +2026,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	    Set<String> memberIds = new TreeSet<String>();
 	    if(permissions.contains(ContentPermissions.CREATE))
 	    {
-		    if(selectedItem.isCollection())
-		    {
-		    	resourceType = ResourceType.TYPE_FOLDER;
+	    	if(selectedItem.isCollection())
+	    	{
 		    	memberIds.addAll(((ContentCollection) selectedItem).getMembers());
-		    }
-		    else
-		    {
-		    	ContentResource resource = (ContentResource) selectedItem;
-		    	// String mimetype = resource.getContentType();
-		    	resourceType = resource.getResourceType();
-		    }
-		    
+	    	}
+	    	
 		    // get the registration for the current item's type 
-		    ResourceType typeDef = registry.getType(resourceType);
+		    ResourceType typeDef = getResourceType(selectedItem, registry);
+		    
 		    if(items_to_be_moved != null && ! items_to_be_moved.isEmpty())
 		    {
 		    	// check items_to_be_moved to ensure there's at least one item that can be pasted here (SAK-9837)
@@ -2117,31 +2125,20 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static List<ResourceToolAction> getAddActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry)
     {
-	    String resourceType = ResourceType.TYPE_UPLOAD;
 	    Reference ref = EntityManager.newReference(selectedItem.getReference());
 	    
 	    List<ResourceToolAction> actions = new Vector<ResourceToolAction>();
 	    
+	    ResourceType typeDef = getResourceType(selectedItem, registry);
+	    
 	    if(permissions.contains(ContentPermissions.CREATE))
-	    {
-		    if(selectedItem.isCollection())
+	    {		    
+		    // certain actions are defined elsewhere but pertain only to ExpandableResourceTypes (collections)
+		    if(typeDef.isExpandable())
 		    {
-		    	resourceType = ResourceType.TYPE_FOLDER;
-		    }
-		    else
-		    {
-		    	ContentResource resource = (ContentResource) selectedItem;
-		    	// String mimetype = resource.getContentType();
-		    	resourceType = resource.getResourceType();
-		    }
-		    
-		    // get the registration for the current item's type 
-		    ResourceType typeDef = registry.getType(resourceType);
-		    
-		    // certain actions are defined elsewhere but pertain only to collections
-		    if(selectedItem.isCollection())
-		    {
-		    	// if item is collection and user has content.new for item, user can create anything 
+		    	ExpandableResourceType expTypeDef = (ExpandableResourceType) typeDef;
+		    	
+		    	// if item is collection and user has content.new for item, user may be able to create new items in the collection 
 		    	{
 		    		// iterate over resource-types and get all the registered types and find actions requiring "content.new" permission
 		    		Collection types = registry.getTypes(ref.getContext());
@@ -2163,20 +2160,22 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		    		}
 		    	}
 		    	
+			    // filter -- remove actions that are not available to the current user in the context of this item.
+		    	// A registered action can restrict itself based on the context.
+		    	// The type registration for the container can restrict what can be created within it.
+			    Iterator<ResourceToolAction> actionIt = actions.iterator();
+			    while(actionIt.hasNext())
+			    {
+			    	ResourceToolAction action = actionIt.next();
+					if(! action.available(selectedItem) || ! expTypeDef.allowAddAction(action, selectedItem))
+			    	{
+			    		actionIt.remove();
+			    	}
+			    }
 		    }
-	    }
-	    // filter -- remove actions that are not available to the current user in the context of this item
-	    Iterator<ResourceToolAction> actionIt = actions.iterator();
-	    while(actionIt.hasNext())
-	    {
-	    	ResourceToolAction action = actionIt.next();
-	    	ContentEntity entity = (ContentEntity) ref.getEntity();
-			if(! action.available(entity))
-	    	{
-	    		actionIt.remove();
-	    	}
-	    }
 
+	    }
+	    
 	    return actions;
     }
 	
@@ -4819,6 +4818,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//context.put("sysout", System.out);
 		//context.put("tlang",rb);
 		// find the ContentTypeImage service
+		
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
 		
 		context.put("copyright_alert_url", COPYRIGHT_ALERT_URL);
@@ -5484,14 +5484,43 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //			String id = (String) collection.getId();
 		    String id = (String) l.next();
 
-			if (id.indexOf (collectionId)==-1)
+			if (id.startsWith(collectionId))
 			{
-	//			newSet.put(id,collection);
-				newSet.add(id);
+				String refstr = ContentHostingService.getReference(id);
+				if(refstr != null)
+				{
+					Reference reference = EntityManager.newReference(refstr);
+					if(reference != null)
+					{
+						ContentEntity entity = (ContentEntity) reference.getEntity();
+						String typeId = entity.getResourceType();
+						ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
+						if(typeId != null && registry != null)
+						{
+							ResourceType typeDef = registry.getType(typeId);
+							if(typeDef != null && typeDef.isExpandable())
+							{
+								ServiceLevelAction collapseAction = ((ExpandableResourceType) typeDef).getCollapseAction();
+								if(collapseAction != null && collapseAction.available(entity))
+								{
+									collapseAction.initializeAction(reference);
+									
+									collapseAction.finalizeAction(reference);
+									
+									folderSortMap.remove(id);
+
+									// add this folder id into the set to be event-observed
+									addObservingPattern(id, state);
+								}
+							}
+						}
+					}
+				}
 			}
 			else
 			{
-				folderSortMap.remove(id);
+				// newSet.put(id,collection);
+				newSet.add(id);
 			}
 		}
 
@@ -6069,11 +6098,38 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		state.setAttribute(STATE_LIST_SELECTIONS, selectedSet);
 
 		String id = params.getString("collectionId");
-		expandedItems.add(id);
+		
+		String refstr = ContentHostingService.getReference(id);
+		if(refstr != null)
+		{
+			Reference reference = EntityManager.newReference(refstr);
+			if(reference != null)
+			{
+				ContentEntity entity = (ContentEntity) reference.getEntity();
+				String typeId = entity.getResourceType();
+				ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
+				if(typeId != null && registry != null)
+				{
+					ResourceType typeDef = registry.getType(typeId);
+					if(typeDef != null && typeDef.isExpandable())
+					{
+						ServiceLevelAction expandAction = ((ExpandableResourceType) typeDef).getExpandAction();
+						if(expandAction != null && expandAction.available(entity))
+						{
+							expandAction.initializeAction(reference);
+							
+							expandAction.finalizeAction(reference);
+							
+							expandedItems.add(id);
 
-		// add this folder id into the set to be event-observed
-		addObservingPattern(id, state);
-
+							// add this folder id into the set to be event-observed
+							addObservingPattern(id, state);
+						}
+					}
+				}
+			}
+		}
+		
 	}	// doExpand_collection
 
 	/**
@@ -7030,6 +7086,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		state.setAttribute(STATE_EXPANDED_COLLECTIONS, new TreeSet());
 		state.setAttribute(STATE_EXPANDED_FOLDER_SORT_MAP, new Hashtable());
+		
+		// TODO: Should iterate over all collectionId's in expandedCollection 
+		//       and call collapseAction.initializeAction() and 
+		//       collapseAction.finalizeAction() for each one.
+		
 		state.setAttribute(STATE_EXPAND_ALL_FLAG, Boolean.FALSE.toString());
 
 	}	// doUnexpandall
@@ -7264,69 +7325,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	protected ResourceType getResourceType(String id, SessionState state)
-	{
-		ResourceType type = null;
-		
-		boolean isCollection = false;
-		String typeId = TYPE_UPLOAD;
-		ResourceProperties properties;
-		try 
-		{
-			properties = ContentHostingService.getProperties(id);
-			isCollection = properties.getBooleanProperty(ResourceProperties.PROP_IS_COLLECTION);
-			if(isCollection)
-			{
-				typeId = "folder";
-			}
-			else 
-			{
-				ContentResource resource = ContentHostingService.getResource(id);
-				String mimetype = resource.getContentType();
-				if(TYPE_HTML.equals(mimetype) || TYPE_URL.equals(mimetype) || TYPE_TEXT.equals(mimetype))
-				{
-					typeId = mimetype;
-				}
-			}
-			
-			ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
-			if(registry == null)
-			{
-				registry = (ResourceTypeRegistry) ComponentManager.get(ResourceTypeRegistry.class);
-				state.setAttribute(STATE_RESOURCES_TYPE_REGISTRY, registry);
-			}
-			type = registry.getType(typeId); 
-		} 
-		catch (PermissionException e1) 
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} 
-		catch (IdUnusedException e1) 
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} 
-		catch (EntityPropertyNotDefinedException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (EntityPropertyTypeException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (TypeException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return type;
-
-	}
-	
 	/**
 	* Populate the state object, if needed - override to do something!
 	*/
