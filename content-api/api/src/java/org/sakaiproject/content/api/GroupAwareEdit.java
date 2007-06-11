@@ -99,11 +99,4 @@ public interface GroupAwareEdit extends GroupAwareEntity, Edit
 	 */
 	public void setAvailability(boolean hidden, Time releaseDate, Time retractDate);
 
-	/**
-	 * Set the "type" of this ContentEntity as determined by the ResourceType registration
-	 * that was used to create it.
-	 * @param string
-	 */
-	public void setResourceType(String string);
-
 }

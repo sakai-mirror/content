@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.sakaiproject.content.api.ContentEntity;
-import org.sakaiproject.content.api.ExpandableResourceType;
 import org.sakaiproject.content.api.ResourceToolAction;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceToolAction.ActionType;
@@ -323,11 +322,6 @@ public class BasicResourceType implements ResourceType
     public void setLocalizer(Localizer localizer)
     {
     	this.localizer = localizer;
-    }
-
-	public boolean isExpandable()
-    {
-	    return (this instanceof ExpandableResourceType);
     }
 
 }

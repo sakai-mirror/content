@@ -8912,14 +8912,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see org.sakaiproject.content.api.ContentResourceEdit#setResourceType(java.lang.String)
-		 */
-		public void setResourceType(String type)
-		{
-			m_resourceType = type;
-		}
-
 	}	// BasicGroupAwareEntity
 
 	/**********************************************************************************************************************************************************************************************************************************************************
@@ -10366,6 +10358,14 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			// TODO: this may need a different implementation in the handler
 			return false;
+		}
+
+		/* (non-Javadoc)
+		 * @see org.sakaiproject.content.api.ContentResourceEdit#setResourceType(java.lang.String)
+		 */
+		public void setResourceType(String type)
+		{
+			m_resourceType = type;
 		}
 
 		/**
