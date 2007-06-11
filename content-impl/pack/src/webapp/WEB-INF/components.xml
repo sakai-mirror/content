@@ -4,7 +4,7 @@
 <beans>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingService"
-			class="org.sakaiproject.content.impl.DbContentService"
+			class="org.sakaiproject.content.impl.JCRContentService"
 			init-method="init"
 			destroy-method="destroy"
 			singleton="true">
@@ -33,6 +33,9 @@
 		<property name="availabilityChecksEnabled"><value>true</value></property>
 		<property name="prioritySortEnabled"><value>true</value></property>
 		<property name="useResourceTypeRegistry"><value>true</value></property>
+		
+		<property name="jcrService"><ref bean="org.sakaiproject.jcr.api.JCRService" ></property>
+		
   	</bean>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
