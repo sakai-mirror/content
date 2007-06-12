@@ -34,7 +34,7 @@
 		<property name="prioritySortEnabled"><value>true</value></property>
 		<property name="useResourceTypeRegistry"><value>true</value></property>
 		
-		<property name="jcrService"><ref bean="org.sakaiproject.jcr.api.JCRService" ></property>
+		<property name="jcrService"><ref bean="org.sakaiproject.jcr.api.JCRService" /></property>
 		
   	</bean>
 

@@ -1381,4 +1381,20 @@ public class JCRContentService extends DbContentService
 		}
 
 	}
+
+	/**
+	 * @return the jcrService
+	 */
+	public JCRService getJcrService()
+	{
+		return jcrService;
+	}
+
+	/**
+	 * @param jcrService the jcrService to set
+	 */
+	public void setJcrService(JCRService jcrService)
+	{
+		this.jcrService = jcrService;
+	}
 }
