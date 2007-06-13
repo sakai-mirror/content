@@ -34,9 +34,45 @@
 		<property name="prioritySortEnabled"><value>true</value></property>
 		<property name="useResourceTypeRegistry"><value>true</value></property>
 		
-		<property name="jcrService"><ref bean="org.sakaiproject.jcr.api.JCRService" /></property>
 		
   	</bean>
+
+
+	<bean id="org.sakaiproject.content.api.ContentHostingService.storage" 
+			class="org.sakaiproject.content.impl.JCRStorage"
+			init-method="init"
+			destroy-method="destroy"
+			singleton="true">
+		<property name="jcrService"><ref bean="org.sakaiproject.jcr.api.JCRService" /></property>
+		<property name="jcrContentService"><ref bean="org.sakaiproject.content.api.ContentHostingService" /></property>
+		<property name="resourceUser"><ref bean="org.sakaiproject.content.api.ContentHostingService.storageUser" /></property>
+		<property name="collectionUser"><ref bean="org.sakaiproject.content.api.ContentHostingService.storageUser" /></property>
+		<property name="resolver"><ref bean="org.sakaiproject.content.api.ContentHostingHandlerResolver" /></property>
+		
+	</bean>
+
+	<bean id="org.sakaiproject.content.api.ContentHostingService.storageUser" 
+			class="org.sakaiproject.content.impl.JCRStorageUser"
+			init-method="init"
+			destroy-method="destroy"
+			singleton="true">
+        <property name="baseContentService"><ref bean="org.sakaiproject.content.api.ContentHostingService"/></property>
+        <property name="jcrTypes">
+        	<map>
+        		<entry key="jcr_property_name" ><value>ignore or jcr type see PropertyType</value></entry>
+        	</map>
+        </property>
+        <property name="jcrToEntity" >
+        	<map>
+        		<entry key="jcr_property_name" ><value>sakai property mapping</value></entry>
+        	</map>        	
+        </property>
+        <property name="entityToJcr" >
+        	<map>
+        		<entry key="sakai_property_name" ><value>jcr property mapping</value></entry>
+        	</map>        	
+        </property>
+	</bean>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
 			class="org.sakaiproject.content.impl.ContentHostingHandlerResolverImpl"
@@ -108,5 +144,9 @@
 		<property name="sqlService"><ref bean="org.sakaiproject.db.api.SqlService"/></property>
  		<property name="autoDdl"><value>${auto.ddl}</value></property>
 	</bean>
+	
+	
+	
+	
 
 </beans>

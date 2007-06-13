@@ -4,6 +4,7 @@
 package org.sakaiproject.content.api;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 
 import org.sakaiproject.exception.ServerOverloadException;
@@ -147,5 +148,17 @@ public interface ContentHostingHandler
 	 * @return
 	 */
 	int getMemberCount(ContentEntity ce);
+
+	/**
+	 * @param ce
+	 * @return
+	 */
+	Collection<String> getMemberCollectionIds(ContentEntity ce);
+
+	/**
+	 * @param ce
+	 * @return
+	 */
+	Collection<String> getMemberResourceIds(ContentEntity ce);
 
 }

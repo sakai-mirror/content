@@ -23,6 +23,7 @@ package org.sakaiproject.content.impl;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -44,6 +45,7 @@ import javax.jcr.query.QueryResult;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.TypeException;
@@ -77,25 +79,28 @@ import org.sakaiproject.jcr.api.JCRService;
  */
 public class BaseJCRStorage
 {
-	private static final String NT_FOLDER = null;
+	
+	public static final String NT_FILE = "nt:file";
 
-	private static final String NT_ROOT = null;
+	public static final String NT_FOLDER = "nt:folder";
 
-	private static final String NT_FILE = null;
+	public static final String REPOSITORY_PREFIX = "/sakai";
 
-	private static final String JCR_CONTENT = null;
+	public static final String NT_ROOT = null;
 
-	private static final String NT_RESOURCE = null;
+	public static final String JCR_CONTENT = null;
 
-	private static final String MIX_REFERENCEABLE = null;
+	public static final String NT_RESOURCE = null;
 
-	private static final String JCR_LASTMODIFIED = null;
+	public static final String MIX_REFERENCEABLE = null;
 
-	private static final String JCR_MIMETYPE = null;
+	public static final String JCR_LASTMODIFIED = null;
 
-	private static final String JCR_DATA = null;
+	public static final String JCR_MIMETYPE = null;
 
-	private static final String JCR_ENCODING = null;
+	public static final String JCR_DATA = null;
+
+	public static final String JCR_ENCODING = null;
 
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseJCRStorage.class);
@@ -220,6 +225,8 @@ public class BaseJCRStorage
 		catch (RepositoryException re)
 		{
 			M_log.debug("Node Not Found " + id, re);
+			M_log.warn("Node Not Found " + id + " cause:"+ re.getMessage());
+			
 		}
 		return null;
 	}
@@ -644,5 +651,37 @@ public class BaseJCRStorage
 		M_log.debug("Doing populate Folder");
 
 	}
+
+	/**
+	 * @param collectionId
+	 * @return
+	 */
+	public Collection<String> getMemberCollectionIds(String collectionId)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * @param collectionId
+	 * @return
+	 */
+	public Collection<String> getMemberResourceIds(String collectionId)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * @param collectionId
+	 * @return
+	 */
+	public int getMemberCount(String collectionId)
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
 
 }

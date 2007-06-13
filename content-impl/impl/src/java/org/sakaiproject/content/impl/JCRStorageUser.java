@@ -62,11 +62,6 @@ public class JCRStorageUser implements LiteStorageUser
 // TODO: mappings and name types
 	private static final Log log = LogFactory.getLog(JCRStorageUser.class);
 
-	private static final String NT_FILE = "nt:file";
-
-	private static final String NT_FOLDER = "nt:folder";
-
-	private static final String REPOSITORY_PREFIX = "/sakai";
 
 	private static final String DATE_FORMAT = "yyyyMMddHHmmssSSS";
 
@@ -98,13 +93,8 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private Map<String, String> entityToJcr;
 
-	public JCRStorageUser(BaseContentService bcs, Map<String, String> jcrTypes,
-			Map<String, String> jcrToEntity, Map<String, String> entityToJcr)
+	public JCRStorageUser()
 	{
-		this.baseContentService = bcs;
-		this.jcrTypes = jcrTypes;
-		this.jcrToEntity = jcrToEntity;
-		this.entityToJcr = entityToJcr;
 	}
 
 	/*
@@ -771,7 +761,11 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public String convertId2Storage(String id)
 	{
-		return REPOSITORY_PREFIX + id;
+		String jcrPath = BaseJCRStorage.REPOSITORY_PREFIX + id;
+		if ( jcrPath.endsWith("/") ) {
+			jcrPath = jcrPath.substring(0,jcrPath.length()-1);
+		}
+		return jcrPath;
 	}
 
 	/**
@@ -780,9 +774,9 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	private String convertStorageToId(String path)
 	{
-		if (path.startsWith(REPOSITORY_PREFIX))
+		if (path.startsWith(BaseJCRStorage.REPOSITORY_PREFIX))
 		{
-			path.substring(REPOSITORY_PREFIX.length());
+			path.substring(BaseJCRStorage.REPOSITORY_PREFIX.length());
 		}
 		log.error("Trying to convert a path to Id that is not a storage path " + path);
 		return path;
@@ -803,13 +797,13 @@ public class JCRStorageUser implements LiteStorageUser
 			try
 			{
 				NodeType nt = n.getPrimaryNodeType();
-				if (NT_FILE.equals(nt))
+				if (BaseJCRStorage.NT_FILE.equals(nt))
 				{
 					Entity e = newResource(null, convertStorageToId(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
-				else if (NT_FOLDER.equals(nt))
+				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
 				{
 					Entity e = newContainer(convertStorageToId(n.getPath()));
 					copy(n, e);
@@ -839,13 +833,13 @@ public class JCRStorageUser implements LiteStorageUser
 			try
 			{
 				NodeType nt = n.getPrimaryNodeType();
-				if (NT_FILE.equals(nt))
+				if (BaseJCRStorage.NT_FILE.equals(nt))
 				{
 					Edit e = newResourceEdit(null, convertStorageToId(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
-				else if (NT_FOLDER.equals(nt))
+				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
 				{
 					Edit e = newContainerEdit(convertStorageToId(n.getPath()));
 					copy(n, e);
@@ -1024,6 +1018,70 @@ public class JCRStorageUser implements LiteStorageUser
 	public Object[] storageFields(Entity r)
 	{
 		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * @return the baseContentService
+	 */
+	public BaseContentService getBaseContentService()
+	{
+		return baseContentService;
+	}
+
+	/**
+	 * @param baseContentService the baseContentService to set
+	 */
+	public void setBaseContentService(BaseContentService baseContentService)
+	{
+		this.baseContentService = baseContentService;
+	}
+
+	/**
+	 * @return the entityToJcr
+	 */
+	public Map<String, String> getEntityToJcr()
+	{
+		return entityToJcr;
+	}
+
+	/**
+	 * @param entityToJcr the entityToJcr to set
+	 */
+	public void setEntityToJcr(Map<String, String> entityToJcr)
+	{
+		this.entityToJcr = entityToJcr;
+	}
+
+	/**
+	 * @return the jcrToEntity
+	 */
+	public Map<String, String> getJcrToEntity()
+	{
+		return jcrToEntity;
+	}
+
+	/**
+	 * @param jcrToEntity the jcrToEntity to set
+	 */
+	public void setJcrToEntity(Map<String, String> jcrToEntity)
+	{
+		this.jcrToEntity = jcrToEntity;
+	}
+
+	/**
+	 * @return the jcrTypes
+	 */
+	public Map<String, String> getJcrTypes()
+	{
+		return jcrTypes;
+	}
+
+	/**
+	 * @param jcrTypes the jcrTypes to set
+	 */
+	public void setJcrTypes(Map<String, String> jcrTypes)
+	{
+		this.jcrTypes = jcrTypes;
 	}
 
 }
