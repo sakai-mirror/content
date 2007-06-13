@@ -28,7 +28,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,14 +55,17 @@ import org.sakaiproject.jcr.api.JCRService;
  */
 public class JCRContentService extends DbContentService
 {
-	protected static final String JCR_RESOURCE = null;
-
-	protected static final String JCR_COLLECTION = null;
 
 	/** Our logger. */
 	private static final Log log = LogFactory.getLog(JCRContentService.class);
 
 	private JCRService jcrService;
+
+	private Map<String, String> jcrTypes = new HashMap<String, String>();
+
+	private Map<String, String> jcrToEntity = new HashMap<String, String>();
+
+	private Map<String, String> entityToJCR = new HashMap<String, String>();
 
 	/*
 	 * (non-Javadoc)
@@ -81,7 +86,7 @@ public class JCRContentService extends DbContentService
 	@Override
 	protected Storage newStorage()
 	{
-		return new JCRStorage(new JCRStorageUser(this), new JCRStorageUser(this),
+		return new JCRStorage(new JCRStorageUser(this,jcrTypes,jcrToEntity,entityToJCR), new JCRStorageUser(this,jcrTypes,jcrToEntity,entityToJCR),
 				(m_bodyPath != null), contentHostingHandlerResolver);
 	}
 
@@ -1083,7 +1088,6 @@ public class JCRContentService extends DbContentService
 			}
 			catch (IOException e)
 			{
-				// TODO Auto-generated catch block
 				log.warn("IOException ", e);
 			}
 			finally
@@ -1096,7 +1100,6 @@ public class JCRContentService extends DbContentService
 					}
 					catch (IOException e)
 					{
-						// TODO Auto-generated catch block
 						log.warn("IOException ", e);
 					}
 				}
@@ -1184,7 +1187,6 @@ public class JCRContentService extends DbContentService
 					}
 					catch (IOException e)
 					{
-						// TODO Auto-generated catch block
 						log.warn("IOException ", e);
 					}
 				}
@@ -1197,7 +1199,6 @@ public class JCRContentService extends DbContentService
 					}
 					catch (IOException e)
 					{
-						// TODO Auto-generated catch block
 						log.warn("IOException ", e);
 					}
 				}

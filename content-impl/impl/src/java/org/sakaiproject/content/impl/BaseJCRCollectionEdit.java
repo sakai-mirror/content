@@ -21,29 +21,10 @@
 
 package org.sakaiproject.content.impl;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
 import javax.jcr.Node;
 
 import org.sakaiproject.content.api.ContentCollection;
-import org.sakaiproject.content.api.ContentEntity;
-import org.sakaiproject.content.api.ContentHostingHandler;
 import org.sakaiproject.content.impl.BaseContentService.BaseCollectionEdit;
-import org.sakaiproject.entity.api.ResourceProperties;
-import org.sakaiproject.entity.api.ResourcePropertiesEdit;
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.exception.InUseException;
-import org.sakaiproject.exception.InconsistentException;
-import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.exception.ServerOverloadException;
-import org.sakaiproject.exception.TypeException;
-import org.sakaiproject.site.api.Group;
-import org.sakaiproject.time.api.Time;
-import org.sakaiproject.tool.api.SessionBindingEvent;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -53,7 +34,7 @@ import org.w3c.dom.Element;
 public class BaseJCRCollectionEdit extends BaseCollectionEdit
 {
 
-	private Node n;
+	private Node node;
 	/**
 	 * @param baseContentService
 	 * @param id
@@ -79,6 +60,24 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 	public BaseJCRCollectionEdit(BaseContentService baseContentService, ContentCollection other)
 	{
 		baseContentService.super(other);
+	}
+
+
+	/**
+	 * @return the node
+	 */
+	public Node getNode()
+	{
+		return node;
+	}
+
+
+	/**
+	 * @param node the node to set
+	 */
+	public void setNode(Node node)
+	{
+		this.node = node;
 	}
 
 	

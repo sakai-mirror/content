@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
@@ -35,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.exception.ServerOverloadException;
-import org.sakaiproject.time.api.Time;
 import org.w3c.dom.Element;
 
 /**

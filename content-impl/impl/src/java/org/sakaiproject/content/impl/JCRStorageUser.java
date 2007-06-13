@@ -30,10 +30,8 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
@@ -41,72 +39,60 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.content.api.ContentCollection;
-import org.sakaiproject.content.api.ContentEntity;
-import org.sakaiproject.content.api.ContentResource;
-import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.impl.BaseContentService.BaseCollectionEdit;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
-import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.site.api.Site;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
-import org.sakaiproject.util.BaseResourceProperties;
-import org.sakaiproject.util.BaseResourcePropertiesEdit;
 import org.sakaiproject.util.StringUtil;
-import org.sakaiproject.util.Xml;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 /**
  * @author ieb
  */
 public class JCRStorageUser implements LiteStorageUser
 {
-
+// TODO: mappings and name types
 	private static final Log log = LogFactory.getLog(JCRStorageUser.class);
 
-	private static final Object NT_FILE = null;
+	private static final String NT_FILE = "nt:file";
 
-	private static final Object NT_FOLDER = null;
+	private static final String NT_FOLDER = "nt:folder";
 
 	private static final String REPOSITORY_PREFIX = "/sakai";
 
-	private static final String DATE_FORMAT = null;
+	private static final String DATE_FORMAT = "yyyyMMddHHmmssSSS";
 
-	private static final String E_GROUP_LIST = null;
+	private static final String JCR_RETRACT_DATE = BaseContentService.RELEASE_DATE;
 
-	private static final String E_ACCESS_MODE = null;
+	private static final String JCR_RELEASE_DATE = BaseContentService.RELEASE_DATE;
 
-	private static final String E_RELEASE_DATE = null;
+	private static final String JCR_HIDDEN = BaseContentService.HIDDEN;
 
-	private static final String E_RETRACT_DATE = null;
+	private static final String JCR_ACCESS_MODE = BaseContentService.ACCESS_MODE;
 
-	private static final String E_HIDDEN = null;
+	private static final String JCR_GROUP_LIST = BaseContentService.GROUP_LIST;
 
-	private static final String E_CONTENT_LENGTH = null;
+	private static final String JCR_FILE_PATH = "sakai:filePath";
 
-	private static final String E_CONTENT_TYPE = null;
+	private static final String JCR_RESOURCE_TYPE = ResourceProperties.FILE_TYPE;
 
-	private static final String E_RESOURCE_TYPE = null;
+	private static final String JCR_CONTENT_LENGTH = "DAV:content-lenght";
 
-	private static final String E_FILE_PATH = null;
+	private static final String JCR_CONTENT_TYPE = "DAV:content-type";
+
+	private static final String IGNORE_PROPERTY = "ignore";
 
 	private BaseContentService baseContentService;
 
 	private Map<String, String> jcrTypes;
-
-	private Map<String, String> entityTypes;
 
 	private Map<String, String> jcrToEntity;
 
@@ -176,77 +162,77 @@ public class JCRStorageUser implements LiteStorageUser
 			if (edit instanceof BaseCollectionEdit)
 			{
 				BaseCollectionEdit bedit = (BaseCollectionEdit) edit;
-				setJCRProperty(convertEntityName2JCRName(E_GROUP_LIST), new ArrayList(
+				setJCRProperty(JCR_GROUP_LIST, new ArrayList(
 						bedit.m_groups), n);
 				if (bedit.m_access == null)
 				{
-					setJCRProperty(convertEntityName2JCRName(E_ACCESS_MODE),
+					setJCRProperty(JCR_ACCESS_MODE,
 							AccessMode.INHERITED.toString(), n);
 				}
 				else
 				{
-					setJCRProperty(convertEntityName2JCRName(E_ACCESS_MODE),
+					setJCRProperty(JCR_ACCESS_MODE,
 							bedit.m_access.toString(), n);
 				}
 				if (bedit.m_releaseDate != null)
 				{
-					setJCRProperty(convertEntityName2JCRName(E_RELEASE_DATE), new Date(
+					setJCRProperty(JCR_RELEASE_DATE, new Date(
 							bedit.m_releaseDate.getTime()), n);
 				}
 				if (bedit.m_retractDate != null)
 				{
-					setJCRProperty(convertEntityName2JCRName(E_RETRACT_DATE), new Date(
+					setJCRProperty(JCR_RETRACT_DATE, new Date(
 							bedit.m_retractDate.getTime()), n);
 				}
-				setJCRProperty(convertEntityName2JCRName(E_HIDDEN), bedit.m_hidden, n);
+				setJCRProperty(JCR_HIDDEN, bedit.m_hidden, n);
 
 			}
 			else if (edit instanceof BaseResourceEdit)
 			{
 				BaseResourceEdit bedit = (BaseResourceEdit) edit;
-				setJCRProperty(convertEntityName2JCRName(E_CONTENT_LENGTH), bedit
+				setJCRProperty(JCR_CONTENT_LENGTH, bedit
 						.getContentLength(), n);
-				setJCRProperty(convertEntityName2JCRName(E_CONTENT_TYPE), bedit
+				setJCRProperty(JCR_CONTENT_TYPE, bedit
 						.getContentType(), n);
-				setJCRProperty(convertEntityName2JCRName(E_RESOURCE_TYPE), bedit
+				setJCRProperty(JCR_RESOURCE_TYPE, bedit
 						.getResourceType(), n);;
-				setJCRProperty(convertEntityName2JCRName(E_FILE_PATH), bedit.m_filePath,
+				setJCRProperty(JCR_FILE_PATH, bedit.m_filePath,
 						n);;
 				if (bedit.m_body != null)
 				{
 
 				}
-				setJCRProperty(convertEntityName2JCRName(E_GROUP_LIST), new ArrayList(
+				setJCRProperty(JCR_GROUP_LIST, new ArrayList(
 						bedit.m_groups), n);
 				if (bedit.m_access == null)
 				{
-					setJCRProperty(convertEntityName2JCRName(E_ACCESS_MODE),
+					setJCRProperty(JCR_ACCESS_MODE,
 							AccessMode.INHERITED.toString(), n);
 				}
 				else
 				{
-					setJCRProperty(convertEntityName2JCRName(E_ACCESS_MODE),
+					setJCRProperty(JCR_ACCESS_MODE,
 							bedit.m_access.toString(), n);
 				}
 				if (bedit.m_hidden)
-				{	
-					clearJCRProperty(convertEntityName2JCRName(E_RELEASE_DATE),n);
-					clearJCRProperty(convertEntityName2JCRName(E_RETRACT_DATE),n);
+				{
+					clearJCRProperty(JCR_RELEASE_DATE, n);
+					clearJCRProperty(JCR_RETRACT_DATE, n);
 				}
 				else
 				{
 					if (bedit.m_releaseDate != null)
 					{
-						setJCRProperty(convertEntityName2JCRName(E_RELEASE_DATE),
+						setJCRProperty(JCR_RELEASE_DATE,
 								new Date(bedit.m_releaseDate.getTime()), n);
 					}
 					if (bedit.m_retractDate != null)
 					{
-						setJCRProperty(convertEntityName2JCRName(E_RETRACT_DATE),
+						setJCRProperty(JCR_RETRACT_DATE,
 								new Date(bedit.m_retractDate.getTime()), n);
 					}
 				}
-				setJCRProperty(convertEntityName2JCRName(E_HIDDEN), bedit.m_hidden, n);
+				setJCRProperty(JCR_HIDDEN, bedit.m_hidden, n);
 			}
 
 		}
@@ -255,18 +241,22 @@ public class JCRStorageUser implements LiteStorageUser
 	/**
 	 * @param string
 	 * @param n
-	 * @throws RepositoryException 
-	 * @throws  
+	 * @throws RepositoryException
+	 * @throws
 	 */
-	private void clearJCRProperty(String jname, Node n) 
+	private void clearJCRProperty(String jname, Node n)
 	{
-		
-		try {
+
+		try
+		{
 			Property p = n.getProperty(jname);
-			if ( p != null ) {
-				p.setValue((Value)null);
+			if (p != null)
+			{
+				p.setValue((Value) null);
 			}
-		} catch ( RepositoryException re ) {
+		}
+		catch (RepositoryException re)
+		{
 			log.error("Failed to clear property ");
 		}
 	}
@@ -281,6 +271,9 @@ public class JCRStorageUser implements LiteStorageUser
 		try
 		{
 			String stype = jcrTypes.get(jname);
+			if ( IGNORE_PROPERTY.equals(stype) ) {
+				return;
+			}
 			int type = PropertyType.STRING;
 			if (stype != null)
 			{
@@ -433,9 +426,6 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			log.error("Failed to set propert " + jname + " to " + list, e);
 		}
-
-		// TODO Auto-generated method stub
-
 	}
 
 	/**
@@ -443,9 +433,142 @@ public class JCRStorageUser implements LiteStorageUser
 	 * @param string
 	 * @param n
 	 */
-	private void setJCRProperty(String jname, Object string, Node n)
+	private void setJCRProperty(String jname, Object ov, Node n)
 	{
-		// TODO Auto-generated method stub
+		try
+		{
+			String stype = jcrTypes.get(jname);
+			if ( IGNORE_PROPERTY.equals(stype) ) {
+				return;
+			}
+			int type = PropertyType.STRING;
+			if (stype != null)
+			{
+				type = PropertyType.valueFromName(stype);
+			}
+			Session s = n.getSession();
+			ValueFactory vf = s.getValueFactory();
+			switch (type)
+			{
+				case PropertyType.BINARY:
+					throw new UnsupportedOperationException(
+							"Cant set a binary list at the moment");
+				case PropertyType.BOOLEAN:
+				{
+					try
+					{
+						if (ov instanceof Boolean)
+						{
+							n.setProperty(jname, ((Boolean) ov).booleanValue());
+						}
+						else
+						{
+							n.setProperty(jname, new Boolean(String
+									.valueOf(ov)));
+						}
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Failed to set " + jname + " to " + ov);
+					}
+					break;
+				}
+				case PropertyType.DATE:
+				{
+					try
+					{
+						if (ov instanceof Calendar)
+						{
+							n.setProperty(jname, (Calendar)ov);
+						}
+						else if (ov instanceof Date)
+						{
+							GregorianCalendar gc = new GregorianCalendar();
+							gc.setTime((Date) ov);
+							n.setProperty(jname, gc);
+						}
+						else
+						{
+							GregorianCalendar gc = new GregorianCalendar();
+							SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+							try
+							{
+								gc.setTime(sdf.parse(String.valueOf(ov)));
+							}
+							catch (ParseException e)
+							{
+								log.error("Failed to parse Date Value ", e);
+							}
+
+							n.setProperty(jname, gc);
+						}
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Failed to set " + jname + " to " + ov);
+					}
+					break;
+				}
+				case PropertyType.DOUBLE:
+				{
+					try
+					{
+						if (ov instanceof Double)
+						{
+							n.setProperty(jname, ((Double) ov).doubleValue());
+						}
+						else
+						{
+							n.setProperty(jname, Double.parseDouble(String.valueOf(ov)));
+						}
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Failed to set " + jname + " to " + ov);
+					}
+					break;
+				}
+				case PropertyType.LONG:
+				{
+					try
+					{
+						if ( ov instanceof Long ) {
+							n.setProperty(jname, ((Long)ov).longValue() );
+						} else if ( ov instanceof Integer ) {
+							n.setProperty(jname, ((Integer)ov).longValue() );
+						} else {
+							n.setProperty(jname, Long
+									.parseLong(String.valueOf(ov)) );
+						}
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Failed to set " + jname + " to " + ov);
+					}
+					break;
+				}
+				case PropertyType.UNDEFINED:
+				case PropertyType.STRING:
+				case PropertyType.REFERENCE:
+				case PropertyType.NAME:
+				case PropertyType.PATH:
+				{
+					try
+					{
+						n.setProperty(jname, String.valueOf(ov));
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Failed to set " + jname + " to " + ov);
+					}
+					break;
+				}
+			}
+		}
+		catch (RepositoryException e)
+		{
+			log.error("Failed to set propert " + jname + " to " + ov, e);
+		}
 
 	}
 
@@ -457,113 +580,162 @@ public class JCRStorageUser implements LiteStorageUser
 	private void copy(Node n, Entity e) throws RepositoryException
 	{
 
-		// setup for properties
-		if ( e instanceof BaseCollectionEdit ) {
-			BaseCollectionEdit bce = (BaseCollectionEdit) e;
-			bce.m_resourceType = ResourceType.TYPE_FOLDER;
-		
-			String refStr = getReference(bce.m_id);
-			Reference ref = m_entityManager.newReference(refStr);
-			String context = ref.getContext();
-			
-			// Site site = null;
-			// try
-			// {
-			// site = m_siteService.getSite(ref.getContext());
-			// }
-			// catch (IdUnusedException e)
-			// {
-			//
-			// }
-			setProperties(n,bce);
-
-			// the children (properties)
-			NodeList children = el.getChildNodes();
-		final int length = children.getLength();
-		for (int i = 0; i < length; i++)
+		// copy from the node to the entity,
+		// there may be some items in the Node properties that we do not want to
+		// copy
+		ResourceProperties rp = e.getProperties();
+		for (PropertyIterator pi = n.getProperties(); pi.hasNext();)
 		{
-			Node child = children.item(i);
-			if (child.getNodeType() != Node.ELEMENT_NODE) continue;
-			Element element = (Element) child;
+			Property p = pi.nextProperty();
+			setEntityProperty(p, rp);
+		}
 
-			// look for properties
-			if (element.getTagName().equals("properties"))
+		if (e instanceof BaseJCRCollectionEdit)
+		{
+			BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) e;
+			bce.setNode(n);
+			Property p = n.getProperty(JCR_GROUP_LIST);
+			bce.m_groups = new ArrayList<String>();
+			if (p != null)
 			{
-				// re-create properties
-				m_properties = new BaseResourcePropertiesEdit(element);
-				
-				
-				
-				if(m_prioritySortEnabled)
+				Value[] v = p.getValues();
+				if (v != null)
 				{
-					// setPriority();
+					for (int i = 0; i < v.length; i++)
+					{
+						bce.m_groups.add(v[i].toString());
+					}
 				}
 			}
-			
-			// look for groups
-			else if(element.getTagName().equals(GROUP_LIST))
+			p = n.getProperty(JCR_ACCESS_MODE);
+			if (p != null)
 			{
-				String groupRef = element.getAttribute(GROUP_NAME);
-				if(groupRef != null)
+				bce.m_access = AccessMode.fromString(p.toString());
+			}
+			else
+			{
+				bce.m_access = AccessMode.INHERITED;
+			}
+			p = n.getProperty(JCR_HIDDEN);
+			if (p != null)
+			{
+				bce.m_hidden = p.getBoolean();
+			}
+			else
+			{
+				bce.m_hidden = false;
+			}
+			if (bce.m_hidden)
+			{
+				bce.m_releaseDate = null;
+				bce.m_retractDate = null;
+			}
+			else
+			{
+				p = n.getProperty(JCR_RELEASE_DATE);
+				if (p != null)
 				{
-					m_groups.add(groupRef);
-				} 
+					bce.m_releaseDate = TimeService
+							.newTime(p.getDate().getTimeInMillis());
+				}
+				p = n.getProperty(JCR_RETRACT_DATE);
+				if (p != null)
+				{
+					bce.m_retractDate = TimeService
+							.newTime(p.getDate().getTimeInMillis());
+				}
 			}
-			else if(element.getTagName().equals("rightsAssignment"))
+		}
+		else if (e instanceof BaseJCRResourceEdit)
+		{
+			BaseJCRResourceEdit bre = (BaseJCRResourceEdit) e;
+			bre.setNode(n);
+			Property p = n.getProperty(JCR_CONTENT_TYPE);
+			if (p != null)
 			{
-				
+				bre.m_contentType = p.getString();
 			}
+			p = n.getProperty(JCR_CONTENT_LENGTH);
+			if (p != null)
+			{
+				bre.m_contentLength = (int) p.getLong();
+			}
+			p = n.getProperty(JCR_RESOURCE_TYPE);
+			if (p != null)
+			{
+				bre.setResourceType(p.toString());
+			}
+			p = n.getProperty(JCR_FILE_PATH);
+			if (p != null)
+			{
+				bre.m_filePath = StringUtil.trimToNull(p.toString());
+			}
+
+			p = n.getProperty(convertEntityName2JCRName(JCR_GROUP_LIST));
+			bre.m_groups = new ArrayList<String>();
+			if (p != null)
+			{
+				Value[] v = p.getValues();
+				if (v != null)
+				{
+					for (int i = 0; i < v.length; i++)
+					{
+						bre.m_groups.add(v[i].toString());
+					}
+				}
+			}
+			p = n.getProperty(JCR_ACCESS_MODE);
+			if (p != null)
+			{
+				bre.m_access = AccessMode.fromString(p.toString());
+			}
+			else
+			{
+				bre.m_access = AccessMode.INHERITED;
+			}
+			p = n.getProperty(JCR_HIDDEN);
+			if (p != null)
+			{
+				bre.m_hidden = p.getBoolean();
+			}
+			else
+			{
+				bre.m_hidden = false;
+			}
+			if (bre.m_hidden)
+			{
+				bre.m_releaseDate = null;
+				bre.m_retractDate = null;
+			}
+			else
+			{
+				p = n.getProperty(JCR_RELEASE_DATE);
+				if (p != null)
+				{
+					bre.m_releaseDate = TimeService
+							.newTime(p.getDate().getTimeInMillis());
+				}
+				p = n.getProperty(JCR_RETRACT_DATE);
+				if (p != null)
+				{
+					bre.m_retractDate = TimeService
+							.newTime(p.getDate().getTimeInMillis());
+				}
+			}
+
 		}
 
-		// extract access
-		AccessMode access = AccessMode.INHERITED;
-		String access_mode = el.getAttribute(ACCESS_MODE);
-		if(access_mode != null && !access_mode.trim().equals(""))
-		{
-			access = AccessMode.fromString(access_mode);
-		}
-		
-		m_access = access;
-		if(m_access == null || AccessMode.SITE == m_access)
-		{
-			m_access = AccessMode.INHERITED;
-		}
-		
-		// extract release date
-		// m_releaseDate = TimeService.newTime(0);
-		String date0 = el.getAttribute(RELEASE_DATE);
-		if(date0 != null && !date0.trim().equals(""))
-		{
-			m_releaseDate = TimeService.newTimeGmt(date0);
-			if(m_releaseDate.getTime() <= START_OF_TIME)
-			{
-				m_releaseDate = null;
-			}
-		}
-		
-		// extract retract date
-		// m_retractDate = TimeService.newTimeGmt(9999,12, 31, 23, 59, 59, 999);
-		String date1 = el.getAttribute(RETRACT_DATE);
-		if(date1 != null && !date1.trim().equals(""))
-		{
-			m_retractDate = TimeService.newTimeGmt(date1);
-			if(m_retractDate.getTime() >= END_OF_TIME)
-			{
-				m_retractDate = null;
-			}
-		}
-		
-		String hidden = el.getAttribute(HIDDEN);
-		m_hidden = hidden != null && ! hidden.trim().equals("") && ! Boolean.FALSE.toString().equalsIgnoreCase(hidden);
 	}
 
 	/**
-	 * @param n
-	 * @param bce
+	 * @param p
+	 * @param rp
+	 * @throws RepositoryException 
+	 * @throws  
 	 */
-	private void setProperties(Node n, BaseCollectionEdit bce)
+	private void setEntityProperty(Property p, ResourceProperties rp) throws  RepositoryException
 	{
-
+		rp.addProperty(convertJCRName2EntityName(p.getName()), p.getString());
 	}
 
 	/**
@@ -572,8 +744,11 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	private String convertJCRName2EntityName(String name)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		String entityName = jcrToEntity.get(name);
+		if ( entityName == null ) {
+			return name;
+		}
+		return entityName;
 	}
 
 	/**
@@ -582,8 +757,11 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	private String convertEntityName2JCRName(String name)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		String jcrName = entityToJcr.get(name);
+		if ( jcrName == null ) {
+			return name;
+		}
+		return jcrName;
 	}
 
 	/*
@@ -719,7 +897,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public Entity newContainer(String id)
 	{
-		return new BaseJCRCollectionEdit(baseContentService,id);
+		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 
 	/*
@@ -749,7 +927,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public Edit newContainerEdit(String id)
 	{
-		return new BaseJCRCollectionEdit(baseContentService,id);
+		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 
 	/*
@@ -780,7 +958,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public Entity newResource(Entity container, String id, Object[] others)
 	{
-		return new BaseJCRResourceEdit(baseContentService,id);
+		return new BaseJCRResourceEdit(baseContentService, id);
 	}
 
 	/*
@@ -813,7 +991,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public Edit newResourceEdit(Entity container, String id, Object[] others)
 	{
-		return new BaseJCRResourceEdit(baseContentService,id);
+		return new BaseJCRResourceEdit(baseContentService, id);
 	}
 
 	/*
