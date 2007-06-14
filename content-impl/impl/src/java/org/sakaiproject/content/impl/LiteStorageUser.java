@@ -69,4 +69,10 @@ public interface LiteStorageUser extends StorageUser
 	 */
 	void commit(Edit edit, Object n);
 
+	/**
+	 * @param path
+	 * @return
+	 */
+	String convertStorage2Id(String path);
+
 }

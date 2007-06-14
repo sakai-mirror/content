@@ -21,6 +21,7 @@
 
 package org.sakaiproject.content.impl;
 
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +38,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
@@ -45,9 +48,13 @@ import javax.jcr.query.QueryResult;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentCollectionEdit;
+import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.IdUsedException;
+import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.javax.Filter;
 import org.sakaiproject.jcr.api.JCRService;
@@ -79,28 +86,40 @@ import org.sakaiproject.jcr.api.JCRService;
  */
 public class BaseJCRStorage
 {
-	
+
 	public static final String NT_FILE = "nt:file";
 
 	public static final String NT_FOLDER = "nt:folder";
 
-	public static final String REPOSITORY_PREFIX = "/sakai";
+	public static final String NT_ROOT = "rep:root";
 
-	public static final String NT_ROOT = null;
+	public static final String JCR_CONTENT = "jcr:content";
 
-	public static final String JCR_CONTENT = null;
+	public static final String NT_RESOURCE = "nt:resource";
 
-	public static final String NT_RESOURCE = null;
+	public static final String MIX_REFERENCEABLE = "mix:referenceable";
 
-	public static final String MIX_REFERENCEABLE = null;
+	public static final String JCR_LASTMODIFIED = "jcr:lastModified";
 
-	public static final String JCR_LASTMODIFIED = null;
+	public static final String JCR_MIMETYPE = "jcr:mimeType";
 
-	public static final String JCR_MIMETYPE = null;
+	public static final String JCR_DATA = "jcr:data";
 
-	public static final String JCR_DATA = null;
+	public static final String JCR_ENCODING = "jcr:encoding";
 
-	public static final String JCR_ENCODING = null;
+	private static final String COUNT_COLLECTION_MEMBERS = "count-members";
+
+	private static final String COUNT_COLLECTION_COLLECTIONS = "count-collections";
+
+	private static final String COUNT_COLLECTION_RESOURCES = "count-resources";
+
+	private static final String GET_MEMBER_RESOURCES = "get-member-resources";
+
+	private static final String GET_MEMBER_COLLECTIONS = "get-member-collections";
+
+	private static final Log log = LogFactory.getLog(BaseJCRStorage.class);
+
+	private static final String JCR_SAKAI_UUID = null;
 
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseJCRStorage.class);
@@ -137,10 +156,16 @@ public class BaseJCRStorage
 		this.jcrService = jcrService;
 		this.m_user = storageUser;
 		this.nodeType = nodeType;
-		
+
 		queryTerms = new HashMap<String, String>();
-		queryTerms.put("WHERE:IN_COLLECTION", "/{0}/{1}/*/element(*,nodeType)" );
-		queryTerms.put("WHERELIKE:IN_COLLECTION", "/{0}/{1}/*/element(*,nodeType)");
+		queryTerms.put("WHERE:IN_COLLECTION", "{0}/{1}/element(*,nodeType)");
+		queryTerms.put("WHERELIKE:IN_COLLECTION", "{0}/{1}/element(*,nodeType)");
+		queryTerms.put(COUNT_COLLECTION_MEMBERS, "{0}/{1}/count(element('nt:,nodeType))");
+		queryTerms
+				.put(COUNT_COLLECTION_COLLECTIONS, "{0}/{1}/count(element(*,nodeType))");
+		queryTerms.put(COUNT_COLLECTION_RESOURCES, "{0}/{1}/count(element(*,nodeType))");
+		queryTerms.put(GET_MEMBER_COLLECTIONS, "{0}/{1}/element(*,nodeType)");
+		queryTerms.put(GET_MEMBER_RESOURCES, "{0}/{1}/element(*,nodeType)");
 	}
 
 	/**
@@ -225,8 +250,8 @@ public class BaseJCRStorage
 		catch (RepositoryException re)
 		{
 			M_log.debug("Node Not Found " + id, re);
-			M_log.warn("Node Not Found " + id + " cause:"+ re.getMessage());
-			
+			M_log.warn("Node Not Found " + id + " cause:" + re.getMessage());
+
 		}
 		return null;
 	}
@@ -290,12 +315,12 @@ public class BaseJCRStorage
 	 */
 	public List getAllResourcesWhere(String field, String value)
 	{
-		return getNodeList("WHERE:"+field,new Object[] {value});
+		return getNodeList("WHERE:" + field, new Object[] { value });
 	}
 
 	public List getAllResourcesWhereLike(String field, String value)
 	{
-		return getNodeList("WHERELIKE:"+field,new Object[] {value});
+		return getNodeList("WHERELIKE:" + field, new Object[] { value });
 	}
 
 	/**
@@ -305,35 +330,44 @@ public class BaseJCRStorage
 	 */
 	private List getNodeList(String key, Object[] value)
 	{
+		NodeIterator ni = getNodeIterator(key, value);
+		if (ni == null)
+		{
+			return new ArrayList();
+		}
+		List<Entity> al = new ArrayList<Entity>();
+		for (; ni.hasNext();)
+		{
+			Node n = ni.nextNode();
+			al.add(m_user.newResource(n));
+		}
+		return al;
+	}
+
+	private NodeIterator getNodeIterator(String key, Object[] value)
+	{
 		try
 		{
 			String queryFormat = queryTerms.get(key);
-			if ( queryFormat == null ) {
-				throw new UnsupportedOperationException("No List Option for "+key);
+			if (queryFormat == null)
+			{
+				throw new UnsupportedOperationException("No List Option for " + key);
 			}
 			String qs = MessageFormat.format(queryFormat, value);
 			Session session = jcrService.getSession();
 			Workspace w = session.getWorkspace();
 			QueryManager qm = w.getQueryManager();
-			
+
 			Query q = qm.createQuery(qs, Query.XPATH);
 			QueryResult qr = q.execute();
-			NodeIterator ni = qr.getNodes();
-			List<Entity> al = new ArrayList<Entity>();
-			for (; ni.hasNext();)
-			{
-				Node n = ni.nextNode();
-				al.add(m_user.newResource(n));
-			}
-			// because we need size, we have to do this, It would be MUCH
-			// better if we could return the Iterator
-			return al;
+			return qr.getNodes();
 		}
 		catch (RepositoryException e)
 		{
-			M_log.error("Failed to get List ",e);
-			return new ArrayList();
+			M_log.error("Failed to get List ", e);
+			return null;
 		}
+
 	}
 
 	/**
@@ -600,8 +634,9 @@ public class BaseJCRStorage
 	private String getParentPath(String absPath)
 	{
 		int pre = absPath.lastIndexOf("/");
-		if ( pre > 0 ) {
-			return absPath.substring(0,pre-1);
+		if (pre > 0)
+		{
+			return absPath.substring(0, pre - 1);
 		}
 		return "/";
 	}
@@ -658,8 +693,25 @@ public class BaseJCRStorage
 	 */
 	public Collection<String> getMemberCollectionIds(String collectionId)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		NodeIterator ni = getNodeIterator(GET_MEMBER_COLLECTIONS, new Object[] { m_user
+				.convertId2Storage(collectionId) });
+		List<String> l = new ArrayList<String>();
+		if (ni == null)
+		{
+			return l;
+		}
+		for (; ni.hasNext();)
+		{
+			try
+			{
+				l.add(m_user.convertStorage2Id(ni.nextNode().getPath()));
+			}
+			catch (RepositoryException e)
+			{
+				log.error("Cant get Path " + e.getMessage());
+			}
+		}
+		return l;
 	}
 
 	/**
@@ -668,8 +720,25 @@ public class BaseJCRStorage
 	 */
 	public Collection<String> getMemberResourceIds(String collectionId)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		NodeIterator ni = getNodeIterator(GET_MEMBER_RESOURCES, new Object[] { m_user
+				.convertId2Storage(collectionId) });
+		List<String> l = new ArrayList<String>();
+		if (ni == null)
+		{
+			return l;
+		}
+		for (; ni.hasNext();)
+		{
+			try
+			{
+				l.add(m_user.convertStorage2Id(ni.nextNode().getPath()));
+			}
+			catch (RepositoryException e)
+			{
+				log.error("Cant get Path " + e.getMessage());
+			}
+		}
+		return l;
 	}
 
 	/**
@@ -678,10 +747,219 @@ public class BaseJCRStorage
 	 */
 	public int getMemberCount(String collectionId)
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		NodeIterator ni = getNodeIterator(COUNT_COLLECTION_MEMBERS, new Object[] { m_user
+				.convertId2Storage(collectionId) });
+		return (int) ni.getSize();
 	}
 
+	/**
+	 * @param resourceId
+	 * @param uuid
+	 */
+	public void setResourceUuid(String resourceId, String uuid)
+	{
+	//	Node n = getNodeById(resourceId);
+	//	n.setProperty(JCR_SAKAI_UUID, uuid);
+	//	n.save();
+	}
+
+	/**
+	 * @param thisCollection
+	 * @param new_folder_id
+	 * @return
+	 * @throws IdUnusedException
+	 *         When the target folder does not exit
+	 * @throws TypeException
+	 *         When the target is not a folder
+	 * @throws IdUsedException
+	 *         When a unique target cannot be found
+	 * @throws ServerOverloadException
+	 *         Failed to move collection due to repository error
+	 */
+	public String moveCollection(ContentCollectionEdit thisCollection,
+			String new_folder_id) throws IdUnusedException, TypeException,
+			IdUsedException, ServerOverloadException
+	{
+		try
+		{
+			String parentFolderId =  isolateContainingId(new_folder_id);
+			Node n = getNodeById(parentFolderId);
+			if (n == null)
+			{
+				throw new IdUnusedException(
+						"The target parent folder of the move does not exist " + new_folder_id);
+			}
+			if (!NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
+			{
+				throw new TypeException("The target of the move " + new_folder_id
+						+ " is not a folder ");
+			}
+
+			String newName = isolateName(new_folder_id);
+
+			boolean found = n.hasNode(m_user.convertId2Storage(newName));
+			// now see of the folder exists
+			for (int i = 0; i < 100 && found; i++)
+			{
+				found = n.hasNode(m_user.convertId2Storage(newName + "-" + i));
+				if (!found)
+				{
+					newName = newName + "-" + i;
+				}
+			}
+			if (!found)
+			{
+				throw new IdUsedException("Unable to create a new copy of " + newName
+						+ " in " + new_folder_id);
+			}
+			String newPath = parentFolderId + "/" + newName;
+
+			
+			// move the folder
+			if (thisCollection instanceof BaseJCRCollectionEdit)
+			{
+				BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) thisCollection;
+				n.getSession().move(bce.getNode().getPath(),
+						m_user.convertId2Storage(newPath));
+			}
+			else
+			{
+				Node newNode = createNode(newPath, NT_FOLDER);
+				m_user.commit(thisCollection, newNode);
+			}
+			return newPath;
+		}
+		catch (RepositoryException e)
+		{
+			log.error("Failed to move collection to " + new_folder_id, e);
+			throw new ServerOverloadException(new_folder_id);
+		}
+	}
+	/**
+	 * Find the containing collection id of a given resource id.
+	 * 
+	 * @param id
+	 *        The resource id.
+	 * @return the containing collection id.
+	 */
+	protected String isolateContainingId(String id)
+	{
+		// take up to including the last resource path separator, not counting one at the very end if there
+		return id.substring(0, id.lastIndexOf('/', id.length() - 2) + 1);
+
+	} // isolateContainingId
+
+	protected String isolateName(String id)
+	{
+		if (id == null) return null;
+		if (id.length() == 0) return null;
+
+		// take after the last resource path separator, not counting one at the
+		// very end if there
+		boolean lastIsSeparator = id.charAt(id.length() - 1) == '/';
+		return id.substring(id.lastIndexOf('/', id.length() - 2) + 1,
+				(lastIsSeparator ? id.length() - 1 : id.length()));
+
+	} // isolateName
+
+	/**
+	 * @param thisResource
+	 * @param new_id
+	 * @return
+	 * @throws IdUnusedException 
+	 * @throws TypeException 
+	 * @throws IdUsedException 
+	 * @throws ServerOverloadException 
+	 */
+	public String moveResource(ContentResourceEdit thisResource, String new_id) throws IdUnusedException, TypeException, IdUsedException, ServerOverloadException
+	{
+		try
+		{
+			String parentFolderId =  isolateContainingId(new_id);
+			Node n = getNodeById(parentFolderId);
+			if (n == null)
+			{
+				throw new IdUnusedException(
+						"The target parent folder of the move does not exist " + new_id);
+			}
+			if (!NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
+			{
+				throw new TypeException("The target of the move " + new_id
+						+ " is not a folder ");
+			}
+
+			String newName = isolateName(new_id);
+			String basename = newName;
+			String extension = "";
+			int index = newName.lastIndexOf(".");
+			if (index >= 0)
+			{
+				basename = newName.substring(0, index);
+				extension = newName.substring(index);
+			}
+
+
+			boolean found = n.hasNode(m_user.convertId2Storage(newName));
+			// now see of the folder exists
+			for (int i = 0; i < 100 && found; i++)
+			{
+				found = n.hasNode(m_user.convertId2Storage(basename + "-" + i+ "."+ extension));
+				if (!found)
+				{
+					newName = newName + "-" + i +"."+ extension;
+				}
+			}
+			if (!found)
+			{
+				throw new IdUsedException("Unable to create a new copy of " + newName
+						+ " in " + new_id);
+			}
+			String newPath = parentFolderId + "/" + newName;
+
+			
+			// move the folder
+			if (thisResource instanceof BaseJCRResourceEdit)
+			{
+				BaseJCRResourceEdit bcr = (BaseJCRResourceEdit) thisResource;
+				n.getSession().move(bcr.getNode().getPath(),
+						m_user.convertId2Storage(newPath));
+			}
+			else
+			{
+				Node newNode = createNode(newPath, NT_FILE);
+				Session s = n.getSession();
+				ValueFactory vf = s.getValueFactory();
+				InputStream is = thisResource.streamContent();
+				Value v = vf.createValue(is);
+				newNode.setProperty(JCR_DATA, v);
+				m_user.commit(thisResource, newNode);
+			}
+			return newPath;
+		}
+		catch (RepositoryException e)
+		{
+			log.error("Failed to move respource to " + new_id, e);
+			throw new ServerOverloadException(new_id);
+		}
+	}
+
+	/**
+	 * @param id
+	 * @return
+	 */
+	public String getUuid(String id)
+	{
+		Node n = getNodeById(id);
+		try
+		{
+			return n.getUUID();
+		}
+		catch (RepositoryException e)
+		{
+			log.error(" Cant get UUID on "+id+" returning null cause:"+e.getMessage());
+		}
+		return null;
+	}
 
 
 }

@@ -179,4 +179,33 @@ public interface ContentHostingHandlerResolver
 	 */
 	Collection<String> getMemberResourceIds(String collectionId);
 
+	/**
+	 * @param resourceId
+	 * @param uuid 
+	 * @throws OperationDelegationException 
+	 */
+	void setResourceUuid(String resourceId, String uuid) throws OperationDelegationException;
+
+	/**
+	 * @param thisCollection
+	 * @param new_folder_id
+	 * @return
+	 * @throws OperationDelegationException if the caller should be implementing the operation
+	 */
+	String moveCollection(ContentCollectionEdit thisCollection, String new_folder_id) throws OperationDelegationException;
+
+	/**
+	 * @param thisResource
+	 * @param new_id
+	 * @return
+	 * @throws OperationDelegationException if the caller should be implementing the operation
+	 */
+	String moveResource(ContentResourceEdit thisResource, String new_id) throws OperationDelegationException;
+
+	/**
+	 * @param id
+	 * @return
+	 */
+	String getUuid(String id) throws OperationDelegationException;
+
 }

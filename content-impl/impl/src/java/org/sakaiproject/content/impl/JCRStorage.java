@@ -33,9 +33,13 @@ import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.OperationDelegationException;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.content.impl.BaseContentService.Storage;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.ServerOverloadException;
+import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.jcr.api.JCRService;
 
 /**
@@ -542,7 +546,7 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentResourceEdit) resolver.editResource( id);
+				return (ContentResourceEdit) resolver.editResource(id);
 			}
 			else
 			{
@@ -564,18 +568,23 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				resolver.commitResource( edit);
+				resolver.commitResource(edit);
 			}
 			else
 			{
 				BaseResourceEdit redit = (BaseResourceEdit) edit;
-				
-				if ( redit.m_contentStream !=  null ) {
-					
-				} else if ( redit.m_body != null ) {
-					
-				} else {
-					
+
+				if (redit.m_contentStream != null)
+				{
+
+				}
+				else if (redit.m_body != null)
+				{
+
+				}
+				else
+				{
+
 				}
 				m_resourceStore.commitResource(edit);
 			}
@@ -598,8 +607,7 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentResourceEdit) resolver.putDeleteResource(id, uuid,
-						userId);
+				return (ContentResourceEdit) resolver.putDeleteResource(id, uuid, userId);
 			}
 			else
 			{
@@ -646,11 +654,10 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				resolver.removeResource( edit);
+				resolver.removeResource(edit);
 			}
 			else
 			{
-
 
 				m_resourceStore.removeResource(edit);
 
@@ -682,7 +689,7 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return resolver.getResourceBody( resource);
+				return resolver.getResourceBody(resource);
 			}
 			else
 			{
@@ -696,7 +703,6 @@ public class JCRStorage implements Storage
 
 	}
 
-
 	// the body is already in the resource for this version of
 	// storage
 	public InputStream streamResourceBody(ContentResource resource)
@@ -707,7 +713,7 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return resolver.streamResourceBody( resource);
+				return resolver.streamResourceBody(resource);
 			}
 			else
 			{
@@ -720,22 +726,14 @@ public class JCRStorage implements Storage
 		}
 	}
 
-
-
-
-
-
-
-
 	public int getMemberCount(String collectionId)
 	{
-		
-		
+
 		if (collectionId == null || collectionId.trim().length() == 0)
 		{
 			return 0;
 		}
-		
+
 		boolean goin = in();
 		try
 		{
@@ -745,7 +743,7 @@ public class JCRStorage implements Storage
 			}
 			else
 			{
-				
+
 				return m_collectionStore.getMemberCount(collectionId);
 			}
 		}
@@ -771,7 +769,7 @@ public class JCRStorage implements Storage
 			}
 			else
 			{
-				
+
 				return m_collectionStore.getMemberCollectionIds(collectionId);
 			}
 		}
@@ -779,7 +777,7 @@ public class JCRStorage implements Storage
 		{
 			out();
 		}
-		
+
 	}
 
 	public Collection<String> getMemberResourceIds(String collectionId)
@@ -798,7 +796,7 @@ public class JCRStorage implements Storage
 			}
 			else
 			{
-				
+
 				return m_collectionStore.getMemberResourceIds(collectionId);
 			}
 		}
@@ -808,6 +806,155 @@ public class JCRStorage implements Storage
 		}
 	}
 
+	/**
+	 * @param id
+	 * @param uuid
+	 */
+	public void setResourceUuid(String resourceId, String uuid)
+	{
+		if (resourceId == null || resourceId.trim().length() == 0)
+		{
+			return;
+		}
+		List list = null;
+		boolean goin = in();
+		try
+		{
+			if (resolver != null && goin)
+			{
+				try
+				{
+					resolver.setResourceUuid(resourceId, uuid);
+				}
+				catch (OperationDelegationException e)
+				{
+				}
+			}
+			m_resourceStore.setResourceUuid(resourceId, uuid);
+		}
+		finally
+		{
+			out();
+		}
+	}
+
+	/**
+	 * @param thisCollection
+	 * @param new_folder_id
+	 * @return
+	 * @throws IdUnusedException
+	 *         When the target folder does not exit
+	 * @throws TypeException
+	 *         When the target is not a folder
+	 * @throws IdUsedException
+	 *         When a unique target cannot be found
+	 * @throws ServerOverloadException
+	 *         Failed to move collection due to repository error
+	 */
+	public String moveCollection(ContentCollectionEdit thisCollection,
+			String new_folder_id) throws IdUnusedException, TypeException,
+			IdUsedException, ServerOverloadException
+	{
+		if (thisCollection == null || new_folder_id == null
+				|| new_folder_id.trim().length() == 0)
+		{
+			return null;
+		}
+		List list = null;
+		boolean goin = in();
+		try
+		{
+			if (resolver != null && goin)
+			{
+				try
+				{
+					return resolver.moveCollection(thisCollection, new_folder_id);
+				}
+				catch (OperationDelegationException e)
+				{
+				}
+			}
+			return m_resourceStore.moveCollection(thisCollection, new_folder_id);
+		}
+		finally
+		{
+			out();
+		}
+	}
+
+	/**
+	 * @param thisResource
+	 * @param new_id
+	 * @return
+	 * @throws ServerOverloadException
+	 * @throws IdUsedException
+	 * @throws TypeException
+	 * @throws IdUnusedException
+	 */
+	public String moveResource(ContentResourceEdit thisResource, String new_id)
+			throws IdUnusedException, TypeException, IdUsedException,
+			ServerOverloadException
+	{
+		if (thisResource == null || new_id == null || new_id.trim().length() == 0)
+		{
+			return null;
+		}
+		List list = null;
+		boolean goin = in();
+		try
+		{
+			try
+			{
+				if (resolver != null && goin)
+				{
+					return resolver.moveResource(thisResource, new_id);
+				}
+			}
+			catch (OperationDelegationException e)
+			{
+			}
+			return m_resourceStore.moveResource(thisResource, new_id);
+		}
+		finally
+		{
+			out();
+		}
+	}
+
+	/**
+	 * @param id
+	 * @return
+	 */
+	public String getUuid(String id)
+	{
+		if ( id == null || id.trim().length() == 0)
+		{
+			return null;
+		}
+		List list = null;
+		boolean goin = in();
+		try
+		{
+			try
+			{
+				if (resolver != null && goin)
+				{
+					return resolver.getUuid(id);
+				}
+			}
+			catch (OperationDelegationException e)
+			{
+			}
+			return m_resourceStore.getUuid(id);
+		}
+		finally
+		{
+			out();
+		}
+	}
+
+	// ===================================== getters and setters
+	// =====================
 	/**
 	 * @return the collectionUser
 	 */

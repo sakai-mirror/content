@@ -438,7 +438,7 @@ public class DbContentService extends BaseContentService
 	 * private utility method to search for UUID for given id
 	 */
 
-	private String findUuid(String id)
+	protected String findUuid(String id)
 	{
 		String sql = "select RESOURCE_UUID from CONTENT_RESOURCE where RESOURCE_ID=?";
 		Object[] fields = new Object[1];

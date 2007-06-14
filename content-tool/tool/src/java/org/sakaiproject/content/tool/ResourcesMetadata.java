@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-import org.sakaiproject.content.api.ContentHostingHandler;
-import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.util.ResourceLoader;
 

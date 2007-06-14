@@ -17,6 +17,7 @@ import org.sakaiproject.content.api.ContentHostingHandler;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.OperationDelegationException;
 import org.sakaiproject.content.impl.BaseContentService.Storage;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
@@ -685,5 +686,73 @@ public class ContentHostingHandlerResolverImpl implements ContentHostingHandlerR
 			}
 		}
 		return storage.getMemberResourceIds(collectionId);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveCollection(org.sakaiproject.content.api.ContentCollectionEdit, java.lang.String)
+	 */
+	public String moveCollection(ContentCollectionEdit thisCollection, String new_folder_id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(new_folder_id, getRealParent(new_folder_id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.moveCollection(thisCollection,new_folder_id);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveResource(org.sakaiproject.content.api.ContentResourceEdit, java.lang.String)
+	 */
+	public String moveResource(ContentResourceEdit thisResource, String new_id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(new_id, getRealParent(new_id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.moveResource(thisResource,new_id);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#setResourceUuid(java.lang.String, java.lang.String)
+	 */
+	public void setResourceUuid(String resourceId, String uuid) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(resourceId, getRealParent(resourceId), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				chh.setResourceUuid(resourceId,uuid);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getUuid(java.lang.String)
+	 */
+	public String getUuid(String id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				chh.getUuid(id);
+			}
+		}
+		throw new OperationDelegationException();
 	}
 }

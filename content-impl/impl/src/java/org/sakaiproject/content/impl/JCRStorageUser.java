@@ -85,6 +85,9 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private static final String IGNORE_PROPERTY = "ignore";
 
+
+	private static final String REPOSITORY_PREFIX = "sakai";
+
 	private BaseContentService baseContentService;
 
 	private Map<String, String> jcrTypes;
@@ -761,22 +764,21 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public String convertId2Storage(String id)
 	{
-		String jcrPath = BaseJCRStorage.REPOSITORY_PREFIX + id;
+		String jcrPath = REPOSITORY_PREFIX + id;
 		if ( jcrPath.endsWith("/") ) {
 			jcrPath = jcrPath.substring(0,jcrPath.length()-1);
 		}
 		return jcrPath;
 	}
 
-	/**
-	 * @param path
-	 * @return
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.impl.LiteStorageUser#convertStorage2Id(java.lang.String)
 	 */
-	private String convertStorageToId(String path)
+	public String convertStorage2Id(String path)
 	{
-		if (path.startsWith(BaseJCRStorage.REPOSITORY_PREFIX))
+		if (path.startsWith(REPOSITORY_PREFIX))
 		{
-			path.substring(BaseJCRStorage.REPOSITORY_PREFIX.length());
+			path.substring(REPOSITORY_PREFIX.length());
 		}
 		log.error("Trying to convert a path to Id that is not a storage path " + path);
 		return path;
@@ -799,13 +801,13 @@ public class JCRStorageUser implements LiteStorageUser
 				NodeType nt = n.getPrimaryNodeType();
 				if (BaseJCRStorage.NT_FILE.equals(nt))
 				{
-					Entity e = newResource(null, convertStorageToId(n.getPath()), null);
+					Entity e = newResource(null, convertStorage2Id(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
 				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
 				{
-					Entity e = newContainer(convertStorageToId(n.getPath()));
+					Entity e = newContainer(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
 				}
@@ -835,13 +837,13 @@ public class JCRStorageUser implements LiteStorageUser
 				NodeType nt = n.getPrimaryNodeType();
 				if (BaseJCRStorage.NT_FILE.equals(nt))
 				{
-					Edit e = newResourceEdit(null, convertStorageToId(n.getPath()), null);
+					Edit e = newResourceEdit(null, convertStorage2Id(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
 				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
 				{
-					Edit e = newContainerEdit(convertStorageToId(n.getPath()));
+					Edit e = newContainerEdit(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
 				}
@@ -1083,5 +1085,6 @@ public class JCRStorageUser implements LiteStorageUser
 	{
 		this.jcrTypes = jcrTypes;
 	}
+
 
 }
