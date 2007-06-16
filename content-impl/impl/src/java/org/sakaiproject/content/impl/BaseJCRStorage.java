@@ -43,14 +43,10 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
-import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,6 +60,7 @@ import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.javax.Filter;
 import org.sakaiproject.jcr.api.JCRService;
+import org.sakaiproject.jcr.api.JcrConstants;
 
 /**
  * <p>
@@ -93,27 +90,6 @@ import org.sakaiproject.jcr.api.JCRService;
 public class BaseJCRStorage
 {
 
-	public static final String NT_FILE = "nt:file";
-
-	public static final String NT_FOLDER = "nt:folder";
-
-	public static final String NT_ROOT = "rep:root";
-
-	public static final String JCR_CONTENT = "jcr:content";
-
-	public static final String NT_RESOURCE = "nt:resource";
-
-	public static final String MIX_REFERENCEABLE = "mix:referenceable";
-
-	public static final String MIX_LOCKABLE = "mix:lockable";
-
-	public static final String JCR_LASTMODIFIED = "jcr:lastModified";
-
-	public static final String JCR_MIMETYPE = "jcr:mimeType";
-
-	public static final String JCR_DATA = "jcr:data";
-
-	public static final String JCR_ENCODING = "jcr:encoding";
 
 	private static final String COUNT_COLLECTION_MEMBERS = "count-members";
 
@@ -195,7 +171,7 @@ public class BaseJCRStorage
 				reset = true;
 				Session s = jcrService.login();
 				log.info("Prepopulating Nodes in repo");
-				Node n = createNode("/", NT_FOLDER);
+				Node n = createNode("/", JcrConstants.NT_FOLDER);
 				for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 				{
 					String[] ndef = i.next().split(";");
@@ -718,8 +694,8 @@ public class BaseJCRStorage
 				{
 					log.info("Getting " + pathElements[i] + " under " + currentNode);
 					currentNode = currentNode.getNode(pathElements[i]);
-					if (!currentNode.isNodeType(NT_FOLDER)
-							&& !currentNode.isNodeType(NT_ROOT))
+					if (!currentNode.isNodeType(JcrConstants.NT_FOLDER)
+							&& !currentNode.isNodeType(JcrConstants.NT_BASE))
 					{
 						throw new TypeException(
 								"Cant create collection or a folder inside a node that is not a folder "
@@ -730,11 +706,11 @@ public class BaseJCRStorage
 				catch (PathNotFoundException pnfe)
 				{
 					log.info("Not Found " + pnfe.getMessage() + " ");
-					if (i < pathElements.length - 1 || NT_FOLDER.equals(type))
+					if (i < pathElements.length - 1 || JcrConstants.NT_FOLDER.equals(type))
 					{
 						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
 								+ currentNode.getPath());
-						Node newNode = currentNode.addNode(pathElements[i], NT_FOLDER);
+						Node newNode = currentNode.addNode(pathElements[i], JcrConstants.NT_FOLDER);
 						populateFolder(newNode);
 						currentNode.save();
 						currentNode = newNode;
@@ -745,7 +721,7 @@ public class BaseJCRStorage
 					{
 						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
 								+ currentNode.getPath());
-						Node newNode = currentNode.addNode(pathElements[i], NT_FILE);
+						Node newNode = currentNode.addNode(pathElements[i], JcrConstants.NT_FILE);
 						populateFile(newNode);
 						currentNode.save();
 						currentNode = newNode;
@@ -832,14 +808,14 @@ public class BaseJCRStorage
 	private void populateFile(Node node) throws RepositoryException
 	{
 		// JCR Types
-		node.addMixin(MIX_REFERENCEABLE);
-		node.addMixin(MIX_LOCKABLE);
+		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
+		node.addMixin(JcrConstants.MIX_LOCKABLE);
 		// node.setProperty("jcr:created", new GregorianCalendar());
-		Node resource = node.addNode(JCR_CONTENT, NT_RESOURCE);
-		resource.setProperty(JCR_LASTMODIFIED, new GregorianCalendar());
-		resource.setProperty(JCR_MIMETYPE, "application/octet-stream");
-		resource.setProperty(JCR_DATA, "");
-		resource.setProperty(JCR_ENCODING, "UTF-8");
+		Node resource = node.addNode(JcrConstants.JCR_CONTENT, JcrConstants.NT_RESOURCE);
+		resource.setProperty(JcrConstants.JCR_LASTMODIFIED, new GregorianCalendar());
+		resource.setProperty(JcrConstants.JCR_MIMETYPE, "application/octet-stream");
+		resource.setProperty(JcrConstants.JCR_DATA, "");
+		resource.setProperty(JcrConstants.JCR_ENCODING, "UTF-8");
 	}
 
 	private void populateFolder(Node node) throws RepositoryException
@@ -847,8 +823,8 @@ public class BaseJCRStorage
 		// JCR Types
 		// TODO: perhpase
 		M_log.debug("Doing populate Folder");
-		node.addMixin(MIX_LOCKABLE);
-		node.addMixin(MIX_REFERENCEABLE);
+		node.addMixin(JcrConstants.MIX_LOCKABLE);
+		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
 
 	}
 
@@ -955,7 +931,7 @@ public class BaseJCRStorage
 						"The target parent folder of the move does not exist "
 								+ new_folder_id);
 			}
-			if (!NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
+			if (!JcrConstants.NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
 			{
 				throw new TypeException("The target of the move " + new_folder_id
 						+ " is not a folder ");
@@ -989,7 +965,7 @@ public class BaseJCRStorage
 			}
 			else
 			{
-				Node newNode = createNode(newPath, NT_FOLDER);
+				Node newNode = createNode(newPath, JcrConstants.NT_FOLDER);
 				m_user.commit(thisCollection, newNode);
 			}
 			return newPath;
@@ -1051,7 +1027,7 @@ public class BaseJCRStorage
 				throw new IdUnusedException(
 						"The target parent folder of the move does not exist " + new_id);
 			}
-			if (!NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
+			if (!JcrConstants.NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
 			{
 				throw new TypeException("The target of the move " + new_id
 						+ " is not a folder ");
@@ -1094,12 +1070,12 @@ public class BaseJCRStorage
 			}
 			else
 			{
-				Node newNode = createNode(newPath, NT_FILE);
+				Node newNode = createNode(newPath, JcrConstants.NT_FILE);
 				Session s = n.getSession();
 				ValueFactory vf = s.getValueFactory();
 				InputStream is = thisResource.streamContent();
 				Value v = vf.createValue(is);
-				newNode.setProperty(JCR_DATA, v);
+				newNode.setProperty(JcrConstants.JCR_DATA, v);
 				m_user.commit(thisResource, newNode);
 			}
 			return newPath;

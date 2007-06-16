@@ -49,7 +49,17 @@
 		<property name="resourceUser"><ref bean="org.sakaiproject.content.api.ContentHostingService.storageUser" /></property>
 		<property name="collectionUser"><ref bean="org.sakaiproject.content.api.ContentHostingService.storageUser" /></property>
 		<property name="resolver"><ref bean="org.sakaiproject.content.api.ContentHostingHandlerResolver" /></property>
-		
+		<property name="jcrRegistrationService" ><ref bean="org.sakaiproject.jcr.api.JCRRegistrationService" /></property>
+		<property name="namespaces" >
+			<map>
+				<entry key="" ><value></value></entry>
+			</map>
+		</property>
+		<property name="nodetypeReources" >
+			<list>
+				<value>/org/sakaiproject/content/impl/CHSNodeTypes.xml</value>
+			</list>
+		</property>
 	</bean>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingService.storageUser" 

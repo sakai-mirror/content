@@ -21,9 +21,11 @@
 
 package org.sakaiproject.content.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -40,7 +42,9 @@ import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
+import org.sakaiproject.jcr.api.JCRRegistrationService;
 import org.sakaiproject.jcr.api.JCRService;
+import org.sakaiproject.jcr.api.JcrConstants;
 
 /**
  * @author ieb
@@ -71,6 +75,12 @@ public class JCRStorage implements Storage
 
 	private ContentHostingHandlerResolver resolver;
 
+	private JCRRegistrationService jcrRegistrationService;
+
+	private HashMap<String, String> namespaces;
+
+	private List<String> nodetypeReources;
+
 	/**
 	 * Construct.
 	 * 
@@ -84,37 +94,59 @@ public class JCRStorage implements Storage
 	public JCRStorage()
 	{
 
+	}
 
-	} 
-	
-	public void init() {
+	public void init()
+	{
+
+		for (String prefix : namespaces.keySet())
+		{
+			String url = namespaces.get(prefix);
+			jcrRegistrationService.registerNamespace(prefix, url);
+		}
+		for (String nodeTypeResource : nodetypeReources)
+		{
+			try
+			{
+				InputStream in = this.getClass().getResourceAsStream(nodeTypeResource);
+				jcrRegistrationService.registerNodetypes(in);
+				in.close();
+			}
+			catch (IOException e)
+			{
+				log.error("Failed to read node type definitions from "+nodeTypeResource);
+			}
+		}
+
 		// build the collection store - a single level store
 		m_collectionStore = new BaseJCRStorage(jcrService, collectionUser,
-				BaseJCRStorage.NT_FOLDER);
+				JcrConstants.NT_FOLDER);
 
 		// build the resources store - a single level store
-		m_resourceStore = new BaseJCRStorage(jcrService, resourceUser, BaseJCRStorage.NT_FILE);
+		m_resourceStore = new BaseJCRStorage(jcrService, resourceUser,
+				JcrConstants.NT_FILE);
 
 		// htripath-build the resource for store of deleted
 		// record-single
 		// level store
-		m_resourceDeleteStore = new BaseJCRStorage(jcrService, collectionUser,  BaseJCRStorage.NT_FILE);
+		m_resourceDeleteStore = new BaseJCRStorage(jcrService, collectionUser,
+				JcrConstants.NT_FILE);
 		m_collectionStore.open();
 		m_resourceStore.open();
 		m_resourceDeleteStore.open();
-		
-		
+
 	}
-	
-	public void destroy() {
+
+	public void destroy()
+	{
 		m_resourceDeleteStore.close();
 		m_resourceStore.close();
 		m_collectionStore.close();
-		
+
 		m_collectionStore = null;
 		m_resourceStore = null;
 		m_resourceDeleteStore = null;
-		
+
 	}
 
 	/**
@@ -125,7 +157,7 @@ public class JCRStorage implements Storage
 		m_collectionStore.open();
 		m_resourceStore.open();
 		m_resourceDeleteStore.open();
-	} 
+	}
 
 	/**
 	 * Close.
@@ -135,8 +167,8 @@ public class JCRStorage implements Storage
 		m_collectionStore.close();
 		m_resourceStore.close();
 		m_resourceDeleteStore.close();
-	} 
-	
+	}
+
 	private class StackRef
 	{
 		protected int count = 0;
@@ -161,7 +193,7 @@ public class JCRStorage implements Storage
 		// self-recurses; now permits 0 or 2
 		// (r.count == 1);
 	}
-	
+
 	private int position()
 	{
 		StackRef r = (StackRef) stackMarker.get();
@@ -228,22 +260,23 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				log.info("Resolving Collection ["+id+"]:"+position());
-				ContentCollection cc =  resolver.getCollection(id);
-				log.info("Resolving Collection ["+id+"]:"+position()+" as "+cc);
+				log.info("Resolving Collection [" + id + "]:" + position());
+				ContentCollection cc = resolver.getCollection(id);
+				log.info("Resolving Collection [" + id + "]:" + position() + " as " + cc);
 				return cc;
 			}
 			else
 			{
-				log.info("Getting Collection ["+id+"]:"+position());
-				ContentCollection cc = (ContentCollection) m_collectionStore.getResource(id);
-				log.info("Getting Collection ["+id+"]:"+position()+" as "+cc);
+				log.info("Getting Collection [" + id + "]:" + position());
+				ContentCollection cc = (ContentCollection) m_collectionStore
+						.getResource(id);
+				log.info("Getting Collection [" + id + "]:" + position() + " as " + cc);
 				return cc;
 			}
 		}
 		finally
 		{
-			log.info("Done getCollection("+id+"):"+position());
+			log.info("Done getCollection(" + id + "):" + position());
 			out();
 		}
 
@@ -472,22 +505,22 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				log.info("Resolving Resource ["+id+"]:"+position());
-				ContentResource cr =  (ContentResource) resolver.getResource(id);
-				log.info("Resolving Resource ["+id+"]:"+position()+" as "+cr);
+				log.info("Resolving Resource [" + id + "]:" + position());
+				ContentResource cr = (ContentResource) resolver.getResource(id);
+				log.info("Resolving Resource [" + id + "]:" + position() + " as " + cr);
 				return cr;
 			}
 			else
 			{
-				log.info("Getting Resource ["+id+"]:"+position());
-				ContentResource cr =  (ContentResource) m_resourceStore.getResource(id);
-				log.info("Getting Resource ["+id+"]:"+position()+" as "+cr);
+				log.info("Getting Resource [" + id + "]:" + position());
+				ContentResource cr = (ContentResource) m_resourceStore.getResource(id);
+				log.info("Getting Resource [" + id + "]:" + position() + " as " + cr);
 				return cr;
 			}
 		}
 		finally
 		{
-			log.info("Done getResource("+id+"):"+position());
+			log.info("Done getResource(" + id + "):" + position());
 			out();
 		}
 	}
@@ -971,7 +1004,7 @@ public class JCRStorage implements Storage
 	 */
 	public String getUuid(String id)
 	{
-		if ( id == null || id.trim().length() == 0)
+		if (id == null || id.trim().length() == 0)
 		{
 			return null;
 		}
@@ -1082,6 +1115,23 @@ public class JCRStorage implements Storage
 	public void setResolver(ContentHostingHandlerResolver resolver)
 	{
 		this.resolver = resolver;
+	}
+
+	/**
+	 * @return the jcrRegistrationService
+	 */
+	public JCRRegistrationService getJcrRegistrationService()
+	{
+		return jcrRegistrationService;
+	}
+
+	/**
+	 * @param jcrRegistrationService
+	 *        the jcrRegistrationService to set
+	 */
+	public void setJcrRegistrationService(JCRRegistrationService jcrRegistrationService)
+	{
+		this.jcrRegistrationService = jcrRegistrationService;
 	}
 
 }

@@ -22,7 +22,6 @@
 package org.sakaiproject.content.impl;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;

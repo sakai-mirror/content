@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.exception.ServerOverloadException;
+import org.sakaiproject.jcr.api.JcrConstants;
 import org.w3c.dom.Element;
 
 /**
@@ -42,9 +43,6 @@ import org.w3c.dom.Element;
 public class BaseJCRResourceEdit extends BaseResourceEdit
 {
 
-	private static final String JCR_CONTENT = null;
-
-	private static final String JCR_DATA = null;
 
 	private static final Log log = LogFactory.getLog(BaseJCRResourceEdit.class);
 
@@ -93,8 +91,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 	{
 		try
 		{
-			Node c = node.getNode(JCR_CONTENT);
-			Property p = c.getProperty(JCR_DATA);
+			Node c = node.getNode(JcrConstants.JCR_CONTENT);
+			Property p = c.getProperty(JcrConstants.JCR_DATA);
 			long length = p.getLength();
 			if (length > 4096)
 			{
@@ -155,8 +153,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 								"Content is being stored in memory, this is bad! ... but we will do it anyway, memory used =  "
 										+ content.length, new Exception("Traceback"));
 			}
-			Node c = node.getNode(JCR_CONTENT);
-			Property p = c.getProperty(JCR_DATA);
+			Node c = node.getNode(JcrConstants.JCR_CONTENT);
+			Property p = c.getProperty(JcrConstants.JCR_DATA);
 			p.setValue(new ByteArrayInputStream(content));
 		}
 		catch (RepositoryException e)
@@ -175,8 +173,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 	{
 		try
 		{
-			Node content = node.getNode(JCR_CONTENT);
-			Property p = content.getProperty(JCR_DATA);
+			Node content = node.getNode(JcrConstants.JCR_CONTENT);
+			Property p = content.getProperty(JcrConstants.JCR_DATA);
 			p.setValue(stream);
 		}
 		catch (RepositoryException e)
@@ -195,8 +193,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 	{
 		try
 		{
-			Node content = node.getNode(JCR_CONTENT);
-			Property p = content.getProperty(JCR_DATA);
+			Node content = node.getNode(JcrConstants.JCR_CONTENT);
+			Property p = content.getProperty(JcrConstants.JCR_DATA);
 			return p.getStream();
 		}
 		catch (RepositoryException e)
