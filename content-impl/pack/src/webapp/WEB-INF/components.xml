@@ -61,6 +61,10 @@
         <property name="jcrTypes">
         	<map>
         		<entry key="jcr:mixinTypes" ><value>ignore</value></entry>
+        		<entry key="jcr:lockIsDeep" ><value>ignore</value></entry>
+        		<entry key="jcr:lockOwner" ><value>ignore</value></entry>
+        		<entry key="jcr:primaryType" ><value>ignore</value></entry>
+        		<entry key="jcr:uuid" ><value>ignore</value></entry>
         		<entry key="jcr_property_name" ><value>ignore or jcr type see PropertyType</value></entry>
         	</map>
         </property>

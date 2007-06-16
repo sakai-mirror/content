@@ -57,6 +57,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 	public BaseJCRResourceEdit(BaseContentService baseContentService, String id)
 	{
 		baseContentService.super(id);
+		 m_active = true;
+
 	}
 
 	/**
@@ -67,6 +69,7 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 	public BaseJCRResourceEdit(BaseContentService baseContentService, Element el)
 	{
 		baseContentService.super(el);
+		 m_active = true;
 	}
 
 	/**
@@ -77,6 +80,7 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 			ContentResource other)
 	{
 		baseContentService.super(other);
+		 m_active = true;
 	}
 
 	/*

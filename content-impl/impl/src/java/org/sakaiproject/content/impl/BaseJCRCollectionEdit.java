@@ -42,6 +42,7 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 	public BaseJCRCollectionEdit(BaseContentService baseContentService, String id)
 	{
 		baseContentService.super(id);
+		 m_active = true;
 	}
 
 	
@@ -52,6 +53,7 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 	public BaseJCRCollectionEdit(BaseContentService baseContentService, Element el)
 	{
 		baseContentService.super(el);
+		 m_active = true;
 	}
 	/**
 	 * @param baseContentService
@@ -60,6 +62,7 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 	public BaseJCRCollectionEdit(BaseContentService baseContentService, ContentCollection other)
 	{
 		baseContentService.super(other);
+		 m_active = true;
 	}
 
 
@@ -80,5 +83,4 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 		this.node = node;
 	}
 
-	
 }

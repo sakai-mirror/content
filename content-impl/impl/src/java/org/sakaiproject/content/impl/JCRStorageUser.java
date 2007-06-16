@@ -911,6 +911,7 @@ public class JCRStorageUser implements LiteStorageUser
 			try
 			{
 				NodeType nt = n.getPrimaryNodeType();
+				log.info("Building resource from "+nt.getName());
 				if (BaseJCRStorage.NT_FILE.equals(nt.getName()))
 				{
 					Edit e = newResourceEdit(null, convertStorage2Id(n.getPath()), null);

@@ -90,15 +90,15 @@ public class JCRStorage implements Storage
 	public void init() {
 		// build the collection store - a single level store
 		m_collectionStore = new BaseJCRStorage(jcrService, collectionUser,
-				"nt:collection");
+				BaseJCRStorage.NT_FOLDER);
 
 		// build the resources store - a single level store
-		m_resourceStore = new BaseJCRStorage(jcrService, resourceUser, "nt:file");
+		m_resourceStore = new BaseJCRStorage(jcrService, resourceUser, BaseJCRStorage.NT_FILE);
 
 		// htripath-build the resource for store of deleted
 		// record-single
 		// level store
-		m_resourceDeleteStore = new BaseJCRStorage(jcrService, collectionUser, "nt:file");
+		m_resourceDeleteStore = new BaseJCRStorage(jcrService, collectionUser,  BaseJCRStorage.NT_FILE);
 		m_collectionStore.open();
 		m_resourceStore.open();
 		m_resourceDeleteStore.open();

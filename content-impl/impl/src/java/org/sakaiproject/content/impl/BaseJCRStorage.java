@@ -673,7 +673,7 @@ public class BaseJCRStorage
 		Node node = null;
 		try
 		{
-			M_log.info("Creating Node " + id);
+			M_log.info("Creating Node " + id + " of type " + type);
 			String absPath = m_user.convertId2Storage(id);
 			Session s = jcrService.getSession();
 			Node n = getNodeFromSession(s, absPath);
@@ -731,7 +731,7 @@ public class BaseJCRStorage
 					log.info("Not Found " + pnfe.getMessage() + " ");
 					if (i < pathElements.length - 1 || NT_FOLDER.equals(type))
 					{
-						log.info("Adding Node " + pathElements[i] + " as folder to "
+						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
 								+ currentNode.getPath());
 						Node newNode = currentNode.addNode(pathElements[i], NT_FOLDER);
 						populateFolder(newNode);
@@ -742,7 +742,7 @@ public class BaseJCRStorage
 					}
 					else
 					{
-						log.info("Adding Node " + pathElements[i] + " as resource to "
+						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
 								+ currentNode.getPath());
 						Node newNode = currentNode.addNode(pathElements[i], NT_FILE);
 						populateFile(newNode);

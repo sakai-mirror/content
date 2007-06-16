@@ -23,7 +23,9 @@ package org.sakaiproject.content.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
+import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
@@ -188,5 +190,22 @@ public class JCRContentService extends DbContentService
     {
 		log.error("JCR manages where data is stored, it is not possible with the service to convert a JCR from DB storage to File Storage, please contact your JCR supplier for a utility");
 		throw new UnsupportedOperationException("JCR manages where data is stored, it is not possible with the service to convert a JCR from DB storage to File Storage, please contact your JCR supplier for a utility");
+    }
+    
+    /* (non-Javadoc)
+     * @see org.sakaiproject.content.impl.BaseContentService#findCollection(java.lang.String)
+     */
+    @Override
+    protected ContentCollection findCollection(String id) throws TypeException
+    {
+    	return storage.getCollection(id);
+    }
+    /* (non-Javadoc)
+     * @see org.sakaiproject.content.impl.BaseContentService#findResource(java.lang.String)
+     */
+    @Override
+    protected ContentResource findResource(String id) throws TypeException
+    {
+    	return storage.getResource(id);
     }
 }
