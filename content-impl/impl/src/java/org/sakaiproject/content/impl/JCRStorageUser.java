@@ -40,6 +40,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,9 +60,7 @@ import org.w3c.dom.Element;
  */
 public class JCRStorageUser implements LiteStorageUser
 {
-// TODO: mappings and name types
 	private static final Log log = LogFactory.getLog(JCRStorageUser.class);
-
 
 	private static final String DATE_FORMAT = "yyyyMMddHHmmssSSS";
 
@@ -85,8 +84,7 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private static final String IGNORE_PROPERTY = "ignore";
 
-
-	private static final String REPOSITORY_PREFIX = "sakai";
+	private static final String REPOSITORY_PREFIX = "/content";
 
 	private BaseContentService baseContentService;
 
@@ -96,8 +94,24 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private Map<String, String> entityToJcr;
 
+	private String repoPrefix;
+
+	private String jcrWorkspace = "/sakai";
+
+	private List<String> createNodes = new ArrayList<String>();
+
 	public JCRStorageUser()
 	{
+	}
+
+	public void init()
+	{
+		repoPrefix = jcrWorkspace + REPOSITORY_PREFIX;
+	}
+
+	public void destroy()
+	{
+
 	}
 
 	/*
@@ -155,27 +169,24 @@ public class JCRStorageUser implements LiteStorageUser
 			if (edit instanceof BaseCollectionEdit)
 			{
 				BaseCollectionEdit bedit = (BaseCollectionEdit) edit;
-				setJCRProperty(JCR_GROUP_LIST, new ArrayList(
-						bedit.m_groups), n);
+				setJCRProperty(JCR_GROUP_LIST, new ArrayList(bedit.m_groups), n);
 				if (bedit.m_access == null)
 				{
-					setJCRProperty(JCR_ACCESS_MODE,
-							AccessMode.INHERITED.toString(), n);
+					setJCRProperty(JCR_ACCESS_MODE, AccessMode.INHERITED.toString(), n);
 				}
 				else
 				{
-					setJCRProperty(JCR_ACCESS_MODE,
-							bedit.m_access.toString(), n);
+					setJCRProperty(JCR_ACCESS_MODE, bedit.m_access.toString(), n);
 				}
 				if (bedit.m_releaseDate != null)
 				{
-					setJCRProperty(JCR_RELEASE_DATE, new Date(
-							bedit.m_releaseDate.getTime()), n);
+					setJCRProperty(JCR_RELEASE_DATE, new Date(bedit.m_releaseDate
+							.getTime()), n);
 				}
 				if (bedit.m_retractDate != null)
 				{
-					setJCRProperty(JCR_RETRACT_DATE, new Date(
-							bedit.m_retractDate.getTime()), n);
+					setJCRProperty(JCR_RETRACT_DATE, new Date(bedit.m_retractDate
+							.getTime()), n);
 				}
 				setJCRProperty(JCR_HIDDEN, bedit.m_hidden, n);
 
@@ -183,29 +194,22 @@ public class JCRStorageUser implements LiteStorageUser
 			else if (edit instanceof BaseResourceEdit)
 			{
 				BaseResourceEdit bedit = (BaseResourceEdit) edit;
-				setJCRProperty(JCR_CONTENT_LENGTH, bedit
-						.getContentLength(), n);
-				setJCRProperty(JCR_CONTENT_TYPE, bedit
-						.getContentType(), n);
-				setJCRProperty(JCR_RESOURCE_TYPE, bedit
-						.getResourceType(), n);;
-				setJCRProperty(JCR_FILE_PATH, bedit.m_filePath,
-						n);;
+				setJCRProperty(JCR_CONTENT_LENGTH, bedit.getContentLength(), n);
+				setJCRProperty(JCR_CONTENT_TYPE, bedit.getContentType(), n);
+				setJCRProperty(JCR_RESOURCE_TYPE, bedit.getResourceType(), n);;
+				setJCRProperty(JCR_FILE_PATH, bedit.m_filePath, n);;
 				if (bedit.m_body != null)
 				{
 
 				}
-				setJCRProperty(JCR_GROUP_LIST, new ArrayList(
-						bedit.m_groups), n);
+				setJCRProperty(JCR_GROUP_LIST, new ArrayList(bedit.m_groups), n);
 				if (bedit.m_access == null)
 				{
-					setJCRProperty(JCR_ACCESS_MODE,
-							AccessMode.INHERITED.toString(), n);
+					setJCRProperty(JCR_ACCESS_MODE, AccessMode.INHERITED.toString(), n);
 				}
 				else
 				{
-					setJCRProperty(JCR_ACCESS_MODE,
-							bedit.m_access.toString(), n);
+					setJCRProperty(JCR_ACCESS_MODE, bedit.m_access.toString(), n);
 				}
 				if (bedit.m_hidden)
 				{
@@ -216,13 +220,13 @@ public class JCRStorageUser implements LiteStorageUser
 				{
 					if (bedit.m_releaseDate != null)
 					{
-						setJCRProperty(JCR_RELEASE_DATE,
-								new Date(bedit.m_releaseDate.getTime()), n);
+						setJCRProperty(JCR_RELEASE_DATE, new Date(bedit.m_releaseDate
+								.getTime()), n);
 					}
 					if (bedit.m_retractDate != null)
 					{
-						setJCRProperty(JCR_RETRACT_DATE,
-								new Date(bedit.m_retractDate.getTime()), n);
+						setJCRProperty(JCR_RETRACT_DATE, new Date(bedit.m_retractDate
+								.getTime()), n);
 					}
 				}
 				setJCRProperty(JCR_HIDDEN, bedit.m_hidden, n);
@@ -242,10 +246,13 @@ public class JCRStorageUser implements LiteStorageUser
 
 		try
 		{
-			Property p = n.getProperty(jname);
-			if (p != null)
+			if (n.hasProperty(jname))
 			{
-				p.setValue((Value) null);
+				Property p = n.getProperty(jname);
+				if (p != null)
+				{
+					p.setValue((Value) null);
+				}
 			}
 		}
 		catch (RepositoryException re)
@@ -264,7 +271,8 @@ public class JCRStorageUser implements LiteStorageUser
 		try
 		{
 			String stype = jcrTypes.get(jname);
-			if ( IGNORE_PROPERTY.equals(stype) ) {
+			if (IGNORE_PROPERTY.equals(stype))
+			{
 				return;
 			}
 			int type = PropertyType.STRING;
@@ -431,7 +439,8 @@ public class JCRStorageUser implements LiteStorageUser
 		try
 		{
 			String stype = jcrTypes.get(jname);
-			if ( IGNORE_PROPERTY.equals(stype) ) {
+			if (IGNORE_PROPERTY.equals(stype))
+			{
 				return;
 			}
 			int type = PropertyType.STRING;
@@ -456,8 +465,7 @@ public class JCRStorageUser implements LiteStorageUser
 						}
 						else
 						{
-							n.setProperty(jname, new Boolean(String
-									.valueOf(ov)));
+							n.setProperty(jname, new Boolean(String.valueOf(ov)));
 						}
 					}
 					catch (RepositoryException e)
@@ -472,7 +480,7 @@ public class JCRStorageUser implements LiteStorageUser
 					{
 						if (ov instanceof Calendar)
 						{
-							n.setProperty(jname, (Calendar)ov);
+							n.setProperty(jname, (Calendar) ov);
 						}
 						else if (ov instanceof Date)
 						{
@@ -525,13 +533,17 @@ public class JCRStorageUser implements LiteStorageUser
 				{
 					try
 					{
-						if ( ov instanceof Long ) {
-							n.setProperty(jname, ((Long)ov).longValue() );
-						} else if ( ov instanceof Integer ) {
-							n.setProperty(jname, ((Integer)ov).longValue() );
-						} else {
-							n.setProperty(jname, Long
-									.parseLong(String.valueOf(ov)) );
+						if (ov instanceof Long)
+						{
+							n.setProperty(jname, ((Long) ov).longValue());
+						}
+						else if (ov instanceof Integer)
+						{
+							n.setProperty(jname, ((Integer) ov).longValue());
+						}
+						else
+						{
+							n.setProperty(jname, Long.parseLong(String.valueOf(ov)));
 						}
 					}
 					catch (RepositoryException e)
@@ -587,36 +599,39 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) e;
 			bce.setNode(n);
-			Property p = n.getProperty(JCR_GROUP_LIST);
 			bce.m_groups = new ArrayList<String>();
-			if (p != null)
+			if (n.hasProperty(JCR_GROUP_LIST))
 			{
-				Value[] v = p.getValues();
-				if (v != null)
+				Property p = n.getProperty(JCR_GROUP_LIST);
+				if (p != null)
 				{
-					for (int i = 0; i < v.length; i++)
+					Value[] v = p.getValues();
+					if (v != null)
 					{
-						bce.m_groups.add(v[i].toString());
+						for (int i = 0; i < v.length; i++)
+						{
+							bce.m_groups.add(v[i].toString());
+						}
 					}
 				}
 			}
-			p = n.getProperty(JCR_ACCESS_MODE);
-			if (p != null)
+			bce.m_access = AccessMode.INHERITED;
+			if (n.hasProperty(JCR_ACCESS_MODE))
 			{
-				bce.m_access = AccessMode.fromString(p.toString());
+				Property p = n.getProperty(JCR_ACCESS_MODE);
+				if (p != null)
+				{
+					bce.m_access = AccessMode.fromString(p.toString());
+				}
 			}
-			else
+			bce.m_hidden = false;
+			if (n.hasProperty(JCR_HIDDEN))
 			{
-				bce.m_access = AccessMode.INHERITED;
-			}
-			p = n.getProperty(JCR_HIDDEN);
-			if (p != null)
-			{
-				bce.m_hidden = p.getBoolean();
-			}
-			else
-			{
-				bce.m_hidden = false;
+				Property p = n.getProperty(JCR_HIDDEN);
+				if (p != null)
+				{
+					bce.m_hidden = p.getBoolean();
+				}
 			}
 			if (bce.m_hidden)
 			{
@@ -625,17 +640,23 @@ public class JCRStorageUser implements LiteStorageUser
 			}
 			else
 			{
-				p = n.getProperty(JCR_RELEASE_DATE);
-				if (p != null)
+				if (n.hasProperty(JCR_RELEASE_DATE))
 				{
-					bce.m_releaseDate = TimeService
-							.newTime(p.getDate().getTimeInMillis());
+					Property p = n.getProperty(JCR_RELEASE_DATE);
+					if (p != null)
+					{
+						bce.m_releaseDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
 				}
-				p = n.getProperty(JCR_RETRACT_DATE);
-				if (p != null)
+				if (n.hasProperty(JCR_RETRACT_DATE))
 				{
-					bce.m_retractDate = TimeService
-							.newTime(p.getDate().getTimeInMillis());
+					Property p = n.getProperty(JCR_RETRACT_DATE);
+					if (p != null)
+					{
+						bce.m_retractDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
 				}
 			}
 		}
@@ -643,57 +664,72 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			BaseJCRResourceEdit bre = (BaseJCRResourceEdit) e;
 			bre.setNode(n);
-			Property p = n.getProperty(JCR_CONTENT_TYPE);
-			if (p != null)
+			if (n.hasProperty(JCR_CONTENT_TYPE))
 			{
-				bre.m_contentType = p.getString();
-			}
-			p = n.getProperty(JCR_CONTENT_LENGTH);
-			if (p != null)
-			{
-				bre.m_contentLength = (int) p.getLong();
-			}
-			p = n.getProperty(JCR_RESOURCE_TYPE);
-			if (p != null)
-			{
-				bre.setResourceType(p.toString());
-			}
-			p = n.getProperty(JCR_FILE_PATH);
-			if (p != null)
-			{
-				bre.m_filePath = StringUtil.trimToNull(p.toString());
-			}
-
-			p = n.getProperty(convertEntityName2JCRName(JCR_GROUP_LIST));
-			bre.m_groups = new ArrayList<String>();
-			if (p != null)
-			{
-				Value[] v = p.getValues();
-				if (v != null)
+				Property p = n.getProperty(JCR_CONTENT_TYPE);
+				if (p != null)
 				{
-					for (int i = 0; i < v.length; i++)
+					bre.m_contentType = p.getString();
+				}
+			}
+			if (n.hasProperty(JCR_CONTENT_LENGTH))
+			{
+				Property p = n.getProperty(JCR_CONTENT_LENGTH);
+				if (p != null)
+				{
+					bre.m_contentLength = (int) p.getLong();
+				}
+			}
+			if (n.hasProperty(JCR_RESOURCE_TYPE))
+			{
+				Property p = n.getProperty(JCR_RESOURCE_TYPE);
+				if (p != null)
+				{
+					bre.setResourceType(p.toString());
+				}
+			}
+			if (n.hasProperty(JCR_FILE_PATH))
+			{
+				Property p = n.getProperty(JCR_FILE_PATH);
+				if (p != null)
+				{
+					bre.m_filePath = StringUtil.trimToNull(p.toString());
+				}
+
+			}
+			bre.m_groups = new ArrayList<String>();
+			if (n.hasProperty(JCR_GROUP_LIST))
+			{
+				Property p = n.getProperty(convertEntityName2JCRName(JCR_GROUP_LIST));
+				if (p != null)
+				{
+					Value[] v = p.getValues();
+					if (v != null)
 					{
-						bre.m_groups.add(v[i].toString());
+						for (int i = 0; i < v.length; i++)
+						{
+							bre.m_groups.add(v[i].toString());
+						}
 					}
 				}
 			}
-			p = n.getProperty(JCR_ACCESS_MODE);
-			if (p != null)
+			bre.m_access = AccessMode.INHERITED;
+			if (n.hasProperty(JCR_ACCESS_MODE))
 			{
-				bre.m_access = AccessMode.fromString(p.toString());
+				Property p = n.getProperty(JCR_ACCESS_MODE);
+				if (p != null)
+				{
+					bre.m_access = AccessMode.fromString(p.toString());
+				}
 			}
-			else
+			bre.m_hidden = false;
+			if (n.hasProperty(JCR_HIDDEN))
 			{
-				bre.m_access = AccessMode.INHERITED;
-			}
-			p = n.getProperty(JCR_HIDDEN);
-			if (p != null)
-			{
-				bre.m_hidden = p.getBoolean();
-			}
-			else
-			{
-				bre.m_hidden = false;
+				Property p = n.getProperty(JCR_HIDDEN);
+				if (p != null)
+				{
+					bre.m_hidden = p.getBoolean();
+				}
 			}
 			if (bre.m_hidden)
 			{
@@ -702,17 +738,23 @@ public class JCRStorageUser implements LiteStorageUser
 			}
 			else
 			{
-				p = n.getProperty(JCR_RELEASE_DATE);
-				if (p != null)
+				if (n.hasProperty(JCR_RELEASE_DATE))
 				{
-					bre.m_releaseDate = TimeService
-							.newTime(p.getDate().getTimeInMillis());
+					Property p = n.getProperty(JCR_RELEASE_DATE);
+					if (p != null)
+					{
+						bre.m_releaseDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
 				}
-				p = n.getProperty(JCR_RETRACT_DATE);
-				if (p != null)
+				if (n.hasProperty(JCR_RETRACT_DATE))
 				{
-					bre.m_retractDate = TimeService
-							.newTime(p.getDate().getTimeInMillis());
+					Property p = n.getProperty(JCR_RETRACT_DATE);
+					if (p != null)
+					{
+						bre.m_retractDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
 				}
 			}
 
@@ -723,12 +765,27 @@ public class JCRStorageUser implements LiteStorageUser
 	/**
 	 * @param p
 	 * @param rp
-	 * @throws RepositoryException 
-	 * @throws  
+	 * @throws RepositoryException
+	 * @throws
 	 */
-	private void setEntityProperty(Property p, ResourceProperties rp) throws  RepositoryException
+	private void setEntityProperty(Property p, ResourceProperties rp)
+			throws RepositoryException
 	{
-		rp.addProperty(convertJCRName2EntityName(p.getName()), p.getString());
+		if (IGNORE_PROPERTY.equals(jcrTypes.get(p.getName())))
+		{
+			return;
+		}
+		log.info("Converting "+p.getName());
+
+		PropertyDefinition pd = p.getDefinition();
+		if ( pd.isMultiple() ) {
+			String ename = convertJCRName2EntityName(p.getName());
+			for ( Value v : p.getValues() ) {
+				rp.addPropertyToList(ename, v.toString());
+			}
+		} else {
+			rp.addProperty(convertJCRName2EntityName(p.getName()), p.getString());
+		}
 	}
 
 	/**
@@ -738,7 +795,8 @@ public class JCRStorageUser implements LiteStorageUser
 	private String convertJCRName2EntityName(String name)
 	{
 		String entityName = jcrToEntity.get(name);
-		if ( entityName == null ) {
+		if (entityName == null)
+		{
 			return name;
 		}
 		return entityName;
@@ -751,7 +809,8 @@ public class JCRStorageUser implements LiteStorageUser
 	private String convertEntityName2JCRName(String name)
 	{
 		String jcrName = entityToJcr.get(name);
-		if ( jcrName == null ) {
+		if (jcrName == null)
+		{
 			return name;
 		}
 		return jcrName;
@@ -764,23 +823,34 @@ public class JCRStorageUser implements LiteStorageUser
 	 */
 	public String convertId2Storage(String id)
 	{
-		String jcrPath = REPOSITORY_PREFIX + id;
-		if ( jcrPath.endsWith("/") ) {
-			jcrPath = jcrPath.substring(0,jcrPath.length()-1);
+		String jcrPath = repoPrefix + id;
+		if (jcrPath.endsWith("/"))
+		{
+			jcrPath = jcrPath.substring(0, jcrPath.length() - 1);
 		}
+		log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
 		return jcrPath;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.sakaiproject.content.impl.LiteStorageUser#convertStorage2Id(java.lang.String)
 	 */
 	public String convertStorage2Id(String path)
 	{
-		if (path.startsWith(REPOSITORY_PREFIX))
+		String id = path;
+		if (path.startsWith(repoPrefix))
 		{
-			path.substring(REPOSITORY_PREFIX.length());
+			id = path.substring(repoPrefix.length());
 		}
-		log.error("Trying to convert a path to Id that is not a storage path " + path);
+		else
+		{
+			log
+					.error("Trying to convert a path to Id that is not a storage path "
+							+ path);
+		}
+		log.info(" JCR2Id [" + path + "] >> [" + id + "]");
 		return path;
 	}
 
@@ -799,17 +869,22 @@ public class JCRStorageUser implements LiteStorageUser
 			try
 			{
 				NodeType nt = n.getPrimaryNodeType();
-				if (BaseJCRStorage.NT_FILE.equals(nt))
+				if (BaseJCRStorage.NT_FILE.equals(nt.getName()))
 				{
 					Entity e = newResource(null, convertStorage2Id(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
-				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
+				else if (BaseJCRStorage.NT_FOLDER.equals(nt.getName()))
 				{
 					Entity e = newContainer(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
+				}
+				else
+				{
+					log.error("Unable to determine node type " + nt.getName());
+					return null;
 				}
 			}
 			catch (RepositoryException e1)
@@ -817,6 +892,7 @@ public class JCRStorageUser implements LiteStorageUser
 				log.error("Failed to create new resource", e1);
 			}
 		}
+		log.error("Cant Create Resource from source " + source);
 		return null;
 	}
 
@@ -835,17 +911,22 @@ public class JCRStorageUser implements LiteStorageUser
 			try
 			{
 				NodeType nt = n.getPrimaryNodeType();
-				if (BaseJCRStorage.NT_FILE.equals(nt))
+				if (BaseJCRStorage.NT_FILE.equals(nt.getName()))
 				{
 					Edit e = newResourceEdit(null, convertStorage2Id(n.getPath()), null);
 					copy(n, e);
 					return e;
 				}
-				else if (BaseJCRStorage.NT_FOLDER.equals(nt))
+				else if (BaseJCRStorage.NT_FOLDER.equals(nt.getName()))
 				{
 					Edit e = newContainerEdit(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
+				}
+				else
+				{
+					log.error("Cant create Resource Edit from a " + nt.getName());
+					return null;
 				}
 			}
 			catch (RepositoryException e1)
@@ -853,6 +934,7 @@ public class JCRStorageUser implements LiteStorageUser
 				log.error("Failed to create new resource", e1);
 			}
 		}
+		log.error("Unable to create JCR based resource from a source object " + source);
 		return null;
 	}
 
@@ -1031,7 +1113,8 @@ public class JCRStorageUser implements LiteStorageUser
 	}
 
 	/**
-	 * @param baseContentService the baseContentService to set
+	 * @param baseContentService
+	 *        the baseContentService to set
 	 */
 	public void setBaseContentService(BaseContentService baseContentService)
 	{
@@ -1047,7 +1130,8 @@ public class JCRStorageUser implements LiteStorageUser
 	}
 
 	/**
-	 * @param entityToJcr the entityToJcr to set
+	 * @param entityToJcr
+	 *        the entityToJcr to set
 	 */
 	public void setEntityToJcr(Map<String, String> entityToJcr)
 	{
@@ -1063,7 +1147,8 @@ public class JCRStorageUser implements LiteStorageUser
 	}
 
 	/**
-	 * @param jcrToEntity the jcrToEntity to set
+	 * @param jcrToEntity
+	 *        the jcrToEntity to set
 	 */
 	public void setJcrToEntity(Map<String, String> jcrToEntity)
 	{
@@ -1079,12 +1164,56 @@ public class JCRStorageUser implements LiteStorageUser
 	}
 
 	/**
-	 * @param jcrTypes the jcrTypes to set
+	 * @param jcrTypes
+	 *        the jcrTypes to set
 	 */
 	public void setJcrTypes(Map<String, String> jcrTypes)
 	{
 		this.jcrTypes = jcrTypes;
 	}
 
+	/**
+	 * @return the jcrWorkspace
+	 */
+	public String getJcrWorkspace()
+	{
+		return jcrWorkspace;
+	}
+
+	/**
+	 * @param jcrWorkspace
+	 *        the jcrWorkspace to set
+	 */
+	public void setJcrWorkspace(String jcrWorkspace)
+	{
+		this.jcrWorkspace = jcrWorkspace;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.sakaiproject.content.impl.LiteStorageUser#startupNodes()
+	 */
+	public Iterator<String> startupNodes()
+	{
+		return createNodes.iterator();
+	}
+
+	/**
+	 * @return the createNodes
+	 */
+	public List<String> getCreateNodes()
+	{
+		return createNodes;
+	}
+
+	/**
+	 * @param createNodes
+	 *        the createNodes to set
+	 */
+	public void setCreateNodes(List<String> createNodes)
+	{
+		this.createNodes = createNodes;
+	}
 
 }

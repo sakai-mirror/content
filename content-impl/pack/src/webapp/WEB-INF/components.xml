@@ -34,6 +34,7 @@
 		<property name="prioritySortEnabled"><value>true</value></property>
 		<property name="useResourceTypeRegistry"><value>true</value></property>
 		
+		<property name="storage"><ref bean="org.sakaiproject.content.api.ContentHostingService.storage" /></property>
 		
   	</bean>
 
@@ -59,6 +60,7 @@
         <property name="baseContentService"><ref bean="org.sakaiproject.content.api.ContentHostingService"/></property>
         <property name="jcrTypes">
         	<map>
+        		<entry key="jcr:mixinTypes" ><value>ignore</value></entry>
         		<entry key="jcr_property_name" ><value>ignore or jcr type see PropertyType</value></entry>
         	</map>
         </property>
@@ -72,11 +74,19 @@
         		<entry key="sakai_property_name" ><value>jcr property mapping</value></entry>
         	</map>        	
         </property>
+        <property name="createNodes" >
+        	<list>
+        		<value>/group;nt:folder</value>
+        		<value>/user;nt:folder</value>
+        	</list>
+        </property>
+        
 	</bean>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
 			class="org.sakaiproject.content.impl.ContentHostingHandlerResolverImpl"
 			singleton="true">
+		<property name="storage"><ref bean="org.sakaiproject.content.api.ContentHostingService.storage" /></property>
 	</bean>
 
 <!--

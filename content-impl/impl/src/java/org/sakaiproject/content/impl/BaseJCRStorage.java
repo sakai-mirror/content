@@ -21,6 +21,7 @@
 
 package org.sakaiproject.content.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,10 +43,14 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
+import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,6 +105,8 @@ public class BaseJCRStorage
 
 	public static final String MIX_REFERENCEABLE = "mix:referenceable";
 
+	public static final String MIX_LOCKABLE = "mix:lockable";
+
 	public static final String JCR_LASTMODIFIED = "jcr:lastModified";
 
 	public static final String JCR_MIMETYPE = "jcr:mimeType";
@@ -120,6 +128,7 @@ public class BaseJCRStorage
 	private static final Log log = LogFactory.getLog(BaseJCRStorage.class);
 
 	private static final String JCR_SAKAI_UUID = null;
+
 
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseJCRStorage.class);
@@ -153,6 +162,7 @@ public class BaseJCRStorage
 	public BaseJCRStorage(JCRService jcrService, LiteStorageUser storageUser,
 			String nodeType)
 	{
+		log.info("Setting jcrService to " + jcrService);
 		this.jcrService = jcrService;
 		this.m_user = storageUser;
 		this.nodeType = nodeType;
@@ -173,6 +183,88 @@ public class BaseJCRStorage
 	 */
 	public void open()
 	{
+		if (isEmpty())
+		{
+
+			Session currentSession = null;
+			boolean reset = false;
+			try
+			{
+				log.info("--------------------------- Start Repository Populate");
+				currentSession = jcrService.setSession(null);
+				reset = true;
+				Session s = jcrService.login();
+				log.info("Prepopulating Nodes in repo");
+				Node n = createNode("/", NT_FOLDER);
+				for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
+				{
+					String[] ndef = i.next().split(";");
+					log.info("       Creating " + ndef[0] + " as a " + ndef[1]);
+					createNode(ndef[0], ndef[1]);
+				}
+				log.info("Session is " + s);
+				s.exportDocumentView("/sakai", System.out, true, false);
+				s.save();
+				s.logout();
+				log.info("Creating Root Node: SUCCESS");
+
+			}
+			catch (RepositoryException e)
+			{
+				M_log.error("Unable to create root node cause:" + e.getMessage());
+				throw new RuntimeException("Unable to create root node cause:"
+						+ e.getMessage(), e);
+			}
+			catch (TypeException e)
+			{
+				M_log.error("Unable to create root node cause:" + e.getMessage());
+				throw new RuntimeException("Unable to create root node cause:"
+						+ e.getMessage(), e);
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				if (reset)
+				{
+					try
+					{
+						jcrService.setSession(currentSession);
+						currentSession = jcrService.getSession();
+						log.info("Session is " + currentSession);
+						currentSession.exportDocumentView("/sakai", System.out, true,
+								false);
+						for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
+						{
+							String[] ndef = i.next().split(";");
+							log.info("       Checking " + ndef[0] + " as a " + ndef[1]);
+							Node n = getNodeById(ndef[0]);
+							if (n == null)
+							{
+								log.fatal("Didnt find " + ndef[0] + " after populate ");
+								System.exit(1);
+							}
+							else
+							{
+								log.info("     Got " + n);
+							}
+						}
+						log.info("Repo Is Empty " + isEmpty());
+						log
+								.info("--------------------------- Repository Populate Complete OK");
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+
+		}
+
 	}
 
 	/**
@@ -195,11 +287,13 @@ public class BaseJCRStorage
 		try
 		{
 
-			return m_user.newResource(n);
+			Entity e = m_user.newResource(n);
+			M_log.info("New Resource is "+e);
+			return e;
 		}
 		catch (Exception e)
 		{
-			M_log.debug("readResource(): ", e);
+			M_log.warn("readResource(): ", e);
 			return null;
 		}
 	}
@@ -242,10 +336,19 @@ public class BaseJCRStorage
 		{
 			Session session = jcrService.getSession();
 			Item i = session.getItem(m_user.convertId2Storage(id));
+
 			if (i != null && i.isNode())
 			{
+				log.info("Found node "+id+" as "+i);
 				return (Node) i;
 			}
+			else
+			{
+				log.info("Item is not a node " + i);
+			}
+		}
+		catch (PathNotFoundException ex)
+		{
 		}
 		catch (RepositoryException re)
 		{
@@ -253,6 +356,7 @@ public class BaseJCRStorage
 			M_log.warn("Node Not Found " + id + " cause:" + re.getMessage());
 
 		}
+		log.info("Returning Null, node "+id+" not found");
 		return null;
 	}
 
@@ -273,12 +377,20 @@ public class BaseJCRStorage
 	public boolean isEmpty()
 	{
 		Node n = getNodeById("/");
+		if (n == null)
+		{
+			log.info("No Node found hence empty");
+			return true;
+		}
 		try
 		{
-			return n.hasNodes();
+			boolean hasnodes = n.hasNodes();
+			log.info("Root has nodes " + hasnodes);
+			return !hasnodes;
 		}
 		catch (RepositoryException e)
 		{
+			log.warn("Is Empty failed with " + e.getMessage() + " assuming empty");
 			return true;
 		}
 	}
@@ -566,31 +678,44 @@ public class BaseJCRStorage
 			Session s = jcrService.getSession();
 			Node n = getNodeFromSession(s, absPath);
 			String vpath = getParentPath(absPath);
-			while (n == null && "/".equals(vpath))
+			while (n == null && !"/".equals(vpath))
 			{
 				n = getNodeFromSession(s, vpath);
 				if (n == null)
 				{
 					vpath = getParentPath(vpath);
 				}
+				else
+				{
+					log.info("Got Path " + vpath + " as " + n);
+				}
 			}
 			if (n == null)
 			{
 				n = s.getRootNode();
 			}
+			log.info("VPath is " + vpath);
 			String relPath = absPath.substring(vpath.length());
-			Node rootNode = s.getRootNode();
+			// Node rootNode = s.getRootNode();
 			if (relPath.startsWith("/"))
 			{
 				relPath = relPath.substring(1);
 			}
 
 			String[] pathElements = relPath.split("/");
+			log.info("RelPath is " + relPath + " split into " + pathElements.length
+					+ " elements ");
+			for (String pathel : pathElements)
+			{
+				log.info("       Path Element is [" + pathel + "]");
+			}
+
 			Node currentNode = n;
 			for (int i = 0; i < pathElements.length; i++)
 			{
 				try
 				{
+					log.info("Getting " + pathElements[i] + " under " + currentNode);
 					currentNode = currentNode.getNode(pathElements[i]);
 					if (!currentNode.isNodeType(NT_FOLDER)
 							&& !currentNode.isNodeType(NT_ROOT))
@@ -603,20 +728,44 @@ public class BaseJCRStorage
 				}
 				catch (PathNotFoundException pnfe)
 				{
+					log.info("Not Found " + pnfe.getMessage() + " ");
 					if (i < pathElements.length - 1 || NT_FOLDER.equals(type))
 					{
-						currentNode = currentNode.addNode(pathElements[i], NT_FOLDER);
-						populateFolder(currentNode);
+						log.info("Adding Node " + pathElements[i] + " as folder to "
+								+ currentNode.getPath());
+						Node newNode = currentNode.addNode(pathElements[i], NT_FOLDER);
+						populateFolder(newNode);
+						currentNode.save();
+						currentNode = newNode;
+
+						log.info("Adding Node Complete");
 					}
 					else
 					{
-						currentNode = currentNode.addNode(pathElements[i], NT_FILE);
-						populateFile(currentNode);
+						log.info("Adding Node " + pathElements[i] + " as resource to "
+								+ currentNode.getPath());
+						Node newNode = currentNode.addNode(pathElements[i], NT_FILE);
+						populateFile(newNode);
+						currentNode.save();
+						currentNode = newNode;
+						log.info("Adding Node Complete");
 
 					}
 				}
 			}
 			node = currentNode;
+			if (node == null)
+			{
+				log.error("Failed to create Node " + absPath + " got " + node);
+				throw new Error("Failed to create node " + absPath + " got " + node);
+			}
+			else if (!absPath.equals(node.getPath()))
+			{
+
+				log.error("Failed to create Node " + absPath + " got" + node.getPath());
+				throw new Error("Failed to create node " + absPath + " got "
+						+ node.getPath());
+			}
 		}
 		catch (RepositoryException rex)
 		{
@@ -636,7 +785,9 @@ public class BaseJCRStorage
 		int pre = absPath.lastIndexOf("/");
 		if (pre > 0)
 		{
-			return absPath.substring(0, pre - 1);
+			String parentPath = absPath.substring(0, pre);
+			log.info("Parent path is [" + parentPath + "]");
+			return parentPath;
 		}
 		return "/";
 	}
@@ -647,11 +798,21 @@ public class BaseJCRStorage
 	 * @return
 	 * @throws TypeException
 	 * @throws RepositoryException
+	 * @throws RepositoryException
 	 */
-	private Node getNodeFromSession(Session s, String id) throws RepositoryException,
-			TypeException
+	private Node getNodeFromSession(Session s, String id) throws TypeException,
+			RepositoryException
 	{
-		Item i = s.getItem(id);
+		Item i;
+		try
+		{
+			i = s.getItem(id);
+		}
+		catch (PathNotFoundException e)
+		{
+			log.warn("getNodeFromSession: Node Does Not Exist :" + id);
+			return null;
+		}
 		Node n = null;
 		if (i != null)
 		{
@@ -671,6 +832,7 @@ public class BaseJCRStorage
 	{
 		// JCR Types
 		node.addMixin(MIX_REFERENCEABLE);
+		node.addMixin(MIX_LOCKABLE);
 		// node.setProperty("jcr:created", new GregorianCalendar());
 		Node resource = node.addNode(JCR_CONTENT, NT_RESOURCE);
 		resource.setProperty(JCR_LASTMODIFIED, new GregorianCalendar());
@@ -679,11 +841,13 @@ public class BaseJCRStorage
 		resource.setProperty(JCR_ENCODING, "UTF-8");
 	}
 
-	private void populateFolder(Node node)
+	private void populateFolder(Node node) throws RepositoryException
 	{
 		// JCR Types
 		// TODO: perhpase
 		M_log.debug("Doing populate Folder");
+		node.addMixin(MIX_LOCKABLE);
+		node.addMixin(MIX_REFERENCEABLE);
 
 	}
 
@@ -758,9 +922,9 @@ public class BaseJCRStorage
 	 */
 	public void setResourceUuid(String resourceId, String uuid)
 	{
-	//	Node n = getNodeById(resourceId);
-	//	n.setProperty(JCR_SAKAI_UUID, uuid);
-	//	n.save();
+		// Node n = getNodeById(resourceId);
+		// n.setProperty(JCR_SAKAI_UUID, uuid);
+		// n.save();
 	}
 
 	/**
@@ -782,12 +946,13 @@ public class BaseJCRStorage
 	{
 		try
 		{
-			String parentFolderId =  isolateContainingId(new_folder_id);
+			String parentFolderId = isolateContainingId(new_folder_id);
 			Node n = getNodeById(parentFolderId);
 			if (n == null)
 			{
 				throw new IdUnusedException(
-						"The target parent folder of the move does not exist " + new_folder_id);
+						"The target parent folder of the move does not exist "
+								+ new_folder_id);
 			}
 			if (!NT_FOLDER.equals(n.getPrimaryNodeType().getName()))
 			{
@@ -814,7 +979,6 @@ public class BaseJCRStorage
 			}
 			String newPath = parentFolderId + "/" + newName;
 
-			
 			// move the folder
 			if (thisCollection instanceof BaseJCRCollectionEdit)
 			{
@@ -835,6 +999,7 @@ public class BaseJCRStorage
 			throw new ServerOverloadException(new_folder_id);
 		}
 	}
+
 	/**
 	 * Find the containing collection id of a given resource id.
 	 * 
@@ -844,7 +1009,8 @@ public class BaseJCRStorage
 	 */
 	protected String isolateContainingId(String id)
 	{
-		// take up to including the last resource path separator, not counting one at the very end if there
+		// take up to including the last resource path separator, not counting
+		// one at the very end if there
 		return id.substring(0, id.lastIndexOf('/', id.length() - 2) + 1);
 
 	} // isolateContainingId
@@ -866,16 +1032,18 @@ public class BaseJCRStorage
 	 * @param thisResource
 	 * @param new_id
 	 * @return
-	 * @throws IdUnusedException 
-	 * @throws TypeException 
-	 * @throws IdUsedException 
-	 * @throws ServerOverloadException 
+	 * @throws IdUnusedException
+	 * @throws TypeException
+	 * @throws IdUsedException
+	 * @throws ServerOverloadException
 	 */
-	public String moveResource(ContentResourceEdit thisResource, String new_id) throws IdUnusedException, TypeException, IdUsedException, ServerOverloadException
+	public String moveResource(ContentResourceEdit thisResource, String new_id)
+			throws IdUnusedException, TypeException, IdUsedException,
+			ServerOverloadException
 	{
 		try
 		{
-			String parentFolderId =  isolateContainingId(new_id);
+			String parentFolderId = isolateContainingId(new_id);
 			Node n = getNodeById(parentFolderId);
 			if (n == null)
 			{
@@ -898,15 +1066,15 @@ public class BaseJCRStorage
 				extension = newName.substring(index);
 			}
 
-
 			boolean found = n.hasNode(m_user.convertId2Storage(newName));
 			// now see of the folder exists
 			for (int i = 0; i < 100 && found; i++)
 			{
-				found = n.hasNode(m_user.convertId2Storage(basename + "-" + i+ "."+ extension));
+				found = n.hasNode(m_user.convertId2Storage(basename + "-" + i + "."
+						+ extension));
 				if (!found)
 				{
-					newName = newName + "-" + i +"."+ extension;
+					newName = newName + "-" + i + "." + extension;
 				}
 			}
 			if (!found)
@@ -916,7 +1084,6 @@ public class BaseJCRStorage
 			}
 			String newPath = parentFolderId + "/" + newName;
 
-			
 			// move the folder
 			if (thisResource instanceof BaseJCRResourceEdit)
 			{
@@ -956,10 +1123,10 @@ public class BaseJCRStorage
 		}
 		catch (RepositoryException e)
 		{
-			log.error(" Cant get UUID on "+id+" returning null cause:"+e.getMessage());
+			log.error(" Cant get UUID on " + id + " returning null cause:"
+					+ e.getMessage());
 		}
 		return null;
 	}
-
 
 }

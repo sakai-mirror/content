@@ -73,6 +73,7 @@ public class JCRContentService extends DbContentService
 	@Override
 	protected JCRStorage newStorage()
 	{
+		log.error("Retruning Storage as "+storage);
 		return storage; 
 	}
 
@@ -89,7 +90,7 @@ public class JCRContentService extends DbContentService
 	/**
 	 * @param storage the storage to set
 	 */
-	public void setJCRStorage(JCRStorage storage)
+	public void setStorage(JCRStorage storage)
 	{
 		this.storage = storage;
 	}

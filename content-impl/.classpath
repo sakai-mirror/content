@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry excluding="**/.DS_Store" kind="src" path="impl/src/java"/>
 	<classpathentry excluding="**/.DS_Store" kind="src" path="hbm/src/java"/>
+	<classpathentry kind="src" path="impl/src/test"/>
 	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/servletapi/jars/servletapi-2.4.jar"/>
@@ -29,5 +30,8 @@
 	<classpathentry kind="var" path="MAVEN_REPO/commons-codec/jars/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/javax.jcr/jars/jcr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/sakaiproject/jars/sakai-jcr-api-dev.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/sakai-jackrabbit-impl"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/content-bundles"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

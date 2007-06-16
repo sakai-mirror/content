@@ -21,6 +21,8 @@
 
 package org.sakaiproject.content.impl;
 
+import java.util.Iterator;
+
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.util.StorageUser;
@@ -74,5 +76,10 @@ public interface LiteStorageUser extends StorageUser
 	 * @return
 	 */
 	String convertStorage2Id(String path);
+
+	/**
+	 * @return
+	 */
+	Iterator<String> startupNodes();
 
 }

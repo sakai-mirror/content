@@ -84,6 +84,10 @@ public class JCRStorage implements Storage
 	public JCRStorage()
 	{
 
+
+	} 
+	
+	public void init() {
 		// build the collection store - a single level store
 		m_collectionStore = new BaseJCRStorage(jcrService, collectionUser,
 				"nt:collection");
@@ -95,8 +99,23 @@ public class JCRStorage implements Storage
 		// record-single
 		// level store
 		m_resourceDeleteStore = new BaseJCRStorage(jcrService, collectionUser, "nt:file");
-
-	} // DbStorage
+		m_collectionStore.open();
+		m_resourceStore.open();
+		m_resourceDeleteStore.open();
+		
+		
+	}
+	
+	public void destroy() {
+		m_resourceDeleteStore.close();
+		m_resourceStore.close();
+		m_collectionStore.close();
+		
+		m_collectionStore = null;
+		m_resourceStore = null;
+		m_resourceDeleteStore = null;
+		
+	}
 
 	/**
 	 * Open and be ready to read / write.
@@ -106,7 +125,7 @@ public class JCRStorage implements Storage
 		m_collectionStore.open();
 		m_resourceStore.open();
 		m_resourceDeleteStore.open();
-	} // open
+	} 
 
 	/**
 	 * Close.
@@ -116,8 +135,8 @@ public class JCRStorage implements Storage
 		m_collectionStore.close();
 		m_resourceStore.close();
 		m_resourceDeleteStore.close();
-	} // close
-
+	} 
+	
 	private class StackRef
 	{
 		protected int count = 0;
@@ -141,6 +160,17 @@ public class JCRStorage implements Storage
 		return r.count <= 1;// johnf@caret -- used to permit no
 		// self-recurses; now permits 0 or 2
 		// (r.count == 1);
+	}
+	
+	private int position()
+	{
+		StackRef r = (StackRef) stackMarker.get();
+		if (r == null)
+		{
+			r = new StackRef();
+			stackMarker.set(r);
+		}
+		return r.count;
 	}
 
 	/**
@@ -198,15 +228,22 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return resolver.getCollection(id);
+				log.info("Resolving Collection ["+id+"]:"+position());
+				ContentCollection cc =  resolver.getCollection(id);
+				log.info("Resolving Collection ["+id+"]:"+position()+" as "+cc);
+				return cc;
 			}
 			else
 			{
-				return (ContentCollection) m_collectionStore.getResource(id);
+				log.info("Getting Collection ["+id+"]:"+position());
+				ContentCollection cc = (ContentCollection) m_collectionStore.getResource(id);
+				log.info("Getting Collection ["+id+"]:"+position()+" as "+cc);
+				return cc;
 			}
 		}
 		finally
 		{
+			log.info("Done getCollection("+id+"):"+position());
 			out();
 		}
 
@@ -435,15 +472,22 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentResource) resolver.getResource(id);
+				log.info("Resolving Resource ["+id+"]:"+position());
+				ContentResource cr =  (ContentResource) resolver.getResource(id);
+				log.info("Resolving Resource ["+id+"]:"+position()+" as "+cr);
+				return cr;
 			}
 			else
 			{
-				return (ContentResource) m_resourceStore.getResource(id);
+				log.info("Getting Resource ["+id+"]:"+position());
+				ContentResource cr =  (ContentResource) m_resourceStore.getResource(id);
+				log.info("Getting Resource ["+id+"]:"+position()+" as "+cr);
+				return cr;
 			}
 		}
 		finally
 		{
+			log.info("Done getResource("+id+"):"+position());
 			out();
 		}
 	}
@@ -992,7 +1036,7 @@ public class JCRStorage implements Storage
 	/**
 	 * @return the parentService
 	 */
-	public JCRContentService getJCRContentService()
+	public JCRContentService getJcrContentService()
 	{
 		return jcrContentService;
 	}
@@ -1001,7 +1045,7 @@ public class JCRStorage implements Storage
 	 * @param parentService
 	 *        the parentService to set
 	 */
-	public void setJCRContentService(JCRContentService jcrContentService)
+	public void setJcrContentService(JCRContentService jcrContentService)
 	{
 		this.jcrContentService = jcrContentService;
 	}

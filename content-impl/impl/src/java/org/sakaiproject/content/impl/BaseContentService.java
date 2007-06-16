@@ -1075,7 +1075,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 */
 	protected boolean unlockCheck(String lock, String id)
 	{
-		boolean isAllowed = SecurityService.isSuperUser();
+		boolean isAllowed = m_securityService.isSuperUser();
 		if(! isAllowed)
 		{
 			lock = convertLockIfDropbox(lock, id);
@@ -1087,7 +1087,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				ref = getReference(id);
 			}
 			
-			isAllowed = ref != null && SecurityService.unlock(lock, ref);
+			isAllowed = ref != null && m_securityService.unlock(lock, ref);
 		}
 		
 		if(isAllowed && lock != null && (lock.startsWith("content.") || lock.startsWith("dropbox.")) && m_availabilityChecksEnabled)
