@@ -168,14 +168,14 @@ public class BaseJCRStorage
 		this.nodeType = nodeType;
 
 		queryTerms = new HashMap<String, String>();
-		queryTerms.put("WHERE:IN_COLLECTION", "{0}/{1}/element(*,nodeType)");
-		queryTerms.put("WHERELIKE:IN_COLLECTION", "{0}/{1}/element(*,nodeType)");
-		queryTerms.put(COUNT_COLLECTION_MEMBERS, "{0}/{1}/count(element('nt:,nodeType))");
+		queryTerms.put("WHERE:IN_COLLECTION", "{0}/element(*,nodeType)");
+		queryTerms.put("WHERELIKE:IN_COLLECTION", "{0}/element(*,nodeType)");
+		queryTerms.put(COUNT_COLLECTION_MEMBERS, "{0}/count(element(*,nodeType))");
 		queryTerms
-				.put(COUNT_COLLECTION_COLLECTIONS, "{0}/{1}/count(element(*,nodeType))");
-		queryTerms.put(COUNT_COLLECTION_RESOURCES, "{0}/{1}/count(element(*,nodeType))");
-		queryTerms.put(GET_MEMBER_COLLECTIONS, "{0}/{1}/element(*,nodeType)");
-		queryTerms.put(GET_MEMBER_RESOURCES, "{0}/{1}/element(*,nodeType)");
+				.put(COUNT_COLLECTION_COLLECTIONS, "{0}/count(element(nt:folder,nodeType))");
+		queryTerms.put(COUNT_COLLECTION_RESOURCES, "{0}/count(element(nt:file,nodeType))");
+		queryTerms.put(GET_MEMBER_COLLECTIONS, "{0}/element(nt:folder,nodeType)");
+		queryTerms.put(GET_MEMBER_RESOURCES, "{0}/element(nt:file,nodeType)");
 	}
 
 	/**
@@ -466,6 +466,7 @@ public class BaseJCRStorage
 				throw new UnsupportedOperationException("No List Option for " + key);
 			}
 			String qs = MessageFormat.format(queryFormat, value);
+			log.info(" Executing Query ["+qs+"]" );
 			Session session = jcrService.getSession();
 			Workspace w = session.getWorkspace();
 			QueryManager qm = w.getQueryManager();
