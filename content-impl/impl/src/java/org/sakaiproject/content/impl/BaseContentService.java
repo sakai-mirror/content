@@ -8863,7 +8863,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		public ContentCollection getContainingCollection()
 		{
 			ContentCollection container = null;
+			M_log.info(" Containing Collection for "+this+" is "+this.getId());
 			String containerId = isolateContainingId(this.getId());
+			M_log.info(" Containing Collection for ["+this+"] is ["+this.getId()+"] containing id is ["+containerId+"]");
 			try
 			{
 				container = findCollection(containerId);
@@ -8938,6 +8940,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			// set the id
 			m_id = id;
+			M_log.info("Creating ID as "+m_id);
 
 			// setup for properties
 			m_properties = new BaseResourcePropertiesEdit();
@@ -8971,6 +8974,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 
 			m_id = el.getAttribute("id");
+			M_log.info("ID set from attribute in Element constructor to "+m_id);
 			m_resourceType = ResourceType.TYPE_FOLDER;
 			
 			String refStr = getReference(m_id);
@@ -9073,6 +9077,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			// set the id
 			m_id = other.getId();
+			M_log.info("ID set from other id as "+m_id);
 
 			// copy other's access mode and list of groups
 			m_access = other.getAccess();
@@ -9743,6 +9748,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		public BaseResourceEdit(String id)
 		{
 			m_id = id;
+			M_log.info("Sessing ResourceID as "+m_id);
 
 			// setup for properties
 			m_properties = new BaseResourcePropertiesEdit();
@@ -9795,6 +9801,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		protected void set(ContentResource other)
 		{
 			m_id = other.getId();
+			M_log.info("Setting ID from other as "+m_id);
 			m_contentType = other.getContentType();
 			m_contentLength = other.getContentLength();
 			m_resourceType = other.getResourceType();
@@ -9856,6 +9863,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 
 			m_id = el.getAttribute("id");
+			M_log.info("Setting ID from element "+m_id);
 			String contentType = StringUtil.trimToNull(el.getAttribute("content-type"));
 			setContentType(contentType);
 			m_contentLength = 0;

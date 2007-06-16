@@ -851,7 +851,38 @@ public class JCRStorageUser implements LiteStorageUser
 							+ path);
 		}
 		log.info(" JCR2Id [" + path + "] >> [" + id + "]");
-		return path;
+		return id;
+	}
+	/**
+	 * @param path
+	 * @return
+	 */
+	private String xconvertStorage2Ref(String path)
+	{
+		String id = convertStorage2Id(path);
+		return baseContentService.getReference(id);
+	}
+
+	/**
+	 * @param ref
+	 * @return
+	 */
+	private String convertRef2Id(String ref)
+	{
+		String baseRef = baseContentService.getReference("/");
+		if ( baseRef.endsWith("/") ) {
+			baseRef = baseRef.substring(0,baseRef.length()-1);
+		}
+		log.info("Base Reference is "+baseRef);
+		String id = ref;
+		if ( ref.startsWith(baseRef) ) {
+			id = ref.substring(baseRef.length());
+			log.error("Ref2Id ref["+ref+"] >> id["+id+"]");
+		} else {
+			log.error("Reference does not appear to be a CHS reference ["+ref+"] should start with ["+baseRef+"]");
+		}
+		
+		return id;
 	}
 
 	/*
@@ -877,7 +908,7 @@ public class JCRStorageUser implements LiteStorageUser
 				}
 				else if (BaseJCRStorage.NT_FOLDER.equals(nt.getName()))
 				{
-					Entity e = newContainer(convertStorage2Id(n.getPath()));
+					Entity e = newContainerById(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
 				}
@@ -895,6 +926,7 @@ public class JCRStorageUser implements LiteStorageUser
 		log.error("Cant Create Resource from source " + source);
 		return null;
 	}
+
 
 	/*
 	 * (non-Javadoc)
@@ -920,7 +952,7 @@ public class JCRStorageUser implements LiteStorageUser
 				}
 				else if (BaseJCRStorage.NT_FOLDER.equals(nt.getName()))
 				{
-					Edit e = newContainerEdit(convertStorage2Id(n.getPath()));
+					Edit e = newContainerEditById(convertStorage2Id(n.getPath()));
 					copy(n, e);
 					return e;
 				}
@@ -974,7 +1006,14 @@ public class JCRStorageUser implements LiteStorageUser
 	 * 
 	 * @see org.sakaiproject.util.StorageUser#newContainer(java.lang.String)
 	 */
-	public Entity newContainer(String id)
+	public Entity newContainer(String ref)
+	{
+		String id = convertRef2Id(ref);
+		return new BaseJCRCollectionEdit(baseContentService, id);
+	}
+
+
+	public Entity newContainerById(String id)
 	{
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
@@ -1004,7 +1043,13 @@ public class JCRStorageUser implements LiteStorageUser
 	 * 
 	 * @see org.sakaiproject.util.StorageUser#newContainerEdit(java.lang.String)
 	 */
-	public Edit newContainerEdit(String id)
+	public Edit newContainerEdit(String ref)
+	{
+		String id = convertRef2Id(ref);
+		return new BaseJCRCollectionEdit(baseContentService, id);
+	}
+	
+	public Edit newContainerEditById(String id)
 	{
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}

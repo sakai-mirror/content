@@ -82,5 +82,17 @@ public interface LiteStorageUser extends StorageUser
 	 */
 	Iterator<String> startupNodes();
 
+	/**
+	 * @param id
+	 * @return
+	 */
+	Entity newContainerEditById(String id);
+
+	/**
+	 * @param id
+	 * @return
+	 */
+	Entity newContainerById(String id);
+
 
 }
