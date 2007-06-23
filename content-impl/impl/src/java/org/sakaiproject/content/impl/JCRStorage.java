@@ -21,12 +21,12 @@
 
 package org.sakaiproject.content.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +45,7 @@ import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.jcr.api.JCRRegistrationService;
 import org.sakaiproject.jcr.api.JCRService;
 import org.sakaiproject.jcr.api.JcrConstants;
+import org.sakaiproject.thread_local.api.ThreadLocalManager;
 
 /**
  * @author ieb
@@ -53,6 +54,9 @@ public class JCRStorage implements Storage
 {
 
 	private static final Log log = LogFactory.getLog(JCRStorage.class);
+
+	private final String CONTENTCOLLECTION_TL_CACHE = this.toString()+"_contentcollectioncache";
+	private final String CONTENTRESOURCE_TL_CACHE = this.toString()+"_contentresourcecache";
 
 	/** A storage for collections. */
 	protected BaseJCRStorage m_collectionStore = null;
@@ -81,6 +85,10 @@ public class JCRStorage implements Storage
 
 	private List<String> nodetypeReources;
 
+	private ThreadLocalCache collectionCache;
+
+	private ThreadLocalCache resourceCache;
+
 	/**
 	 * Construct.
 	 * 
@@ -102,17 +110,46 @@ public class JCRStorage implements Storage
 		for (String prefix : namespaces.keySet())
 		{
 			String url = namespaces.get(prefix);
+			log.info("Registering ["+prefix+"] as ["+url+"]");
 			jcrRegistrationService.registerNamespace(prefix, url);
 		}
 		for (String nodeTypeResource : nodetypeReources)
 		{
 			try
 			{
+				/*
+				ClassLoader cl = this.getClass().getClassLoader();
+				if ( cl instanceof URLClassLoader ) {
+					URLClassLoader ucl = (URLClassLoader) cl;
+					for( URL url : ucl.getURLs() ) {
+						log.info("Classloader Path "+url.toString());
+					}
+					
+					
+				}
+				ClassLoader pcl = cl.getParent();
+				log.info("Parent Class Loader is "+pcl);
+				if ( pcl instanceof URLClassLoader ) {
+					URLClassLoader ucl = (URLClassLoader) pcl;
+					for( URL url : ucl.getURLs() ) {
+						log.info("Parent Classloader Path "+url.toString());
+					}
+					
+					
+				}
+				log.info("Registering Node Types ["+nodeTypeResource+"] with "+this.getClass().getClassLoader());
+				*/
 				InputStream in = this.getClass().getResourceAsStream(nodeTypeResource);
+				if ( in == null ) {
+					log.error("Didnt Find with class.getResourceAsStream");
+					in = this.getClass().getClassLoader().getResourceAsStream(nodeTypeResource);
+				} else {
+					log.error("GOT IT!");
+				}
 				jcrRegistrationService.registerNodetypes(in);
 				in.close();
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				log.error("Failed to read node type definitions from "+nodeTypeResource);
 			}
@@ -231,6 +268,10 @@ public class JCRStorage implements Storage
 		{
 			return false;
 		}
+		ContentCollection cc = (ContentCollection) collectionCache.get(id);
+		if ( cc != null ) {
+			return true;
+		}
 		boolean goin = in();
 		try
 		{
@@ -255,23 +296,27 @@ public class JCRStorage implements Storage
 		{
 			return null;
 		}
+		ContentCollection  cc = (ContentCollection) collectionCache.get(id);
+		if ( cc != null ) {
+			return cc;
+		}
 		boolean goin = in();
 		try
 		{
 			if (resolver != null && goin)
 			{
 				log.info("Resolving Collection [" + id + "]:" + position());
-				ContentCollection cc = resolver.getCollection(id);
+				cc = resolver.getCollection(id);
 				log.info("Resolving Collection [" + id + "]:" + position() + " as " + cc);
-				return cc;
+				return (ContentCollection) collectionCache.put(id, cc);
 			}
 			else
 			{
 				log.info("Getting Collection [" + id + "]:" + position());
-				ContentCollection cc = (ContentCollection) m_collectionStore
+				cc = (ContentCollection) m_collectionStore
 						.getResource(id);
 				log.info("Getting Collection [" + id + "]:" + position() + " as " + cc);
-				return cc;
+				return (ContentCollection) collectionCache.put(id, cc);
 			}
 		}
 		finally
@@ -281,6 +326,7 @@ public class JCRStorage implements Storage
 		}
 
 	}
+
 
 	/**
 	 * Get a list of all getCollections within a collection.
@@ -337,11 +383,11 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentCollectionEdit) resolver.putCollection(id);
+				return (ContentCollectionEdit) collectionCache.put(id, resolver.putCollection(id));
 			}
 			else
 			{
-				return (ContentCollectionEdit) m_collectionStore.putResource(id, null);
+				return (ContentCollectionEdit) collectionCache.put(id,m_collectionStore.putResource(id, null));
 			}
 		}
 		finally
@@ -356,16 +402,24 @@ public class JCRStorage implements Storage
 		{
 			return null;
 		}
+		try {
+			ContentCollectionEdit cce = (ContentCollectionEdit) collectionCache.get(id);
+			if ( cce != null ) {
+				return cce;
+			}
+		} catch ( Exception ex ) {
+			
+		}
 		boolean goin = in();
 		try
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentCollectionEdit) resolver.editCollection(id);
+				return  (ContentCollectionEdit) collectionCache.put(id, resolver.editCollection(id));
 			}
 			else
 			{
-				return (ContentCollectionEdit) m_collectionStore.editResource(id);
+				return   (ContentCollectionEdit) collectionCache.put(id, m_collectionStore.editResource(id));
 			}
 		}
 		finally
@@ -400,12 +454,15 @@ public class JCRStorage implements Storage
 				m_resourceStore.cancelResource(edit);
 
 			}
+			resourceCache.remove(edit.getId());
 		}
 		finally
 		{
 			out();
 		}
 	}
+
+
 
 	public void commitCollection(ContentCollectionEdit edit)
 	{
@@ -420,6 +477,7 @@ public class JCRStorage implements Storage
 			{
 				m_collectionStore.commitResource(edit);
 			}
+			collectionCache.remove(edit.getId());
 		}
 		finally
 		{
@@ -440,6 +498,7 @@ public class JCRStorage implements Storage
 			{
 				m_collectionStore.cancelResource(edit);
 			}
+			collectionCache.remove(edit.getId());
 		}
 		finally
 		{
@@ -461,6 +520,8 @@ public class JCRStorage implements Storage
 			{
 				m_collectionStore.removeResource(edit);
 			}
+			collectionCache.remove(edit.getId());
+
 		}
 		finally
 		{
@@ -475,6 +536,10 @@ public class JCRStorage implements Storage
 		if (id == null || id.trim().length() == 0)
 		{
 			return false;
+		}
+		ContentResource cr = (ContentResource) resourceCache.get(id);
+		if ( cr != null ) {
+			return true;
 		}
 		boolean goin = in();
 		try
@@ -500,22 +565,26 @@ public class JCRStorage implements Storage
 		{
 			return null;
 		}
+		ContentResource cr = (ContentResource) resourceCache.get(id);
+		if ( cr != null ) {
+			return cr;
+		}
 		boolean goin = in();
 		try
 		{
 			if (resolver != null && goin)
 			{
 				log.info("Resolving Resource [" + id + "]:" + position());
-				ContentResource cr = (ContentResource) resolver.getResource(id);
+				cr = (ContentResource) resolver.getResource(id);
 				log.info("Resolving Resource [" + id + "]:" + position() + " as " + cr);
-				return cr;
+				return (ContentResource) resourceCache.put(id, cr);
 			}
 			else
 			{
 				log.info("Getting Resource [" + id + "]:" + position());
-				ContentResource cr = (ContentResource) m_resourceStore.getResource(id);
+				cr = (ContentResource) m_resourceStore.getResource(id);
 				log.info("Getting Resource [" + id + "]:" + position() + " as " + cr);
-				return cr;
+				return (ContentResource) resourceCache.put(id, cr);
 			}
 		}
 		finally
@@ -599,11 +668,11 @@ public class JCRStorage implements Storage
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentResourceEdit) resolver.putResource(id);
+				return (ContentResourceEdit) resourceCache.put(id,resolver.putResource(id));
 			}
 			else
 			{
-				return (ContentResourceEdit) m_resourceStore.putResource(id, null);
+				return (ContentResourceEdit) resourceCache.put(id, m_resourceStore.putResource(id, null));
 			}
 		}
 		finally
@@ -618,16 +687,24 @@ public class JCRStorage implements Storage
 		{
 			return null;
 		}
+		try {
+			ContentResourceEdit cr = (ContentResourceEdit) resourceCache.get(id);
+			if ( cr != null ) {
+				return cr;
+			}
+		} catch ( Exception ex ) {
+			
+		}
 		boolean goin = in();
 		try
 		{
 			if (resolver != null && goin)
 			{
-				return (ContentResourceEdit) resolver.editResource(id);
+				return (ContentResourceEdit) resourceCache.put(id, resolver.editResource(id));
 			}
 			else
 			{
-				return (ContentResourceEdit) m_resourceStore.editResource(id);
+				return (ContentResourceEdit) resourceCache.put(id, m_resourceStore.editResource(id));
 			}
 		}
 		finally
@@ -665,6 +742,7 @@ public class JCRStorage implements Storage
 				}
 				m_resourceStore.commitResource(edit);
 			}
+			resourceCache.remove(edit.getId());
 
 		}
 		finally
@@ -679,6 +757,7 @@ public class JCRStorage implements Storage
 	 */
 	public ContentResourceEdit putDeleteResource(String id, String uuid, String userId)
 	{
+		resourceCache.remove(id);
 		boolean goin = in();
 		try
 		{
@@ -704,6 +783,7 @@ public class JCRStorage implements Storage
 	 */
 	public void commitDeleteResource(ContentResourceEdit edit, String uuid)
 	{
+		resourceCache.remove(edit.getId());
 		boolean goin = in();
 		try
 		{
@@ -739,6 +819,8 @@ public class JCRStorage implements Storage
 				m_resourceStore.removeResource(edit);
 
 			}
+			resourceCache.remove(edit.getId());
+
 		}
 		finally
 		{
@@ -1133,5 +1215,70 @@ public class JCRStorage implements Storage
 	{
 		this.jcrRegistrationService = jcrRegistrationService;
 	}
+
+	/**
+	 * @return the namespaces
+	 */
+	public HashMap<String, String> getNamespaces()
+	{
+		return namespaces;
+	}
+
+	/**
+	 * @param namespaces the namespaces to set
+	 */
+	public void setNamespaces(HashMap<String, String> namespaces)
+	{
+		this.namespaces = namespaces;
+	}
+
+	/**
+	 * @return the nodetypeReources
+	 */
+	public List<String> getNodetypeReources()
+	{
+		return nodetypeReources;
+	}
+
+	/**
+	 * @param nodetypeReources the nodetypeReources to set
+	 */
+	public void setNodetypeReources(List<String> nodetypeReources)
+	{
+		this.nodetypeReources = nodetypeReources;
+	}
+
+	/**
+	 * @return the collectionCache
+	 */
+	public ThreadLocalCache getCollectionCache()
+	{
+		return collectionCache;
+	}
+
+	/**
+	 * @param collectionCache the collectionCache to set
+	 */
+	public void setCollectionCache(ThreadLocalCache collectionCache)
+	{
+		this.collectionCache = collectionCache;
+	}
+
+	/**
+	 * @return the resourceCache
+	 */
+	public ThreadLocalCache getResourceCache()
+	{
+		return resourceCache;
+	}
+
+	/**
+	 * @param resourceCache the resourceCache to set
+	 */
+	public void setResourceCache(ThreadLocalCache resourceCache)
+	{
+		this.resourceCache = resourceCache;
+	}
+
 
 }

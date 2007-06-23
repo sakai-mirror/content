@@ -151,7 +151,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 				log
 						.error(
 								"Content is being stored in memory, this is bad! ... but we will do it anyway, memory used =  "
-										+ content.length, new Exception("Traceback"));
+										+ content.length);
+				log.debug("Traceback ", new Exception("Traceback"));
 			}
 			Node c = node.getNode(JcrConstants.JCR_CONTENT);
 			Property p = c.getProperty(JcrConstants.JCR_DATA);

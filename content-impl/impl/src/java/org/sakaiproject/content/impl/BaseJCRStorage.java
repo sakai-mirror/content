@@ -52,6 +52,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.impl.jcr.JCRConstants;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.IdUnusedException;
@@ -90,7 +91,6 @@ import org.sakaiproject.jcr.api.JcrConstants;
 public class BaseJCRStorage
 {
 
-
 	private static final String COUNT_COLLECTION_MEMBERS = "count-members";
 
 	private static final String COUNT_COLLECTION_COLLECTIONS = "count-collections";
@@ -104,7 +104,6 @@ public class BaseJCRStorage
 	private static final Log log = LogFactory.getLog(BaseJCRStorage.class);
 
 	private static final String JCR_SAKAI_UUID = null;
-
 
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseJCRStorage.class);
@@ -144,14 +143,13 @@ public class BaseJCRStorage
 		this.nodeType = nodeType;
 
 		queryTerms = new HashMap<String, String>();
-		queryTerms.put("WHERE:IN_COLLECTION", "{0}/element(*,nodeType)");
-		queryTerms.put("WHERELIKE:IN_COLLECTION", "{0}/element(*,nodeType)");
-		queryTerms.put(COUNT_COLLECTION_MEMBERS, "{0}/count(element(*,nodeType))");
-		queryTerms
-				.put(COUNT_COLLECTION_COLLECTIONS, "{0}/count(element(nt:folder,nodeType))");
-		queryTerms.put(COUNT_COLLECTION_RESOURCES, "{0}/count(element(nt:file,nodeType))");
-		queryTerms.put(GET_MEMBER_COLLECTIONS, "{0}/element(nt:folder,nodeType)");
-		queryTerms.put(GET_MEMBER_RESOURCES, "{0}/element(nt:file,nodeType)");
+		queryTerms.put("WHERE:IN_COLLECTION", "{0}/*");
+		queryTerms.put("WHERELIKE:IN_COLLECTION", "{0}/*");
+		queryTerms.put(COUNT_COLLECTION_MEMBERS, "{0}/*");
+		queryTerms.put(COUNT_COLLECTION_COLLECTIONS, "{0}/element(*,nt:folder)");
+		queryTerms.put(COUNT_COLLECTION_RESOURCES, "{0}/element(*,nt:file)");
+		queryTerms.put(GET_MEMBER_COLLECTIONS, "{0}/element(*,nt:folder)");
+		queryTerms.put(GET_MEMBER_RESOURCES, "{0}/element(*,nt:file)");
 	}
 
 	/**
@@ -259,12 +257,16 @@ public class BaseJCRStorage
 	 */
 	protected Entity readResource(Node n)
 	{
+		if (n == null)
+		{
+			return null;
+		}
 
 		try
 		{
 
 			Entity e = m_user.newResource(n);
-			M_log.info("New Resource is "+e);
+			M_log.info("New Resource is " + e);
 			return e;
 		}
 		catch (Exception e)
@@ -315,7 +317,7 @@ public class BaseJCRStorage
 
 			if (i != null && i.isNode())
 			{
-				log.info("Found node "+id+" as "+i);
+				log.info("Found node " + id + " as " + i);
 				return (Node) i;
 			}
 			else
@@ -332,7 +334,7 @@ public class BaseJCRStorage
 			M_log.warn("Node Not Found " + id + " cause:" + re.getMessage());
 
 		}
-		log.info("Returning Null, node "+id+" not found");
+		log.info("Returning Null, node " + id + " not found");
 		return null;
 	}
 
@@ -401,14 +403,74 @@ public class BaseJCRStorage
 	 *        The value to select.
 	 * @return The list of all Resources that meet the criteria.
 	 */
+	@SuppressWarnings("unchecked")
 	public List getAllResourcesWhere(String field, String value)
 	{
-		return getNodeList("WHERE:" + field, new Object[] { value });
+		List l = new ArrayList();
+		if ("IN_COLLECTION".equals(field))
+		{
+			Node n = getNodeById(value);
+			addMembers(n, l, false);
+		} else {
+			log.error("Unknown Type "+field);
+		}
+		return l;
 	}
 
 	public List getAllResourcesWhereLike(String field, String value)
 	{
-		return getNodeList("WHERELIKE:" + field, new Object[] { value });
+		List l = new ArrayList();
+		if ("IN_COLLECTION".equals(field))
+		{
+			Node n = getNodeById(value);
+			addMembers(n, l, true);
+
+		} else {
+			log.error("Unknown Type "+field);
+		}
+		return l;
+	}
+
+	/**
+	 * @param value
+	 * @param l
+	 */
+	private void addMembers(Node n, List l, boolean recurse)
+	{
+		if (n == null)
+		{
+			return;
+		}
+		try
+		{
+			for (NodeIterator ni = n.getNodes(); ni.hasNext();)
+			{
+				Node nn = ni.nextNode();
+				if (nn != null)
+				{
+					try
+					{
+						String ntname = nn.getPrimaryNodeType().getName();
+						if (nodeType.equals(ntname))
+						{
+							l.add(readResource(nn));
+						}
+						else if (recurse && JCRConstants.NT_FOLDER.equals(ntname))
+						{
+							addMembers(nn, l, recurse);
+						}
+					}
+					catch (RepositoryException re)
+					{
+
+					}
+				}
+			}
+		}
+		catch (RepositoryException re)
+		{
+
+		}
 	}
 
 	/**
@@ -434,26 +496,28 @@ public class BaseJCRStorage
 
 	private NodeIterator getNodeIterator(String key, Object[] value)
 	{
+		String queryFormat = queryTerms.get(key);
+		if (queryFormat == null)
+		{
+			throw new UnsupportedOperationException("No List Option for " + key);
+		}
+		String qs = MessageFormat.format(queryFormat, value);
 		try
 		{
-			String queryFormat = queryTerms.get(key);
-			if (queryFormat == null)
-			{
-				throw new UnsupportedOperationException("No List Option for " + key);
-			}
-			String qs = MessageFormat.format(queryFormat, value);
-			log.info(" Executing Query ["+qs+"]" );
 			Session session = jcrService.getSession();
 			Workspace w = session.getWorkspace();
 			QueryManager qm = w.getQueryManager();
 
 			Query q = qm.createQuery(qs, Query.XPATH);
 			QueryResult qr = q.execute();
-			return qr.getNodes();
+
+			NodeIterator ni = qr.getNodes();
+			log.info(" Executing Query [" + qs + "] gave [" + ni.getSize() + "] results");
+			return ni;
 		}
 		catch (RepositoryException e)
 		{
-			M_log.error("Failed to get List ", e);
+			M_log.error("Failed to get List using query [" + qs + "]", e);
 			return null;
 		}
 
@@ -541,6 +605,10 @@ public class BaseJCRStorage
 	public Edit editResource(String id)
 	{
 		Node n = getNodeById(id);
+		if (n == null)
+		{
+			return null;
+		}
 		try
 		{
 			if (n.lock(true, true) == null)
@@ -569,15 +637,22 @@ public class BaseJCRStorage
 	public void commitResource(Edit edit)
 	{
 		Node n = getNodeById(edit.getId());
-		m_user.commit(edit, n);
-		try
+		if (n == null)
 		{
-			n.save();
-			n.unlock();
+			M_log.error("Cant Commit since node cant be found for id " + edit.getId());
 		}
-		catch (RepositoryException e)
+		else
 		{
-			M_log.error("Failed to save resource ", e);
+			m_user.commit(edit, n);
+			try
+			{
+				n.save();
+				n.unlock();
+			}
+			catch (RepositoryException e)
+			{
+				M_log.error("Failed to save resource ", e);
+			}
 		}
 	}
 
@@ -654,6 +729,11 @@ public class BaseJCRStorage
 			String absPath = m_user.convertId2Storage(id);
 			Session s = jcrService.getSession();
 			Node n = getNodeFromSession(s, absPath);
+			// the node might already exist
+			if ( n != null ) {
+				return n;
+			}
+			
 			String vpath = getParentPath(absPath);
 			while (n == null && !"/".equals(vpath))
 			{
@@ -706,11 +786,13 @@ public class BaseJCRStorage
 				catch (PathNotFoundException pnfe)
 				{
 					log.info("Not Found " + pnfe.getMessage() + " ");
-					if (i < pathElements.length - 1 || JcrConstants.NT_FOLDER.equals(type))
+					if (i < pathElements.length - 1
+							|| JcrConstants.NT_FOLDER.equals(type))
 					{
-						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
-								+ currentNode.getPath());
-						Node newNode = currentNode.addNode(pathElements[i], JcrConstants.NT_FOLDER);
+						log.info("Adding Node " + pathElements[i] + " as " + type
+								+ " to " + currentNode.getPath());
+						Node newNode = currentNode.addNode(pathElements[i],
+								JcrConstants.NT_FOLDER);
 						populateFolder(newNode);
 						currentNode.save();
 						currentNode = newNode;
@@ -719,9 +801,10 @@ public class BaseJCRStorage
 					}
 					else
 					{
-						log.info("Adding Node " + pathElements[i] + " as " + type + " to "
-								+ currentNode.getPath());
-						Node newNode = currentNode.addNode(pathElements[i], JcrConstants.NT_FILE);
+						log.info("Adding Node " + pathElements[i] + " as " + type
+								+ " to " + currentNode.getPath());
+						Node newNode = currentNode.addNode(pathElements[i],
+								JcrConstants.NT_FILE);
 						populateFile(newNode);
 						currentNode.save();
 						currentNode = newNode;
@@ -810,6 +893,7 @@ public class BaseJCRStorage
 		// JCR Types
 		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
 		node.addMixin(JcrConstants.MIX_LOCKABLE);
+		node.addMixin(JCRConstants.MIX_SAKAIPROPERTIES);
 		// node.setProperty("jcr:created", new GregorianCalendar());
 		Node resource = node.addNode(JcrConstants.JCR_CONTENT, JcrConstants.NT_RESOURCE);
 		resource.setProperty(JcrConstants.JCR_LASTMODIFIED, new GregorianCalendar());
@@ -825,6 +909,7 @@ public class BaseJCRStorage
 		M_log.debug("Doing populate Folder");
 		node.addMixin(JcrConstants.MIX_LOCKABLE);
 		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
+		node.addMixin(JCRConstants.MIX_SAKAIPROPERTIES);
 
 	}
 
@@ -834,23 +919,50 @@ public class BaseJCRStorage
 	 */
 	public Collection<String> getMemberCollectionIds(String collectionId)
 	{
-		NodeIterator ni = getNodeIterator(GET_MEMBER_COLLECTIONS, new Object[] { m_user
-				.convertId2Storage(collectionId) });
+		return getMembersOfType(collectionId, JCRConstants.NT_FOLDER);
+
+	}
+
+	/**
+	 * @param collectionId
+	 * @param nt_folder
+	 * @return
+	 */
+	private List<String> getMembersOfType(String collectionId, String type)
+	{
 		List<String> l = new ArrayList<String>();
-		if (ni == null)
+		try
 		{
-			return l;
+			Node n = getNodeById(collectionId);
+			if (n == null)
+			{
+				return l;
+			}
+			NodeType nt = n.getPrimaryNodeType();
+			if (JCRConstants.NT_FOLDER.equals(nt.getName()))
+			{
+				NodeIterator ni = n.getNodes();
+				for (; ni.hasNext();)
+				{
+					try
+					{
+						Node tn = ni.nextNode();
+						if (type == null
+								|| type.equals(tn.getPrimaryNodeType().getName()))
+						{
+							l.add(m_user.convertStorage2Id(tn.getPath()));
+						}
+					}
+					catch (RepositoryException e)
+					{
+						log.error("Cant get Path " + e.getMessage());
+					}
+				}
+			}
 		}
-		for (; ni.hasNext();)
+		catch (Exception e)
 		{
-			try
-			{
-				l.add(m_user.convertStorage2Id(ni.nextNode().getPath()));
-			}
-			catch (RepositoryException e)
-			{
-				log.error("Cant get Path " + e.getMessage());
-			}
+			log.error("Failed to count collection " + e.getMessage());
 		}
 		return l;
 	}
@@ -861,25 +973,7 @@ public class BaseJCRStorage
 	 */
 	public Collection<String> getMemberResourceIds(String collectionId)
 	{
-		NodeIterator ni = getNodeIterator(GET_MEMBER_RESOURCES, new Object[] { m_user
-				.convertId2Storage(collectionId) });
-		List<String> l = new ArrayList<String>();
-		if (ni == null)
-		{
-			return l;
-		}
-		for (; ni.hasNext();)
-		{
-			try
-			{
-				l.add(m_user.convertStorage2Id(ni.nextNode().getPath()));
-			}
-			catch (RepositoryException e)
-			{
-				log.error("Cant get Path " + e.getMessage());
-			}
-		}
-		return l;
+		return getMembersOfType(collectionId, JCRConstants.NT_FILE);
 	}
 
 	/**
@@ -888,9 +982,26 @@ public class BaseJCRStorage
 	 */
 	public int getMemberCount(String collectionId)
 	{
-		NodeIterator ni = getNodeIterator(COUNT_COLLECTION_MEMBERS, new Object[] { m_user
-				.convertId2Storage(collectionId) });
-		return (int) ni.getSize();
+		try
+		{
+			Node n = getNodeById(collectionId);
+			if (n == null)
+			{
+				return 0;
+			}
+			NodeType nt = n.getPrimaryNodeType();
+			if (JCRConstants.NT_FOLDER.equals(nt.getName()))
+			{
+				int c = (int) n.getNodes().getSize();
+				log.info(" Collection " + collectionId + " has " + n + " members ");
+				return c;
+			}
+		}
+		catch (Exception e)
+		{
+			log.error("Failed to count collection");
+		}
+		return 0;
 	}
 
 	/**
@@ -1094,6 +1205,10 @@ public class BaseJCRStorage
 	public String getUuid(String id)
 	{
 		Node n = getNodeById(id);
+		if (n == null)
+		{
+			return null;
+		}
 		try
 		{
 			return n.getUUID();

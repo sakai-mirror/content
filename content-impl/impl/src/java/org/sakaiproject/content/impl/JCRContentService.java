@@ -75,7 +75,7 @@ public class JCRContentService extends DbContentService
 	@Override
 	protected JCRStorage newStorage()
 	{
-		log.error("Retruning Storage as "+storage);
+		log.info("Retruning Storage as "+storage);
 		return storage; 
 	}
 

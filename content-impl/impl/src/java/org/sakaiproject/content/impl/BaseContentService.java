@@ -1482,6 +1482,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		// check security
 		unlock(AUTH_RESOURCE_ADD, id);
+		
+		M_log.info("Adding Collection ["+id+"]");
 
 		return addValidPermittedCollection(id);
 	}
@@ -1554,6 +1556,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		// make sure the containing collection exists
 		String container = isolateContainingId(id);
+		M_log.info("Adding Collection ["+id+"] to ["+container+"]");
+		
 		ContentCollection containingCollection = m_storage.getCollection(container);
 		if (containingCollection == null)
 		{

@@ -31,7 +31,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/javax.jcr/jars/jcr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/sakaiproject/jars/sakai-jcr-api-dev.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/sakai-jackrabbit-impl"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/content-bundles"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
