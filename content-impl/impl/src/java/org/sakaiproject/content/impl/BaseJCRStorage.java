@@ -170,11 +170,13 @@ public class BaseJCRStorage
 				Session s = jcrService.login();
 				log.info("Prepopulating Nodes in repo");
 				Node n = createNode("/", JcrConstants.NT_FOLDER);
+				n.save();
 				for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 				{
 					String[] ndef = i.next().split(";");
 					log.info("       Creating " + ndef[0] + " as a " + ndef[1]);
-					createNode(ndef[0], ndef[1]);
+					n = createNode(ndef[0], ndef[1]);
+					n.save();
 				}
 				log.info("Session is " + s);
 				s.exportDocumentView("/sakai", System.out, true, false);
@@ -317,7 +319,7 @@ public class BaseJCRStorage
 
 			if (i != null && i.isNode())
 			{
-				log.info("Found node " + id + " as " + i);
+				//log.info("Found node " + id + " as " + i);
 				return (Node) i;
 			}
 			else
@@ -796,7 +798,6 @@ public class BaseJCRStorage
 						populateFolder(newNode);
 						currentNode.save();
 						currentNode = newNode;
-
 						log.info("Adding Node Complete");
 					}
 					else
@@ -812,6 +813,9 @@ public class BaseJCRStorage
 
 					}
 				}
+				if ( currentNode.isCheckedOut() ) {
+					currentNode.save();
+				}
 			}
 			node = currentNode;
 			if (node == null)
@@ -826,6 +830,16 @@ public class BaseJCRStorage
 				throw new Error("Failed to create node " + absPath + " got "
 						+ node.getPath());
 			}
+			try
+			{
+				s.exportDocumentView("/sakai", System.out, true, false);
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		}
 		catch (RepositoryException rex)
 		{
@@ -894,7 +908,6 @@ public class BaseJCRStorage
 		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
 		node.addMixin(JcrConstants.MIX_LOCKABLE);
 		node.addMixin(JCRConstants.MIX_SAKAIPROPERTIES);
-		// node.setProperty("jcr:created", new GregorianCalendar());
 		Node resource = node.addNode(JcrConstants.JCR_CONTENT, JcrConstants.NT_RESOURCE);
 		resource.setProperty(JcrConstants.JCR_LASTMODIFIED, new GregorianCalendar());
 		resource.setProperty(JcrConstants.JCR_MIMETYPE, "application/octet-stream");
@@ -910,6 +923,7 @@ public class BaseJCRStorage
 		node.addMixin(JcrConstants.MIX_LOCKABLE);
 		node.addMixin(JcrConstants.MIX_REFERENCEABLE);
 		node.addMixin(JCRConstants.MIX_SAKAIPROPERTIES);
+		node.setProperty(JcrConstants.JCR_LASTMODIFIED, new GregorianCalendar());
 
 	}
 
@@ -993,7 +1007,7 @@ public class BaseJCRStorage
 			if (JCRConstants.NT_FOLDER.equals(nt.getName()))
 			{
 				int c = (int) n.getNodes().getSize();
-				log.info(" Collection " + collectionId + " has " + n + " members ");
+				log.info(" Collection " + collectionId + " has " + c + " members ");
 				return c;
 			}
 		}

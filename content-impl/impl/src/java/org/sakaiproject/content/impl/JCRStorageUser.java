@@ -50,6 +50,7 @@ import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.impl.BaseContentService.BaseCollectionEdit;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.content.impl.jcr.DAVConstants;
+import org.sakaiproject.content.impl.jcr.JCRConstants;
 import org.sakaiproject.content.impl.jcr.SakaiConstants;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
@@ -673,11 +674,24 @@ public class JCRStorageUser implements LiteStorageUser
 			Property p = pi.nextProperty();
 			setEntityProperty(p, rp);
 		}
+		
+		
 
 		if (e instanceof BaseJCRCollectionEdit)
 		{
 			BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) e;
 			bce.setNode(n);
+			bce.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,"true");
+			if ( n.hasProperty(ResourceProperties.PROP_DISPLAY_NAME)  ) {
+				Property p = n.getProperty(convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME));
+				if ( p != null ) {
+					bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,p.getString());
+				} else {
+					bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());					
+				}
+			} else {
+				bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());
+			}
 			bce.m_groups = new ArrayList<String>();
 			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST)))
 			{
@@ -751,6 +765,17 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			BaseJCRResourceEdit bre = (BaseJCRResourceEdit) e;
 			bre.setNode(n);
+			bre.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,"false");
+			if ( n.hasProperty(ResourceProperties.PROP_DISPLAY_NAME)  ) {
+				Property p = n.getProperty(convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME));
+				if ( p != null ) {
+					bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,p.getString());
+				} else {
+					bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());					
+				}
+			} else {
+				bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());
+			}
 			if (n.hasProperty(DAVConstants.DAV_GETCONTENTTYPE))
 			{
 				Property p = n.getProperty(DAVConstants.DAV_GETCONTENTTYPE);
@@ -759,12 +784,19 @@ public class JCRStorageUser implements LiteStorageUser
 					bre.m_contentType = p.getString();
 				}
 			}
-			if (n.hasProperty(DAVConstants.DAV_GETCONTENTTYPE))
+			
+			if (n.hasProperty(DAVConstants.DAV_GETCONTENTLENGTH))
 			{
-				Property p = n.getProperty(DAVConstants.DAV_GETCONTENTTYPE);
+				Property p = n.getProperty(DAVConstants.DAV_GETCONTENTLENGTH);
 				if (p != null)
 				{
 					bre.m_contentLength = (int) p.getLong();
+				}
+			} else {
+				if ( n.hasNode(JCRConstants.JCR_CONTENT) ) {
+					Node content = n.getNode(JCRConstants.JCR_CONTENT);
+					Property p = content.getProperty(JCRConstants.JCR_DATA);
+					bre.m_contentLength = (int) p.getLength();
 				}
 			}
 			if (n
@@ -873,7 +905,7 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			return;
 		}
-		log.info("Converting " + p.getName());
+		//log.info("Converting " + p.getName());
 
 		PropertyDefinition pd = p.getDefinition();
 		if (pd.isMultiple())
@@ -930,7 +962,7 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			jcrPath = jcrPath.substring(0, jcrPath.length() - 1);
 		}
-		log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
+//		log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
 		return jcrPath;
 	}
 
@@ -952,7 +984,10 @@ public class JCRStorageUser implements LiteStorageUser
 					.error("Trying to convert a path to Id that is not a storage path "
 							+ path);
 		}
-		log.info(" JCR2Id [" + path + "] >> [" + id + "]");
+		if ( id == null || id.length() == 0 ) {
+			id = "/";
+		}
+//		log.info(" JCR2Id [" + path + "] >> [" + id + "]");
 		return id;
 	}
 
@@ -1116,11 +1151,17 @@ public class JCRStorageUser implements LiteStorageUser
 	public Entity newContainer(String ref)
 	{
 		String id = convertRef2Id(ref);
+		if ( !id.endsWith("/") ) {
+			id = id + "/";
+		}
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 
 	public Entity newContainerById(String id)
 	{
+		if ( !id.endsWith("/") ) {
+			id = id + "/";
+		}
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 
@@ -1152,11 +1193,19 @@ public class JCRStorageUser implements LiteStorageUser
 	public Edit newContainerEdit(String ref)
 	{
 		String id = convertRef2Id(ref);
+		if ( !id.endsWith("/") ) {
+			id = id + "/";
+		}
+
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 
 	public Edit newContainerEditById(String id)
 	{
+		if ( !id.endsWith("/") ) {
+			id = id + "/";
+		}
+
 		return new BaseJCRCollectionEdit(baseContentService, id);
 	}
 

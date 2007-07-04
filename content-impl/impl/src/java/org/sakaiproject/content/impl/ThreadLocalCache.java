@@ -117,10 +117,10 @@ public class ThreadLocalCache
 		id = cleanId(id);
 		Object o = ccc.get(id);
 		if ( o == null ) {
-			log.info("Cache "+name+" Miss "+id);
+			//log.info("Cache "+name+" Miss "+id);
 			hits++;
 		} else {
-			log.info("Cache "+name+" Hit "+id+" "+o);
+			//log.info("Cache "+name+" Hit "+id+" "+o);
 			miss++;
 		}
 		return o;

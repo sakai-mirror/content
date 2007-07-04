@@ -110,7 +110,12 @@
         	<list>
         		<value>/group;nt:folder</value>
         		<value>/user;nt:folder</value>
-        	</list>
+				<value>/group-user;nt:folder</value>
+				<value>/public;nt:folder</value>
+				<value>/private;nt:folder</value>
+				<value>/meleteDocs;nt:folder</value>
+				<value>/attachment;nt:folder</value>
+    		</list>
         </property>
         
 	</bean>

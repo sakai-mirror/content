@@ -198,9 +198,9 @@ public class JCRContentService extends DbContentService
     @Override
     protected ContentCollection findCollection(String id) throws TypeException
     {
-       	log.info("+++++++++ Start to find Collection "+id);
+       	//log.info("+++++++++ Start to find Collection "+id);
            	ContentCollection cc = storage.getCollection(id);
-        log.info("========= End to find Collection "+id+" "+cc);
+        //log.info("========= End to find Collection "+id+" "+cc);
     	return cc;
     }
     /* (non-Javadoc)

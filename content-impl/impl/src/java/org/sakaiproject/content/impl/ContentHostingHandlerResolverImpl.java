@@ -23,6 +23,7 @@ import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.ServerOverloadException;
+import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.util.StorageUser;
 
 /**
@@ -69,7 +70,14 @@ public class ContentHostingHandlerResolverImpl implements ContentHostingHandlerR
 		ContentEntity ce = storage.getCollection(id);
 		if (ce == null)
 		{
+			try {
 			ce = storage.getResource(id);
+			}
+			catch (TypeException e)
+			{
+				log.debug("Type Exception ",e);
+			}
+
 		}
 		if (ce == null)
 		{
@@ -448,7 +456,15 @@ public class ContentHostingHandlerResolverImpl implements ContentHostingHandlerR
 	public ContentResource getResource( String id)
 	{
 
-		ContentResource cc = storage.getResource(id);
+		ContentResource cc = null;
+		try
+		{
+			cc = storage.getResource(id);
+		}
+		catch (TypeException e)
+		{
+			log.debug("Type Exception ",e);
+		}
 		if (cc != null)
 		{
 			return cc;

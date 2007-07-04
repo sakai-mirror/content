@@ -32,12 +32,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
+import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.OperationDelegationException;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
 import org.sakaiproject.content.impl.BaseContentService.Storage;
+import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.ServerOverloadException;
@@ -559,8 +561,13 @@ public class JCRStorage implements Storage
 		}
 	}
 
-	public ContentResource getResource(String id)
+	public ContentResource getResource(String id) throws TypeException
 	{
+		Exception ex = new Exception("GET GRESOURCE TRACEBACK");
+		log.info("Trace back ",ex);
+		
+//		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
+//		log.info(ste[2].getClassName()+"."+ste[2].getMethodName()+":"+ste[2].getLineNumber()+" called by "+ste[3].getClassName()+"."+ste[3].getMethodName()+":"+ste[3].getLineNumber());
 		if (id == null || id.trim().length() == 0)
 		{
 			return null;
@@ -582,8 +589,17 @@ public class JCRStorage implements Storage
 			else
 			{
 				log.info("Getting Resource [" + id + "]:" + position());
-				cr = (ContentResource) m_resourceStore.getResource(id);
-				log.info("Getting Resource [" + id + "]:" + position() + " as " + cr);
+				Entity ce =  m_resourceStore.getResource(id);
+				if ( ce != null ) {
+					if ( ! (ce instanceof ContentResource) ) {
+						log.error("=================RESORUCE is not a RESOURCE ");
+					} else {
+						cr = (ContentResource) ce;
+					}
+					log.info("Got Resource [" + id + "]:" + position() + " as " + ce.getId());
+				} else {
+					log.info("Getting Resource [" + id + "]:" + position() + " as " + ce.getId());					
+				}
 				return (ContentResource) resourceCache.put(id, cr);
 			}
 		}
