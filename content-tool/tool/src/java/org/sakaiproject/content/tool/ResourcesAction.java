@@ -1361,7 +1361,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 * @param pipe
 	 * @param state 
 	 */
-	protected static List<ContentCollection> createFolders(SessionState state, ResourceToolActionPipe pipe)
+	public static List<ContentCollection> createFolders(SessionState state, ResourceToolActionPipe pipe)
 	{
 		List<ContentCollection> new_collections = new Vector<ContentCollection>();
 		String collectionId = pipe.getContentEntity().getId();
@@ -1485,10 +1485,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
+				int notification = NotificationService.NOTI_NONE;
 				Object obj = fp.getRevisedListItem();
 				if(obj != null && obj instanceof ListItem)
 				{
 					((ListItem) obj).updateContentResourceEdit(resource);
+					notification = ((ListItem) obj).getNotification();
 				}
 				
 				ResourcePropertiesEdit resourceProperties = resource.getPropertiesEdit();
@@ -1506,7 +1508,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //					resourceProperties.addProperty(ResourceProperties.PROP_CONTENT_ENCODING, UTF_8_ENCODING);
 //				}
 				
-				ContentHostingService.commitResource(resource, NotificationService.NOTI_NONE);
+				ContentHostingService.commitResource(resource, notification);
 				item_added = true;
 				new_resources.add(resource);
 			}
@@ -4609,21 +4611,18 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				// context.put("movedItems", movedItems);
 			}
 
-			SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
-			
-			//ContentCollection coll = contentService.getCollection(collectionId);
-			expandedCollections.add(collectionId);
-			context.put("expandedCollections", expandedCollections);
-
 			state.removeAttribute(STATE_PASTE_ALLOWED_FLAG);
-			
-			ContentCollection collection = ContentHostingService.getCollection(collectionId);
 			
 			List<String> items_to_be_copied = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_COPIED);
 			List<String> items_to_be_moved = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_MOVED);
 
 			boolean need_to_expand_all = Boolean.TRUE.toString().equals((String)state.getAttribute(STATE_NEED_TO_EXPAND_ALL));
+			SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+			expandedCollections.add(collectionId);
+			context.put("expandedCollections", expandedCollections);
 
+			ContentCollection collection = ContentHostingService.getCollection(collectionId);
+			
 			ListItem item = ListItem.getListItem(collection, null, registry, need_to_expand_all, expandedCollections, items_to_be_moved, items_to_be_copied, 0, userSelectedSort, false);
 			
 			Map<String, ResourceToolAction> listActions = new HashMap<String, ResourceToolAction>();
@@ -7205,6 +7204,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case NEW_FOLDER:
 			List<ContentCollection> folders = createFolders(state, pipe);
@@ -7215,6 +7215,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case NEW_URLS:
 			List<ContentResource> urls = createUrls(state, pipe);
@@ -7229,6 +7230,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 				toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			}
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case REVISE_CONTENT:
 			reviseContent(pipe);
@@ -7270,6 +7272,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				edit.setContent(content);
 			}
+			
 			// update properties
 			if(action instanceof InteractionAction)
 			{
@@ -7295,9 +7298,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 				}
 			}
+			
+			int notification = NotificationService.NOTI_NONE;
+			Object obj = pipe.getRevisedListItem();
+			if(obj instanceof ListItem)
+			{
+				notification = ((ListItem) obj).getNotification();
+			}
+			
 			// update mimetype
 			edit.setContentType(pipe.getRevisedMimeType());
-			ContentHostingService.commitResource(edit);
+			ContentHostingService.commitResource(edit, notification);
 		}
 		catch (PermissionException e)
 		{
@@ -8209,12 +8220,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
+				int notification = NotificationService.NOTI_NONE;
 				Object obj = fp.getRevisedListItem();
 				if(obj != null && obj instanceof ListItem)
 				{
 					((ListItem) obj).updateContentResourceEdit(resource);
+					notification = ((ListItem) obj).getNotification();
 				}
-				ContentHostingService.commitResource(resource, NotificationService.NOTI_NONE);
+				ContentHostingService.commitResource(resource, notification);
 				item_added = true;
 				new_resources.add(resource);
 			}
