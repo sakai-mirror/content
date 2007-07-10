@@ -52,6 +52,7 @@ public class BasicResourceToolActionPipe
 	protected boolean errorEncountered;
 	protected String fileName;
 	protected Object revisedListItem;
+	private int notification;
 	
 	/**
 	 * @return the helperId
@@ -304,5 +305,16 @@ public class BasicResourceToolActionPipe
 	{
 		return revisedListItem;
 	}
+
+	public int getNotification()
+    {
+	    // TODO Auto-generated method stub
+	    return this.notification;
+    }
+
+	public void setNotification(int priority)
+    {
+	    this.notification = priority;
+    }
 
 }
