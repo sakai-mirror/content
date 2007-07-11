@@ -43,6 +43,7 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -5391,7 +5392,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		return true;
 	}
-
+	
 	/** stream content requests if true, read all into memory and send if false. */
 	protected static final boolean STREAM_CONTENT = true;
 
@@ -5479,10 +5480,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			else
 			{
 				// use the last part, the file name part of the id, for the download file name
-				String fileName = Validator.getFileName(ref.getId());
-				fileName = Validator.escapeResourceName(fileName);
-
+				String fileName = Web.encodeFileName( req, Validator.getFileName(ref.getId()) );
+				
 				String disposition = null;
+				
 				if (Validator.letBrowserInline(contentType))
 				{
 					disposition = "inline; filename=\"" + fileName + "\"";
@@ -5519,7 +5520,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 						res.setContentType(contentType);
 						res.addHeader("Content-Disposition", disposition);
 						res.setContentLength(len);
-
+						
 						// set the buffer of the response to match what we are reading from the request
 						if (len < STREAM_BUFFER_SIZE)
 						{
