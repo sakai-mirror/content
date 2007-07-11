@@ -2354,6 +2354,27 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 	}
 
+	protected void cacheEntities(List entities)
+    {
+		if(entities == null)
+		{
+			return;
+		}
+		
+		for(ContentEntity entity : (List<ContentEntity>) entities)
+		{
+			String ref = entity.getReference();
+			if(entity instanceof ContentResource)
+			{
+				ThreadLocalManager.set("findResource@" + ref, entity);
+			}
+			else if(entity instanceof ContentCollection)
+			{
+				ThreadLocalManager.set("findCollection@" + ref, entity);
+			}
+		}
+    }
+
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Resources
 	 *********************************************************************************************************************************************************************************************************************************************************/
@@ -9331,27 +9352,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		} // getMemberResources
 
-		protected void cacheEntities(List entities)
-        {
-			if(entities == null)
-			{
-				return;
-			}
-			
-			for(ContentEntity entity : (List<ContentEntity>) entities)
-			{
-				String ref = entity.getReference();
-				if(entity instanceof ContentResource)
-				{
-					ThreadLocalManager.set("findResource@" + ref, entity);
-				}
-				else if(entity instanceof ContentCollection)
-				{
-					ThreadLocalManager.set("findCollection@" + ref, entity);
-				}
-			}
-        }
-
 		protected List copyEntityList(List entities)
         {
 			List list = new Vector();
@@ -9673,7 +9673,17 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		public int getMemberCount() 
 		{
-			int count = m_storage.getMemberCount(this.m_id);
+			int count = 0;
+			Integer countObj = (Integer) ThreadLocalManager.get("getMemberCount@" + this.m_id);
+			if(countObj == null)
+			{
+				count = m_storage.getMemberCount(this.m_id);
+				ThreadLocalManager.set("getMemberCount@" + this.m_id, new Integer(count));
+			}
+			else
+			{
+				count = countObj.intValue();
+			}
 			return count;
 		}
 
