@@ -43,7 +43,6 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -2353,27 +2352,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 		}
 	}
-
-	protected void cacheEntities(List entities)
-    {
-		if(entities == null)
-		{
-			return;
-		}
-		
-		for(ContentEntity entity : (List<ContentEntity>) entities)
-		{
-			String ref = entity.getReference();
-			if(entity instanceof ContentResource)
-			{
-				ThreadLocalManager.set("findResource@" + ref, entity);
-			}
-			else if(entity instanceof ContentCollection)
-			{
-				ThreadLocalManager.set("findCollection@" + ref, entity);
-			}
-		}
-    }
 
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Resources
@@ -5392,7 +5370,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		return true;
 	}
-	
+
 	/** stream content requests if true, read all into memory and send if false. */
 	protected static final boolean STREAM_CONTENT = true;
 
@@ -5480,10 +5458,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			else
 			{
 				// use the last part, the file name part of the id, for the download file name
-				String fileName = Web.encodeFileName( req, Validator.getFileName(ref.getId()) );
-				
+				String fileName = Validator.getFileName(ref.getId());
+				fileName = Validator.escapeResourceName(fileName);
+
 				String disposition = null;
-				
 				if (Validator.letBrowserInline(contentType))
 				{
 					disposition = "inline; filename=\"" + fileName + "\"";
@@ -5520,7 +5498,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 						res.setContentType(contentType);
 						res.addHeader("Content-Disposition", disposition);
 						res.setContentLength(len);
-						
+
 						// set the buffer of the response to match what we are reading from the request
 						if (len < STREAM_BUFFER_SIZE)
 						{
@@ -9352,6 +9330,27 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		} // getMemberResources
 
+		protected void cacheEntities(List entities)
+        {
+			if(entities == null)
+			{
+				return;
+			}
+			
+			for(ContentEntity entity : (List<ContentEntity>) entities)
+			{
+				String ref = entity.getReference();
+				if(entity instanceof ContentResource)
+				{
+					ThreadLocalManager.set("findResource@" + ref, entity);
+				}
+				else if(entity instanceof ContentCollection)
+				{
+					ThreadLocalManager.set("findCollection@" + ref, entity);
+				}
+			}
+        }
+
 		protected List copyEntityList(List entities)
         {
 			List list = new Vector();
@@ -9673,17 +9672,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		public int getMemberCount() 
 		{
-			int count = 0;
-			Integer countObj = (Integer) ThreadLocalManager.get("getMemberCount@" + this.m_id);
-			if(countObj == null)
-			{
-				count = m_storage.getMemberCount(this.m_id);
-				ThreadLocalManager.set("getMemberCount@" + this.m_id, new Integer(count));
-			}
-			else
-			{
-				count = countObj.intValue();
-			}
+			int count = m_storage.getMemberCount(this.m_id);
 			return count;
 		}
 

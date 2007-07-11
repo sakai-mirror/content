@@ -60,7 +60,6 @@ import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.id.api.IdManager;
-import org.sakaiproject.thread_local.cover.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.util.BaseDbSingleStorage;
@@ -695,18 +694,11 @@ public class DbContentService extends BaseContentService
 					 * // read all the records, then filter them to accept only those in this collection // Note: this is not desirable, as the read is linear to the database site -ggolden List rv = m_collectionStore.getSelectedResources( new Filter() {
 					 * public boolean accept(Object o) { // o is a String, the collection id return StringUtil.referencePath((String) o).equals(target); } } );
 					 */
-					
-					List collections = (List) ThreadLocalManager.get("getCollections@" + target);
-					if(collections == null)
-					{
-						collections = m_collectionStore.getAllResourcesWhere("IN_COLLECTION", target);
-						ThreadLocalManager.set("getCollections@" + target, collections);
-						cacheEntities(collections);
-					}
+
 					// read the records with a where clause to let the database
 					// select
 					// those in this collection
-					return collections;
+					return m_collectionStore.getAllResourcesWhere("IN_COLLECTION", target);
 				}
 			}
 			finally
@@ -923,17 +915,10 @@ public class DbContentService extends BaseContentService
 					 * public boolean accept(Object o) { // o is a String, the resource id return StringUtil.referencePath((String) o).equals(target); } } );
 					 */
 
-					List resources = (List) ThreadLocalManager.get("getResources@" + target);
-					if(resources == null)
-					{
-						resources = m_resourceStore.getAllResourcesWhere("IN_COLLECTION", target);
-						ThreadLocalManager.set("getResources@" + target, resources);
-						cacheEntities(resources);
-					}
 					// read the records with a where clause to let the database
 					// select
 					// those in this collection
-					return resources;
+					return m_resourceStore.getAllResourcesWhere("IN_COLLECTION", target);
 				}
 			}
 			finally
