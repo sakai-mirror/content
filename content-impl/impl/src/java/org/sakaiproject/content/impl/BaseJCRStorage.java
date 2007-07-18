@@ -166,6 +166,9 @@ public class BaseJCRStorage
 			{
 				log.info("--------------------------- Start Repository Populate");
 				currentSession = jcrService.setSession(null);
+				log.info("Got Current Session as   " + currentSession);
+				
+				
 				reset = true;
 				Session s = jcrService.login();
 				log.info("Prepopulating Nodes in repo");
@@ -181,7 +184,7 @@ public class BaseJCRStorage
 				log.info("Session is " + s);
 				s.exportDocumentView("/sakai", System.out, true, false);
 				s.save();
-				jcrService.logout();				
+				s.logout();				
 				log.info("Creating Root Node: SUCCESS");
 
 			}
@@ -208,6 +211,7 @@ public class BaseJCRStorage
 				{
 					try
 					{
+						log.info("Setting Session to  " + currentSession);
 						jcrService.setSession(currentSession);
 						currentSession = jcrService.getSession();
 						log.info("Session is " + currentSession);
