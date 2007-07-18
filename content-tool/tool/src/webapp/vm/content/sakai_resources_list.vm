@@ -20,6 +20,42 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 </style>
 <![endif]-->
 
+<style type="text/css"> 
+/* needs to be moved to reference when signed off on */
+div.makeDescription{  
+	border: 1px solid #666; 
+	background-color: #fff;
+	position: absolute;
+	text-indent: 0em;
+	margin-top: 0.4em;
+	margin-left: -1.2em;
+	width: 24em;
+	max-height: 250px; /* if div >= to this max-height value, will override with scrollDescription class b/c IE scrollbar issues */
+}
+
+div.scrollDescription {
+	height: 25em;
+	overflow: scroll; /* for browsers that don't support overflow-y */
+	overflow-x: auto;
+	overflow-y: scroll;
+}
+
+.descriptionTitle {
+	background-color: #eee;
+	font-weight: bold;
+	padding: 0.15em;
+	padding-left: 0.6em;
+
+}
+
+.descriptionText {
+	padding: 0.6em;
+}
+
+</style>
+
+<script  type="text/javascript" language="JavaScript" src="#scriptLink('jquery-1.1.2.js')"></script>
+
 #set($num = 0)
 #set($removeCount = 0)
 #set($moveCount = 0)
@@ -299,6 +335,20 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 									&#169;
 								#end
 							#end
+							#if ($item.hoverDescription)
+								#set ($numHier=$actionCount + 1)
+								<div class="resourceLink" style="display:inline;">
+									<img src="#imageLink("sakai/information_sm.png")" alt="$tlang.getString('gen.description') " />
+									<div class="makeDescription" style="display:none;z-index:$numHier;">
+										<div class="descriptionTitle"> 
+											$tlang.getString('gen.description') 
+										</div>
+										<div class="descriptionText">
+											$item.hoverDescription
+										</div>
+									</div>
+								</div>
+							#end
 						</h$headerDepth>	
 					</td>
 					<td headers="actions1"  style="white-space:nowrap;vertical-align:middle"  class="attach">
@@ -525,6 +575,20 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 											<a href="$item.accessUrl" target="$item.target" title="$item.hoverText">
 												$validator.escapeHtml($item.name)
 											</a>
+										#end
+										#if ($item.hoverDescription)
+										#set ($numHier=$actionCount + 1)
+											<div class="resourceLink" style="display:inline;">
+												<img src="#imageLink("sakai/information_sm.png")" alt="$tlang.getString('gen.description')" />
+												<div class="makeDescription" style="display:none;z-index:$numHier;">
+													<div class="descriptionTitle"> 
+														$tlang.getString('gen.description') 
+													</div>
+													<div class="descriptionText">
+														$item.hoverDescription
+													</div>
+												</div>
+											</div>
 										#end
 									#else
 										 <img src="#imageLink($item.iconLocation)" border="0" alt ="$item.hoverText" hspace="0" />
@@ -753,6 +817,43 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 				theForm.submit();
 			}
 		}
+		
+		$(document).ready(
+			function() {
+		
+				$("div.resourceLink").hover(
+					function() {  
+						$(this).children("div:eq(0)").css("display","inline");
+						
+						maxHeight = parseInt($(this).children("div:eq(0)").css("max-height"));
+						divHeight = parseInt($(this).children("div:eq(0)").height());
+						if (divHeight >= maxHeight) {
+							$(this).children("div:eq(0)").addClass("scrollDescription");
+						}
+		
+					}, 
+					function() { 
+						$(this).children("div:eq(0)").css("display","none");
+				});	
+					
+				$("div.resourceLink img").focus(
+					function() {  
+						$(this).next("div:eq(0)").css("display","inline");
+		
+						$(this).next("div:eq(0)").css("height", "auto");
+						$(this).next("div:eq(0)").css("max-height", "none");
+		
+					}
+				);
+					
+				$("div.resourceLink img").blur(
+					function() {  
+						$(this).next("div:eq(0)").css("display","none");
+					}
+				);
+		});
+		
+		
 	//-->
 </script>
 

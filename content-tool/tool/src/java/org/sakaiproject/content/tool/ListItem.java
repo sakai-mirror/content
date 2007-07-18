@@ -319,6 +319,7 @@ public class ListItem
 	protected String modifiedBy;
 	protected String modifiedTime;
 	protected int depth;
+	protected String hoverDescription;
 
 	protected Map<String, ResourceToolAction> multipleItemActions = new HashMap<String, ResourceToolAction>();
 
@@ -446,6 +447,10 @@ public class ListItem
 		this.hoverText = this.name;
 		if(typeDef != null)
 		{
+			if (this.description != null && this.description.length() > 0)
+				this.hoverDescription = this.description;
+			else
+				this.hoverDescription = null; 
 			this.hoverText = typeDef.getLocalizedHoverText(entity);
 			this.iconLocation = typeDef.getIconLocation(entity);
 			if(typeDef.isExpandable())
@@ -1800,6 +1805,14 @@ public class ListItem
 	public String getHoverText()
 	{
 		return this.hoverText;
+	}
+	
+	/**
+	 * @return the item description
+	 */
+	public String getHoverDescription()
+	{
+		return this.hoverDescription;
 	}
 
 	/**
