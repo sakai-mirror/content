@@ -143,11 +143,12 @@ public class JCRStorage implements Storage
 				*/
 				InputStream in = this.getClass().getResourceAsStream(nodeTypeResource);
 				if ( in == null ) {
-					log.error("Didnt Find with class.getResourceAsStream");
+					log.error("Didnt Find with class.getResourceAsStream "+nodeTypeResource);
 					in = this.getClass().getClassLoader().getResourceAsStream(nodeTypeResource);
 				} else {
 					log.error("GOT IT!");
 				}
+				
 				jcrRegistrationService.registerNodetypes(in);
 				in.close();
 			}

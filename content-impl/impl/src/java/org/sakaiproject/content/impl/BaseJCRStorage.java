@@ -181,7 +181,7 @@ public class BaseJCRStorage
 				log.info("Session is " + s);
 				s.exportDocumentView("/sakai", System.out, true, false);
 				s.save();
-				s.logout();
+				jcrService.logout();				
 				log.info("Creating Root Node: SUCCESS");
 
 			}
