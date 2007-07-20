@@ -322,8 +322,12 @@ public class JCRStorageUser implements LiteStorageUser
 						"false");
 				bre.setResourceType(ResourceType.TYPE_UPLOAD);
 			}
+			
+			
+			log.info("Checking for BaseGroupAwareEdit ");
 			if (edit instanceof BasicGroupAwareEdit)
 			{
+				log.info("IS Checking for BaseGroupAwareEdit ");
 				BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
 				SimpleDateFormat sdf = new SimpleDateFormat(
 						SakaiConstants.SAKAI_DATE_FORMAT);
@@ -771,6 +775,7 @@ public class JCRStorageUser implements LiteStorageUser
 		collectionConverterMap.put(ResourceProperties.PROP_CREATION_DATE, nullConverter);
 		collectionConverterMap.put(ResourceProperties.PROP_MODIFIED_DATE, nullConverter);
 
+		collectionConverterList.add(contentConverter);
 		collectionConverterList.add(glconverter);
 		collectionConverterList.add(amconverter);
 		collectionConverterList.add(releaseRetractDateConverter);
@@ -882,6 +887,7 @@ public class JCRStorageUser implements LiteStorageUser
 		// copy
 		if (e instanceof Edit)
 		{
+			log.info(" Instance of Edit "+e);
 
 			Edit edit = (Edit) e;
 			Map<String, GenericConverter> cmap = resourceConverterMap;
@@ -895,6 +901,7 @@ public class JCRStorageUser implements LiteStorageUser
 			ResourceProperties rp = e.getProperties();
 			for (CustomConverter c : clist)
 			{
+				log.info("Converter Calling "+c);
 				c.convert(n, edit, rp);
 			}
 			for (PropertyIterator pi = n.getProperties(); pi.hasNext();)
@@ -905,13 +912,17 @@ public class JCRStorageUser implements LiteStorageUser
 				GenericConverter converter = cmap.get(ename);
 				if (converter != null)
 				{
+					log.info("Converter Calling "+converter+" for "+jname);
 					converter.copy(p, jname, rp, ename);
 				}
 				else
 				{
+					log.info("Converter Calling Default "+jname);
 					defaultConverter.copy(p, jname, rp, ename);
 				}
 			}
+		} else {
+			log.info("Not an Instance of Edit "+e);
 		}
 	}
 
@@ -1477,12 +1488,14 @@ public class JCRStorageUser implements LiteStorageUser
 				if (JcrConstants.NT_FILE.equals(nt.getName()))
 				{
 					Entity e = newResource(null, convertStorage2Id(n.getPath()), null);
+					log.info("Loading File from "+n);
 					copy(n, e);
 					return e;
 				}
 				else if (JcrConstants.NT_FOLDER.equals(nt.getName()))
 				{
 					Entity e = newContainerById(convertStorage2Id(n.getPath()));
+					log.info("Loading Colletion from "+n);
 					copy(n, e);
 					return e;
 				}
