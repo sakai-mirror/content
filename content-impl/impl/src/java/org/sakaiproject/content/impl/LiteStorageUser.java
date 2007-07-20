@@ -22,6 +22,7 @@
 package org.sakaiproject.content.impl;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
@@ -93,6 +94,11 @@ public interface LiteStorageUser extends StorageUser
 	 * @return
 	 */
 	Entity newContainerById(String id);
+
+	/**
+	 * @param namespaces
+	 */
+	void setNamespaces(Map<String, String> namespaces);
 
 
 }

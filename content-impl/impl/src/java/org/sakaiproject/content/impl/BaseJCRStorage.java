@@ -666,7 +666,9 @@ public class BaseJCRStorage
 			try
 			{
 				n.save();
-				n.unlock();
+				if ( n.isLocked() ) {
+					n.unlock();
+				}
 			}
 			catch (RepositoryException e)
 			{
@@ -694,7 +696,9 @@ public class BaseJCRStorage
 		}
 		try
 		{
-			n.unlock();
+			if ( n.isLocked() ) {
+				n.unlock();
+			}
 		}
 		catch (RepositoryException e)
 		{

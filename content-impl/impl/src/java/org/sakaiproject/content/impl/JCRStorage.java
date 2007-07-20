@@ -24,8 +24,8 @@ package org.sakaiproject.content.impl;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,13 +80,15 @@ public class JCRStorage implements Storage
 
 	private JCRRegistrationService jcrRegistrationService;
 
-	private HashMap<String, String> namespaces;
+	private Map<String, String> namespaces;
 
 	private List<String> nodetypeReources;
 
 	private ThreadLocalCache collectionCache;
 
 	private ThreadLocalCache resourceCache;
+
+	private Map<String, String> convertableNamespaces;
 
 	/**
 	 * Construct.
@@ -112,6 +114,14 @@ public class JCRStorage implements Storage
 			log.info("Registering ["+prefix+"] as ["+url+"]");
 			jcrRegistrationService.registerNamespace(prefix, url);
 		}
+		for (String prefix : convertableNamespaces.keySet())
+		{
+			String url = convertableNamespaces.get(prefix);
+			log.info("Registering ["+prefix+"] as ["+url+"]");
+			jcrRegistrationService.registerNamespace(prefix, url);
+		}
+		resourceUser.setNamespaces(convertableNamespaces);
+		collectionUser.setNamespaces(convertableNamespaces);
 		for (String nodeTypeResource : nodetypeReources)
 		{
 			try
@@ -596,7 +606,7 @@ public class JCRStorage implements Storage
 					}
 					log.info("Got Resource [" + id + "]:" + position() + " as " + ce.getId());
 				} else {
-					log.info("Getting Resource [" + id + "]:" + position() + " as " + ce.getId());					
+					log.info("Getting Resource [" + id + "]:" + position() + " was null " );					
 				}
 				return (ContentResource) resourceCache.put(id, cr);
 			}
@@ -1233,7 +1243,7 @@ public class JCRStorage implements Storage
 	/**
 	 * @return the namespaces
 	 */
-	public HashMap<String, String> getNamespaces()
+	public Map<String, String> getNamespaces()
 	{
 		return namespaces;
 	}
@@ -1241,7 +1251,7 @@ public class JCRStorage implements Storage
 	/**
 	 * @param namespaces the namespaces to set
 	 */
-	public void setNamespaces(HashMap<String, String> namespaces)
+	public void setNamespaces(Map<String, String> namespaces)
 	{
 		this.namespaces = namespaces;
 	}
@@ -1292,6 +1302,22 @@ public class JCRStorage implements Storage
 	public void setResourceCache(ThreadLocalCache resourceCache)
 	{
 		this.resourceCache = resourceCache;
+	}
+
+	/**
+	 * @return the convertableNamespaces
+	 */
+	public Map<String, String> getConvertableNamespaces()
+	{
+		return convertableNamespaces;
+	}
+
+	/**
+	 * @param convertableNamespaces the convertableNamespaces to set
+	 */
+	public void setConvertableNamespaces(Map<String, String> convertableNamespaces)
+	{
+		this.convertableNamespaces = convertableNamespaces;
 	}
 
 

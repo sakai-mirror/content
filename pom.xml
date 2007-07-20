@@ -25,8 +25,10 @@
     <module>content-impl/hbm</module>
     <module>content-impl/impl</module>
     <module>content-impl/pack</module>
+<!--
     <module>content-tool</module>
     <module>content-tool/tool</module>
+-->
     <module>content-util/util</module>
   </modules>
 </project>

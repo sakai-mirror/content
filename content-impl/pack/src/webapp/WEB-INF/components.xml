@@ -56,8 +56,15 @@
 		<property name="jcrRegistrationService" ><ref bean="org.sakaiproject.jcr.api.JCRRegistrationService" /></property>
 		<property name="namespaces" >
 			<map>
-					<entry key="SAKAI"><value>http://www.sakaiproject.org/CHS/jcr/SAKAI/1.0</value></entry>
-			</map>
+				<entry key="SAKAI"><value>http://www.sakaiproject.org/CHS/jcr/SAKAI/1.0</value></entry>
+   			</map>
+		</property>
+		<!-- convertable namespaces are namespaces that will be converted into jrc types based on their name -->
+		<property name="convertableNamespaces" >
+			<map>
+        		<entry key="dc" ><value>http://purl.org/dc/elements/1.1/</value></entry>
+        		<entry key="dcterms" ><value>http://purl.org/dc/terms/</value></entry>
+   			</map>
 		</property>
 		<property name="nodetypeReources" >
 			<list>
@@ -81,7 +88,6 @@
 				<property name="clean" ><value>true</value></property>
 			</bean>
 	
-	
 
 	<bean id="org.sakaiproject.content.api.ContentHostingService.storageUser" 
 			class="org.sakaiproject.content.impl.JCRStorageUser"
@@ -89,27 +95,6 @@
 			destroy-method="destroy"
 			singleton="true">
         <property name="baseContentService"><ref bean="org.sakaiproject.content.api.ContentHostingService"/></property>
-        <property name="jcrTypes">
-        	<map>
-        		<entry key="jcr:mixinTypes" ><value>ignore</value></entry>
-        		<entry key="jcr:lockIsDeep" ><value>ignore</value></entry>
-        		<entry key="jcr:lockOwner" ><value>ignore</value></entry>
-        		<entry key="jcr:primaryType" ><value>ignore</value></entry>
-        		<entry key="jcr:uuid" ><value>ignore</value></entry>
-        		<entry key="jcr:predecessors" ><value>ignore</value></entry>
-        		<entry key="jcr_property_name" ><value>ignore or jcr type see PropertyType</value></entry>
-        	</map>
-        </property>
-        <property name="jcrToEntity" >
-        	<map>
-        		<entry key="XXXjcr:lastModified" ><value>DAV:getlastmodified</value></entry>
-        	</map>        	
-        </property>
-        <property name="entityToJcr" >
-        	<map>
-        		<entry key="XXXDAV:getlastmodified" ><value>jcr:lastModified</value></entry>
-        	</map>        	
-        </property>
         <property name="createNodes" >
         	<list>
         		<value>/group;nt:folder;group</value>

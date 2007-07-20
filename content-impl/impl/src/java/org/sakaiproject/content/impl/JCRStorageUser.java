@@ -604,7 +604,6 @@ public class JCRStorageUser implements LiteStorageUser
 						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE));
 				if (p != null)
 				{
-					log.error("Access Mode Property " + p.getString());
 					bedit.m_access = AccessMode.fromString(p.getString());
 				}
 				else
@@ -727,11 +726,11 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private BaseContentService baseContentService;
 
-	private Map<String, String> jcrTypes;
+	private Map<String, String> jcrTypes = new HashMap<String, String>();
 
-	private Map<String, String> jcrToEntity;
+	private Map<String, String> jcrToEntity = new HashMap<String, String>();
 
-	private Map<String, String> entityToJcr;
+	private Map<String, String> entityToJcr = new HashMap<String, String>();
 
 	private String repoPrefix;
 
@@ -750,6 +749,8 @@ public class JCRStorageUser implements LiteStorageUser
 	private List<CustomConverter> resourceConverterList = new ArrayList<CustomConverter>();
 
 	private List<CustomConverter> collectionConverterList = new ArrayList<CustomConverter>();
+
+	private Map<String,String> namespaces;
 
 	public JCRStorageUser()
 	{
@@ -802,7 +803,24 @@ public class JCRStorageUser implements LiteStorageUser
 		resourceConverterList.add(hiddenConverter);
 		resourceConverterList.add(displayNameConverter);
 
+
+		// ignore these properties, they are protected
+		jcrTypes.put(JCRConstants.JCR_MIXINTYPES,IGNORE_PROPERTY);
+		jcrTypes.put(JCRConstants.JCR_LOCKISDEEP,IGNORE_PROPERTY);
+		jcrTypes.put(JCRConstants.JCR_PRIMARYTYPE,IGNORE_PROPERTY);
+		jcrTypes.put(JCRConstants.JCR_UUID,IGNORE_PROPERTY);
+		jcrTypes.put(JCRConstants.JCR_UUID,IGNORE_PROPERTY);
+		jcrTypes.put(JCRConstants.JCR_PREDECESSORS,IGNORE_PROPERTY);
+		
+		
+		// these properties are dates
+		jcrTypes.put(SakaiConstants.SAKAI_RELEASE_DATE, PropertyType.TYPENAME_DATE);
+		jcrTypes.put(SakaiConstants.SAKAI_RETRACT_DATE, PropertyType.TYPENAME_DATE);
+		
+		
+		
 	}
+
 
 	public void destroy()
 	{
@@ -1196,6 +1214,8 @@ public class JCRStorageUser implements LiteStorageUser
 							GregorianCalendar gc = new GregorianCalendar();
 							SimpleDateFormat sdf = new SimpleDateFormat(
 									SakaiConstants.SAKAI_DATE_FORMAT);
+							TimeZone tzGMT = TimeZone.getTimeZone("GMT");
+							sdf.setTimeZone(tzGMT);
 							try
 							{
 								gc.setTime(sdf.parse(String.valueOf(ov)));
@@ -1372,6 +1392,13 @@ public class JCRStorageUser implements LiteStorageUser
 		String entityName = jcrToEntity.get(name);
 		if (entityName == null)
 		{
+			String[] parts = name.split(":",2);
+			if  ( parts.length == 2 ) {
+				String uri = namespaces.get(parts[0]);
+				if ( uri != null ) {
+					return uri+parts[1];
+				}
+			}
 			return name;
 		}
 		return entityName;
@@ -1380,12 +1407,20 @@ public class JCRStorageUser implements LiteStorageUser
 	/**
 	 * @param name
 	 * @return
+	 * @throws RepositoryException 
 	 */
-	private String convertEntityName2JCRName(String name)
+	private String convertEntityName2JCRName(String name) 
 	{
 		String jcrName = entityToJcr.get(name);
 		if (jcrName == null)
 		{
+			for( String prefix : namespaces.keySet() ) {
+				String uri = namespaces.get(prefix);
+				if ( name.startsWith(uri) ) {
+					return prefix+":"+ name.substring(uri.length());
+				}
+			}
+			
 			return name;
 		}
 		return jcrName;
@@ -1863,6 +1898,22 @@ public class JCRStorageUser implements LiteStorageUser
 	public void setCreateNodes(List<String> createNodes)
 	{
 		this.createNodes = createNodes;
+	}
+
+	/**
+	 * @return the namespaces
+	 */
+	public Map<String, String> getNamespaces()
+	{
+		return namespaces;
+	}
+
+	/**
+	 * @param namespaces the namespaces to set
+	 */
+	public void setNamespaces(Map<String, String> namespaces)
+	{
+		this.namespaces = namespaces;
 	}
 
 }
