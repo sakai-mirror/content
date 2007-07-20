@@ -146,6 +146,25 @@
 	<version>1.3.1</version> <!-- 1.4 latest -->
     </dependency>
 
+<!-- jcr dependencies -->
+
+    <dependency>
+        <groupId>javax.jcr</groupId>
+        <artifactId>jcr</artifactId>
+        <version>1.0</version> 
+    </dependency>
+    <dependency>
+        <groupId>org.sakaiproject</groupId>
+        <artifactId>sakai-jcr-api</artifactId>
+        <version>${sakai.version}</version> <!-- 1.4 latest -->
+        <scope>provided</scope> <!-- remove when in master -->
+    </dependency>
+
+<!-- end jcr dependencies -->
+
+
+
+
   </dependencies>
   <build>
     
@@ -165,6 +184,7 @@
         <directory>${basedir}/src/config</directory>
         <includes>
           <include>**/*.properties</include>
+          <include>**/*.xml</include>
         </includes>
       </resource>
       <resource>
