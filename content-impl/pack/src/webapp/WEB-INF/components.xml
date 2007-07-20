@@ -3,7 +3,11 @@
 
 <beans>
 
-	<bean id="org.sakaiproject.content.api.ContentHostingService"
+
+
+
+
+  <bean id="org.sakaiproject.content.api.ContentHostingService"
 			class="org.sakaiproject.content.impl.JCRContentService"
 			init-method="init"
 			destroy-method="destroy"
@@ -98,27 +102,34 @@
         </property>
         <property name="jcrToEntity" >
         	<map>
-        		<entry key="jcr_property_name" ><value>sakai property mapping</value></entry>
+        		<entry key="XXXjcr:lastModified" ><value>DAV:getlastmodified</value></entry>
         	</map>        	
         </property>
         <property name="entityToJcr" >
         	<map>
-        		<entry key="sakai_property_name" ><value>jcr property mapping</value></entry>
+        		<entry key="XXXDAV:getlastmodified" ><value>jcr:lastModified</value></entry>
         	</map>        	
         </property>
         <property name="createNodes" >
         	<list>
-        		<value>/group;nt:folder</value>
-        		<value>/user;nt:folder</value>
-				<value>/group-user;nt:folder</value>
-				<value>/public;nt:folder</value>
-				<value>/private;nt:folder</value>
-				<value>/meleteDocs;nt:folder</value>
-				<value>/attachment;nt:folder</value>
+        		<value>/group;nt:folder;group</value>
+        		<value>/user;nt:folder;user</value>
+				<value>/group-user;nt:folder;group-user</value>
+				<value>/public;nt:folder;public</value>
+				<value>/private;nt:folder;private</value>
+<!--				<value>/meleteDocs;nt:folder</value> -->
+				<value>/attachment;nt:folder;attachment</value>
     		</list>
         </property>
         
 	</bean>
+
+
+<!--
+   Other Beans
+   -->
+
+
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
 			class="org.sakaiproject.content.impl.ContentHostingHandlerResolverImpl"

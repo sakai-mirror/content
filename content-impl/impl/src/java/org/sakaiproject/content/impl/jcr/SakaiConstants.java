@@ -60,6 +60,14 @@ public class SakaiConstants
 	
 	public static final String SAKAI_RESOURCE_TYPE = "sakai:fileResource";
 
+	public static final String CHEF_IS_COLLECTION = "CHEF:is-collection";
+
+	public static final String SAKAI_CONTENT_PRIORITY = "sakai:content_priority";
+
+	public static final String CHEF_CREATOR = "CHEF:creator";
+
+	public static final String CHEF_MODIFIEDBY = "CHEF:modifiedby";
+
 
 
 }

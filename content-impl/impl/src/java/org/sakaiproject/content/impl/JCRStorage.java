@@ -26,13 +26,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
-import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
@@ -47,7 +45,6 @@ import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.jcr.api.JCRRegistrationService;
 import org.sakaiproject.jcr.api.JCRService;
 import org.sakaiproject.jcr.api.JcrConstants;
-import org.sakaiproject.thread_local.api.ThreadLocalManager;
 
 /**
  * @author ieb
@@ -564,8 +561,8 @@ public class JCRStorage implements Storage
 
 	public ContentResource getResource(String id) throws TypeException
 	{
-		Exception ex = new Exception("GET GRESOURCE TRACEBACK");
-		log.info("Trace back ",ex);
+//		Exception ex = new Exception("GET GRESOURCE TRACEBACK");
+//		log.info("Trace back ",ex);
 		
 //		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
 //		log.info(ste[2].getClassName()+"."+ste[2].getMethodName()+":"+ste[2].getLineNumber()+" called by "+ste[3].getClassName()+"."+ste[3].getMethodName()+":"+ste[3].getLineNumber());

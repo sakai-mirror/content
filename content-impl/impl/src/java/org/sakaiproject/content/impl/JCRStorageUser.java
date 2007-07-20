@@ -21,15 +21,18 @@
 
 package org.sakaiproject.content.impl;
 
+import java.io.ByteArrayInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.Node;
@@ -41,14 +44,15 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.impl.BaseContentService.BaseCollectionEdit;
 import org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit;
+import org.sakaiproject.content.impl.BaseContentService.BasicGroupAwareEdit;
 import org.sakaiproject.content.impl.jcr.DAVConstants;
 import org.sakaiproject.content.impl.jcr.JCRConstants;
 import org.sakaiproject.content.impl.jcr.SakaiConstants;
@@ -66,6 +70,651 @@ import org.w3c.dom.Element;
  */
 public class JCRStorageUser implements LiteStorageUser
 {
+	/**
+	 * Performs custom converion on a specific area of the metadata
+	 * 
+	 * @author ieb
+	 */
+	public interface CustomConverter
+	{
+		/**
+		 * Convert from the Entity to the JCR space
+		 * 
+		 * @param edit
+		 *        the entity to convert
+		 * @param rp
+		 *        name resource properties on the entity
+		 * @param n
+		 *        the destination node
+		 * @throws RepositoryException
+		 */
+		void convert(Edit edit, ResourceProperties rp, Node n) throws RepositoryException;
+
+		/**
+		 * Convert from the JCR space to the entity space
+		 * 
+		 * @param n
+		 *        the source node
+		 * @param edit
+		 *        the destination edit
+		 * @param rp
+		 *        the destincation resource properties
+		 * @throws RepositoryException
+		 */
+		void convert(Node n, Edit edit, ResourceProperties rp) throws RepositoryException;
+
+	}
+
+	/**
+	 * A generic type converter that converts named properties
+	 * 
+	 * @author ieb
+	 */
+	public interface GenericConverter
+	{
+
+		/**
+		 * Convert from entity to JCR
+		 * 
+		 * @param edit
+		 *        the source entity
+		 * @param rp
+		 *        the source properties
+		 * @param name
+		 *        the source name
+		 * @param n
+		 *        the destination node
+		 * @param jname
+		 *        the destincation name
+		 */
+		void copy(Edit edit, ResourceProperties rp, String name, Node n, String jname);
+
+		/**
+		 * Convert from JCR property to entity
+		 * 
+		 * @param p
+		 *        source JCR property
+		 * @param jname
+		 *        source JCR name
+		 * @param rp
+		 *        destincation resource property
+		 * @param ename
+		 *        dstination name of hte entity property
+		 * @throws RepositoryException
+		 */
+		void copy(Property p, String jname, ResourceProperties rp, String ename)
+				throws RepositoryException;
+
+	}
+
+	/**
+	 * Does not perform any convertion
+	 * 
+	 * @author ieb
+	 */
+	public class NullConverter implements GenericConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.GenericConverter#copy(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties,
+		 *      java.lang.String, javax.jcr.Node, java.lang.String)
+		 */
+		public void copy(Edit edit, ResourceProperties rp, String name, Node n,
+				String jname)
+		{
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.GenericConverter#copy(javax.jcr.Property,
+		 *      java.lang.String,
+		 *      org.sakaiproject.entity.api.ResourceProperties,
+		 *      java.lang.String)
+		 */
+		public void copy(Property p, String jname, ResourceProperties rp, String ename)
+				throws RepositoryException
+		{
+		}
+
+	}
+
+	/**
+	 * Converts all Display name oriented attributes
+	 * 
+	 * @author ieb
+	 */
+	public class DisplayNameConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+		{
+			String displayName = rp.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
+			if (displayName != null && displayName.trim().length() > 0)
+			{
+				setJCRProperty(
+						convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME),
+						displayName, n);
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+
+			String jname = convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME);
+			if (n.hasProperty(jname))
+			{
+				Property p = n.getProperty(jname);
+				if (p != null)
+				{
+					bedit.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,
+							p.getString());
+				}
+				else
+				{
+					bedit.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,
+							n.getName());
+				}
+			}
+			else
+			{
+				bedit.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n
+						.getName());
+			}
+		}
+
+	}
+
+	/**
+	 * Converts all Content Attributes, must be the first in the list
+	 * 
+	 * @author ieb
+	 */
+	public class ContentConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+				throws RepositoryException
+		{
+
+
+			if (edit instanceof BaseResourceEdit)
+			{
+
+				BaseResourceEdit bedit = (BaseResourceEdit) edit;
+
+				setJCRProperty(DAVConstants.DAV_GETCONTENTLENGTH, bedit
+						.getContentLength(), n);
+				setJCRProperty(DAVConstants.DAV_GETCONTENTTYPE, bedit.getContentType(), n);
+				setJCRProperty(
+						convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE),
+						bedit.getResourceType(), n);;
+				setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH),
+						bedit.m_filePath, n);;
+				if (bedit.m_body != null)
+				{
+					Node content = null;
+					if (n.hasNode(JCRConstants.JCR_CONTENT))
+					{
+						content = n.getNode(JCRConstants.JCR_CONTENT);
+					}
+					else
+					{
+						content = n.addNode(JCRConstants.JCR_CONTENT,
+								JCRConstants.NT_RESOURCE);
+					}
+					log.warn("Setting Content from Byte Array in Memory, size: "
+							+ bedit.m_body.length);
+					content.setProperty(JCRConstants.JCR_DATA, new ByteArrayInputStream(
+							bedit.m_body));
+				}
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+
+			if (edit instanceof BaseJCRCollectionEdit)
+			{
+				BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) edit;
+				bce.setNode(n);
+				bce.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,
+						"true");
+				bce.setResourceType(ResourceType.TYPE_FOLDER);
+			}
+			else if (edit instanceof BaseJCRResourceEdit)
+			{
+				BaseJCRResourceEdit bre = (BaseJCRResourceEdit) edit;
+				bre.setNode(n);
+				bre.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,
+						"false");
+				bre.setResourceType(ResourceType.TYPE_UPLOAD);
+			}
+			if (edit instanceof BasicGroupAwareEdit)
+			{
+				BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+				SimpleDateFormat sdf = new SimpleDateFormat(
+						SakaiConstants.SAKAI_DATE_FORMAT);
+				TimeZone zGMT = TimeZone.getTimeZone("GMT");
+				sdf.setTimeZone(zGMT);
+
+				try
+				{
+					Property pcd = n.getProperty(JCRConstants.JCR_CREATED);
+					String creationDate = sdf.format(pcd.getDate().getTime());
+					log.info("Setting Creation date on "+bedit.m_id+" to "+creationDate);
+					bedit.m_properties.addProperty(ResourceProperties.PROP_CREATION_DATE,
+							creationDate);
+					bedit.m_properties.addProperty(ResourceProperties.PROP_MODIFIED_DATE,
+							creationDate);
+				}
+				catch (Exception ex)
+				{
+					log.error("Failed to set Creation date " + ex.getMessage());
+				}
+
+				try
+				{
+					Property pmd = n.getProperty(JCRConstants.JCR_LASTMODIFIED);
+					String modifiedDate = sdf.format(pmd.getDate().getTime());
+					log.info("Setting Modification date on "+bedit.m_id+" to "+modifiedDate);
+					bedit.m_properties.addProperty(ResourceProperties.PROP_MODIFIED_DATE,
+							modifiedDate);
+				}
+				catch (Exception ex)
+				{
+					log.warn("Failed to set Modified date " + ex.getMessage());
+				}
+			}
+
+			if (edit instanceof BaseResourceEdit)
+			{
+
+				BaseResourceEdit bedit = (BaseResourceEdit) edit;
+				if (n.hasProperty(DAVConstants.DAV_GETCONTENTTYPE))
+				{
+					Property p = n.getProperty(DAVConstants.DAV_GETCONTENTTYPE);
+					if (p != null)
+					{
+						bedit.m_contentType = p.getString();
+					}
+				}
+
+				if (n.hasNode(JCRConstants.JCR_CONTENT))
+				{
+					Node content = n.getNode(JCRConstants.JCR_CONTENT);
+					Property p = content.getProperty(JCRConstants.JCR_DATA);
+					bedit.m_contentLength = (int) p.getLength();
+				}
+				else if (n.hasProperty(DAVConstants.DAV_GETCONTENTLENGTH))
+				{
+					Property p = n.getProperty(DAVConstants.DAV_GETCONTENTLENGTH);
+					if (p != null)
+					{
+						bedit.m_contentLength = (int) p.getLong();
+					}
+					else
+					{
+						bedit.m_contentLength = 0;
+					}
+				}
+
+				if (n
+						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE)))
+				{
+					Property p = n
+							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE));
+					if (p != null)
+					{
+						bedit.setResourceType(p.getString());
+					}
+				}
+
+				if (n
+						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH)))
+				{
+					Property p = n
+							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH));
+					if (p != null)
+					{
+						bedit.m_filePath = StringUtil.trimToNull(p.getString());
+					}
+
+				}
+			}
+		}
+	}
+
+	/**
+	 * Converts the hidden attribute
+	 * 
+	 * @author ieb
+	 */
+	public class HiddenConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN),
+					bedit.m_hidden, n);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			bedit.m_hidden = false;
+			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN)))
+			{
+				Property p = n
+						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN));
+				if (p != null)
+				{
+					bedit.m_hidden = p.getBoolean();
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Converts release and restract dates
+	 * 
+	 * @author ieb
+	 */
+	public class ReleaseRetractDateConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			if (bedit.m_hidden)
+			{
+				clearJCRProperty(
+						convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE), n);
+				clearJCRProperty(
+						convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE), n);
+			}
+			else
+			{
+
+				if (bedit.m_releaseDate != null)
+				{
+					setJCRProperty(
+							convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE),
+							new Date(bedit.m_releaseDate.getTime()), n);
+				}
+				if (bedit.m_retractDate != null)
+				{
+					setJCRProperty(
+							convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE),
+							new Date(bedit.m_retractDate.getTime()), n);
+				}
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			if (bedit.m_hidden)
+			{
+				bedit.m_releaseDate = null;
+				bedit.m_retractDate = null;
+			}
+			else
+			{
+				if (n
+						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE)))
+				{
+					Property p = n
+							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE));
+					if (p != null)
+					{
+						bedit.m_releaseDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
+				}
+				if (n
+						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE)))
+				{
+					Property p = n
+							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE));
+					if (p != null)
+					{
+						bedit.m_retractDate = TimeService.newTime(p.getDate()
+								.getTimeInMillis());
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Converts access mode
+	 * 
+	 * @author ieb
+	 */
+	public class AccessModeConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			if (bedit.m_access == null)
+			{
+				setJCRProperty(
+						convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
+						AccessMode.INHERITED.toString(), n);
+			}
+			else
+			{
+				setJCRProperty(
+						convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
+						bedit.m_access.toString(), n);
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			bedit.m_access = AccessMode.INHERITED;
+			if (n
+					.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE)))
+			{
+				Property p = n
+						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE));
+				if (p != null)
+				{
+					log.error("Access Mode Property " + p.getString());
+					bedit.m_access = AccessMode.fromString(p.getString());
+				}
+				else
+				{
+					log.error("Access Mode Property Null ");
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Converts group lists
+	 * 
+	 * @author ieb
+	 */
+	public class GroupListConverter implements CustomConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties, javax.jcr.Node)
+		 */
+		public void convert(Edit edit, ResourceProperties rp, Node n)
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST),
+					new ArrayList(bedit.m_groups), n);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#convert(javax.jcr.Node,
+		 *      org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties)
+		 */
+		public void convert(Node n, Edit edit, ResourceProperties rp)
+				throws RepositoryException
+		{
+			BasicGroupAwareEdit bedit = (BasicGroupAwareEdit) edit;
+			bedit.m_groups = new ArrayList<String>();
+			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST)))
+			{
+				Property p = n
+						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST));
+				if (p != null)
+				{
+					Value[] v = p.getValues();
+					if (v != null)
+					{
+						for (int i = 0; i < v.length; i++)
+						{
+							bedit.m_groups.add(v[i].getString());
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * A generic named property converter that uses simple property types and
+	 * name mappings to perform the conversion
+	 * 
+	 * @author ieb
+	 */
+	public class DefaultConverter implements GenericConverter
+	{
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#copy(org.sakaiproject.entity.api.Edit,
+		 *      org.sakaiproject.entity.api.ResourceProperties,
+		 *      java.lang.String, javax.jcr.Node, java.lang.String)
+		 */
+		public void copy(Edit edit, ResourceProperties rp, String name, Node n,
+				String jname)
+		{
+			Object v = rp.get(name);
+			if (v instanceof String)
+			{
+				setJCRProperty(jname, (String) v, n);
+			}
+			else if (v instanceof List)
+			{
+				setJCRProperty(jname, (List) v, n);
+			}
+			else
+			{
+				setJCRProperty(jname, String.valueOf(v), n);
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.sakaiproject.content.impl.JCRStorageUser.Converter#copy(javax.jcr.Property,
+		 *      java.lang.String,
+		 *      org.sakaiproject.entity.api.ResourceProperties,
+		 *      java.lang.String)
+		 */
+		public void copy(Property p, String jname, ResourceProperties rp, String ename)
+				throws RepositoryException
+		{
+			setEntityProperty(p, rp);
+		}
+
+	}
+
 	private static final Log log = LogFactory.getLog(JCRStorageUser.class);
 
 	private static final String IGNORE_PROPERTY = "ignore";
@@ -88,6 +737,16 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private ConcurrentHashMap<String, PropertyDefinition> ntCache = new ConcurrentHashMap<String, PropertyDefinition>();
 
+	private GenericConverter defaultConverter = new DefaultConverter();
+
+	private Map<String, GenericConverter> resourceConverterMap = new HashMap<String, GenericConverter>();;
+
+	private Map<String, GenericConverter> collectionConverterMap = new HashMap<String, GenericConverter>();
+
+	private List<CustomConverter> resourceConverterList = new ArrayList<CustomConverter>();
+
+	private List<CustomConverter> collectionConverterList = new ArrayList<CustomConverter>();
+
 	public JCRStorageUser()
 	{
 	}
@@ -95,6 +754,49 @@ public class JCRStorageUser implements LiteStorageUser
 	public void init()
 	{
 		repoPrefix = jcrWorkspace + REPOSITORY_PREFIX;
+
+		CustomConverter glconverter = new GroupListConverter();
+		CustomConverter amconverter = new AccessModeConverter();
+		CustomConverter releaseRetractDateConverter = new ReleaseRetractDateConverter();
+		CustomConverter hiddenConverter = new HiddenConverter();
+		CustomConverter contentConverter = new ContentConverter();
+		CustomConverter displayNameConverter = new DisplayNameConverter();
+		GenericConverter nullConverter = new NullConverter();
+		collectionConverterMap.put(SakaiConstants.SAKAI_GROUP_LIST, nullConverter);
+		collectionConverterMap.put(SakaiConstants.SAKAI_ACCESS_MODE, nullConverter);
+		collectionConverterMap.put(SakaiConstants.SAKAI_RELEASE_DATE, nullConverter);
+		collectionConverterMap.put(SakaiConstants.SAKAI_RETRACT_DATE, nullConverter);
+		collectionConverterMap.put(SakaiConstants.SAKAI_HIDDEN, nullConverter);
+		collectionConverterMap.put(ResourceProperties.PROP_DISPLAY_NAME, nullConverter);
+		collectionConverterMap.put(ResourceProperties.PROP_CREATION_DATE, nullConverter);
+		collectionConverterMap.put(ResourceProperties.PROP_MODIFIED_DATE, nullConverter);
+
+		collectionConverterList.add(glconverter);
+		collectionConverterList.add(amconverter);
+		collectionConverterList.add(releaseRetractDateConverter);
+		collectionConverterList.add(hiddenConverter);
+		collectionConverterList.add(displayNameConverter);
+
+		resourceConverterMap.put(SakaiConstants.SAKAI_GROUP_LIST, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_ACCESS_MODE, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_RELEASE_DATE, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_RETRACT_DATE, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_HIDDEN, nullConverter);
+		resourceConverterMap.put(SakaiConstants.DAV_CONTENT_LENGTH, nullConverter);
+		resourceConverterMap.put(SakaiConstants.DAV_CONTENT_TYPE, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_RESOURCE_TYPE, nullConverter);
+		resourceConverterMap.put(SakaiConstants.SAKAI_FILE_PATH, nullConverter);
+		resourceConverterMap.put(ResourceProperties.PROP_DISPLAY_NAME, nullConverter);
+		resourceConverterMap.put(ResourceProperties.PROP_CREATION_DATE, nullConverter);
+		resourceConverterMap.put(ResourceProperties.PROP_MODIFIED_DATE, nullConverter);
+
+		resourceConverterList.add(contentConverter);
+		resourceConverterList.add(glconverter);
+		resourceConverterList.add(amconverter);
+		resourceConverterList.add(releaseRetractDateConverter);
+		resourceConverterList.add(hiddenConverter);
+		resourceConverterList.add(displayNameConverter);
+
 	}
 
 	public void destroy()
@@ -113,9 +815,9 @@ public class JCRStorageUser implements LiteStorageUser
 		if (o instanceof Node)
 		{
 			Node n = (Node) o;
-			copy(edit, n);
 			try
 			{
+				copy(edit, n);
 				n.save();
 			}
 			catch (RepositoryException e)
@@ -128,127 +830,88 @@ public class JCRStorageUser implements LiteStorageUser
 	/**
 	 * @param edit
 	 * @param n
+	 * @throws RepositoryException
 	 */
-	private void copy(Edit edit, Object o)
+	private void copy(Edit edit, Object o) throws RepositoryException
 	{
 		if ((o instanceof Node)
 				&& ((edit instanceof BaseCollectionEdit) || (edit instanceof BaseResourceEdit)))
 		{
+
+			Map<String, GenericConverter> cmap = resourceConverterMap;
+			List<CustomConverter> clist = resourceConverterList;
+			if (edit instanceof BaseCollectionEdit)
+			{
+				cmap = collectionConverterMap;
+				clist = collectionConverterList;
+			}
 			Node n = (Node) o;
 			ResourceProperties rp = edit.getProperties();
+			for (CustomConverter c : clist)
+			{
+				c.convert(edit, rp, n);
+			}
 			for (Iterator i = rp.getPropertyNames(); i.hasNext();)
 			{
 				String name = (String) i.next();
-				Object v = rp.get(name);
+				GenericConverter c = cmap.get(name);
 				String jname = convertEntityName2JCRName(name);
-				if (v instanceof String)
+				if (c != null)
 				{
-					setJCRProperty(jname, (String) v, n);
-				}
-				else if (v instanceof List)
-				{
-					setJCRProperty(jname, (List) v, n);
+					c.copy(edit, rp, name, n, jname);
 				}
 				else
 				{
-					setJCRProperty(jname, String.valueOf(v), n);
+					defaultConverter.copy(edit, rp, name, n, jname);
 				}
 			}
-			if (edit instanceof BaseCollectionEdit)
+
+		}
+	}
+
+	/**
+	 * @param n
+	 * @param e
+	 * @throws RepositoryException
+	 */
+	private void copy(Node n, Entity e) throws RepositoryException
+	{
+
+		// copy from the node to the entity,
+		// there may be some items in the Node properties that we do not want to
+		// copy
+		if (e instanceof Edit)
+		{
+
+			Edit edit = (Edit) e;
+			Map<String, GenericConverter> cmap = resourceConverterMap;
+			List<CustomConverter> clist = resourceConverterList;
+			if (e instanceof BaseJCRCollectionEdit)
 			{
-				BaseCollectionEdit bedit = (BaseCollectionEdit) edit;
-				setJCRProperty(
-						convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST),
-						new ArrayList(bedit.m_groups), n);
-				if (bedit.m_access == null)
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
-							AccessMode.INHERITED.toString(), n);
-				}
-				else
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
-							bedit.m_access.toString(), n);
-				}
-				if (bedit.m_releaseDate != null)
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE),
-							new Date(bedit.m_releaseDate.getTime()), n);
-				}
-				if (bedit.m_retractDate != null)
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE),
-							new Date(bedit.m_retractDate.getTime()), n);
-				}
-				setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN),
-						bedit.m_hidden, n);
-
+				cmap = collectionConverterMap;
+				clist = collectionConverterList;
 			}
-			else if (edit instanceof BaseResourceEdit)
+
+			ResourceProperties rp = e.getProperties();
+			for (CustomConverter c : clist)
 			{
-				BaseResourceEdit bedit = (BaseResourceEdit) edit;
-				setJCRProperty(
-						convertEntityName2JCRName(SakaiConstants.DAV_CONTENT_LENGTH),
-						bedit.getContentLength(), n);
-				setJCRProperty(
-						convertEntityName2JCRName(SakaiConstants.DAV_CONTENT_TYPE), bedit
-								.getContentType(), n);
-				setJCRProperty(
-						convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE),
-						bedit.getResourceType(), n);;
-				setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH),
-						bedit.m_filePath, n);;
-				if (bedit.m_body != null)
-				{
-
-				}
-				setJCRProperty(
-						convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST),
-						new ArrayList(bedit.m_groups), n);
-				if (bedit.m_access == null)
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
-							AccessMode.INHERITED.toString(), n);
-				}
-				else
-				{
-					setJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE),
-							bedit.m_access.toString(), n);
-				}
-				if (bedit.m_hidden)
-				{
-					clearJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE),
-							n);
-					clearJCRProperty(
-							convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE),
-							n);
-				}
-				else
-				{
-					if (bedit.m_releaseDate != null)
-					{
-						setJCRProperty(
-								convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE),
-								new Date(bedit.m_releaseDate.getTime()), n);
-					}
-					if (bedit.m_retractDate != null)
-					{
-						setJCRProperty(
-								convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE),
-								new Date(bedit.m_retractDate.getTime()), n);
-					}
-				}
-				setJCRProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN),
-						bedit.m_hidden, n);
+				c.convert(n, edit, rp);
 			}
-
+			for (PropertyIterator pi = n.getProperties(); pi.hasNext();)
+			{
+				Property p = pi.nextProperty();
+				String jname = p.getName();
+				String ename = convertJCRName2EntityName(jname);
+				GenericConverter converter = cmap.get(ename);
+				if (converter != null)
+				{
+					converter.copy(p, jname, rp, ename);
+				}
+				else
+				{
+					defaultConverter.copy(p, jname, rp, ename);
+				}
+			}
 		}
 	}
 
@@ -463,7 +1126,7 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			if (isProtected(n, jname))
 			{
-				log.info(jname+" is protected ignoring ");
+				log.info(jname + " is protected ignoring ");
 				return;
 			}
 			String stype = jcrTypes.get(jname);
@@ -615,12 +1278,13 @@ public class JCRStorageUser implements LiteStorageUser
 	 * @param n
 	 * @param jname
 	 * @return
-	 * @throws RepositoryException 
+	 * @throws RepositoryException
 	 */
 	private boolean isProtected(Node n, String jname) throws RepositoryException
 	{
-		PropertyDefinition pd  = getDefinition(n, jname);
-		if ( pd == null ) {
+		PropertyDefinition pd = getDefinition(n, jname);
+		if (pd == null)
+		{
 			return false;
 		}
 		return pd.isProtected();
@@ -629,9 +1293,10 @@ public class JCRStorageUser implements LiteStorageUser
 	/**
 	 * @param n
 	 * @param jname
-	 * @throws RepositoryException 
+	 * @throws RepositoryException
 	 */
-	private PropertyDefinition getDefinition(Node n, String jname) throws RepositoryException
+	private PropertyDefinition getDefinition(Node n, String jname)
+			throws RepositoryException
 	{
 		NodeType pnt = n.getPrimaryNodeType();
 		String name = pnt.getName() + ":" + jname;
@@ -642,254 +1307,19 @@ public class JCRStorageUser implements LiteStorageUser
 
 				for (PropertyDefinition pd : pnt.getPropertyDefinitions())
 				{
-					ntCache.put(pnt.getName()+":"+pd.getName(), pd);
+					ntCache.put(pnt.getName() + ":" + pd.getName(), pd);
 				}
 			}
 			for (NodeType nt : n.getMixinNodeTypes())
 			{
 				for (PropertyDefinition pd : nt.getPropertyDefinitions())
 				{
-					ntCache.put(pnt.getName()+":"+pd.getName(), pd);
+					ntCache.put(pnt.getName() + ":" + pd.getName(), pd);
 				}
 			}
 			opd = ntCache.get(name);
 		}
 		return opd;
-	}
-
-	/**
-	 * @param n
-	 * @param e
-	 * @throws RepositoryException
-	 */
-	private void copy(Node n, Entity e) throws RepositoryException
-	{
-
-		// copy from the node to the entity,
-		// there may be some items in the Node properties that we do not want to
-		// copy
-		ResourceProperties rp = e.getProperties();
-		for (PropertyIterator pi = n.getProperties(); pi.hasNext();)
-		{
-			Property p = pi.nextProperty();
-			setEntityProperty(p, rp);
-		}
-		
-		
-
-		if (e instanceof BaseJCRCollectionEdit)
-		{
-			BaseJCRCollectionEdit bce = (BaseJCRCollectionEdit) e;
-			bce.setNode(n);
-			bce.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,"true");
-			if ( n.hasProperty(ResourceProperties.PROP_DISPLAY_NAME)  ) {
-				Property p = n.getProperty(convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME));
-				if ( p != null ) {
-					bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,p.getString());
-				} else {
-					bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());					
-				}
-			} else {
-				bce.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());
-			}
-			bce.m_groups = new ArrayList<String>();
-			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST));
-				if (p != null)
-				{
-					Value[] v = p.getValues();
-					if (v != null)
-					{
-						for (int i = 0; i < v.length; i++)
-						{
-							bce.m_groups.add(v[i].toString());
-						}
-					}
-				}
-			}
-			bce.m_access = AccessMode.INHERITED;
-			if (n
-					.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE));
-				if (p != null)
-				{
-					bce.m_access = AccessMode.fromString(p.toString());
-				}
-			}
-			bce.m_hidden = false;
-			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN));
-				if (p != null)
-				{
-					bce.m_hidden = p.getBoolean();
-				}
-			}
-			if (bce.m_hidden)
-			{
-				bce.m_releaseDate = null;
-				bce.m_retractDate = null;
-			}
-			else
-			{
-				if (n
-						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE)))
-				{
-					Property p = n
-							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE));
-					if (p != null)
-					{
-						bce.m_releaseDate = TimeService.newTime(p.getDate()
-								.getTimeInMillis());
-					}
-				}
-				if (n
-						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE)))
-				{
-					Property p = n
-							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE));
-					if (p != null)
-					{
-						bce.m_retractDate = TimeService.newTime(p.getDate()
-								.getTimeInMillis());
-					}
-				}
-			}
-		}
-		else if (e instanceof BaseJCRResourceEdit)
-		{
-			BaseJCRResourceEdit bre = (BaseJCRResourceEdit) e;
-			bre.setNode(n);
-			bre.m_properties.addProperty(ResourceProperties.PROP_IS_COLLECTION,"false");
-			if ( n.hasProperty(ResourceProperties.PROP_DISPLAY_NAME)  ) {
-				Property p = n.getProperty(convertEntityName2JCRName(ResourceProperties.PROP_DISPLAY_NAME));
-				if ( p != null ) {
-					bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME,p.getString());
-				} else {
-					bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());					
-				}
-			} else {
-				bre.m_properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, n.getName());
-			}
-			if (n.hasProperty(DAVConstants.DAV_GETCONTENTTYPE))
-			{
-				Property p = n.getProperty(DAVConstants.DAV_GETCONTENTTYPE);
-				if (p != null)
-				{
-					bre.m_contentType = p.getString();
-				}
-			}
-			
-			if (n.hasProperty(DAVConstants.DAV_GETCONTENTLENGTH))
-			{
-				Property p = n.getProperty(DAVConstants.DAV_GETCONTENTLENGTH);
-				if (p != null)
-				{
-					bre.m_contentLength = (int) p.getLong();
-				}
-			} else {
-				if ( n.hasNode(JCRConstants.JCR_CONTENT) ) {
-					Node content = n.getNode(JCRConstants.JCR_CONTENT);
-					Property p = content.getProperty(JCRConstants.JCR_DATA);
-					bre.m_contentLength = (int) p.getLength();
-				}
-			}
-			if (n
-					.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RESOURCE_TYPE));
-				if (p != null)
-				{
-					bre.setResourceType(p.toString());
-				}
-			}
-			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_FILE_PATH));
-				if (p != null)
-				{
-					bre.m_filePath = StringUtil.trimToNull(p.toString());
-				}
-
-			}
-			bre.m_groups = new ArrayList<String>();
-			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_GROUP_LIST));
-				if (p != null)
-				{
-					Value[] v = p.getValues();
-					if (v != null)
-					{
-						for (int i = 0; i < v.length; i++)
-						{
-							bre.m_groups.add(v[i].toString());
-						}
-					}
-				}
-			}
-			bre.m_access = AccessMode.INHERITED;
-			if (n
-					.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_ACCESS_MODE));
-				if (p != null)
-				{
-					bre.m_access = AccessMode.fromString(p.toString());
-				}
-			}
-			bre.m_hidden = false;
-			if (n.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN)))
-			{
-				Property p = n
-						.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_HIDDEN));
-				if (p != null)
-				{
-					bre.m_hidden = p.getBoolean();
-				}
-			}
-			if (bre.m_hidden)
-			{
-				bre.m_releaseDate = null;
-				bre.m_retractDate = null;
-			}
-			else
-			{
-				if (n
-						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE)))
-				{
-					Property p = n
-							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RELEASE_DATE));
-					if (p != null)
-					{
-						bre.m_releaseDate = TimeService.newTime(p.getDate()
-								.getTimeInMillis());
-					}
-				}
-				if (n
-						.hasProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE)))
-				{
-					Property p = n
-							.getProperty(convertEntityName2JCRName(SakaiConstants.SAKAI_RETRACT_DATE));
-					if (p != null)
-					{
-						bre.m_retractDate = TimeService.newTime(p.getDate()
-								.getTimeInMillis());
-					}
-				}
-			}
-
-		}
-
 	}
 
 	/**
@@ -905,7 +1335,7 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			return;
 		}
-		//log.info("Converting " + p.getName());
+		// log.info("Converting " + p.getName());
 
 		PropertyDefinition pd = p.getDefinition();
 		if (pd.isMultiple())
@@ -913,7 +1343,7 @@ public class JCRStorageUser implements LiteStorageUser
 			String ename = convertJCRName2EntityName(p.getName());
 			for (Value v : p.getValues())
 			{
-				rp.addPropertyToList(ename, v.toString());
+				rp.addPropertyToList(ename, v.getString());
 			}
 		}
 		else
@@ -962,7 +1392,7 @@ public class JCRStorageUser implements LiteStorageUser
 		{
 			jcrPath = jcrPath.substring(0, jcrPath.length() - 1);
 		}
-//		log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
+		// log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
 		return jcrPath;
 	}
 
@@ -984,10 +1414,11 @@ public class JCRStorageUser implements LiteStorageUser
 					.error("Trying to convert a path to Id that is not a storage path "
 							+ path);
 		}
-		if ( id == null || id.length() == 0 ) {
+		if (id == null || id.length() == 0)
+		{
 			id = "/";
 		}
-//		log.info(" JCR2Id [" + path + "] >> [" + id + "]");
+		// log.info(" JCR2Id [" + path + "] >> [" + id + "]");
 		return id;
 	}
 
@@ -1151,7 +1582,8 @@ public class JCRStorageUser implements LiteStorageUser
 	public Entity newContainer(String ref)
 	{
 		String id = convertRef2Id(ref);
-		if ( !id.endsWith("/") ) {
+		if (!id.endsWith("/"))
+		{
 			id = id + "/";
 		}
 		return new BaseJCRCollectionEdit(baseContentService, id);
@@ -1159,7 +1591,8 @@ public class JCRStorageUser implements LiteStorageUser
 
 	public Entity newContainerById(String id)
 	{
-		if ( !id.endsWith("/") ) {
+		if (!id.endsWith("/"))
+		{
 			id = id + "/";
 		}
 		return new BaseJCRCollectionEdit(baseContentService, id);
@@ -1193,7 +1626,8 @@ public class JCRStorageUser implements LiteStorageUser
 	public Edit newContainerEdit(String ref)
 	{
 		String id = convertRef2Id(ref);
-		if ( !id.endsWith("/") ) {
+		if (!id.endsWith("/"))
+		{
 			id = id + "/";
 		}
 
@@ -1202,7 +1636,8 @@ public class JCRStorageUser implements LiteStorageUser
 
 	public Edit newContainerEditById(String id)
 	{
-		if ( !id.endsWith("/") ) {
+		if (!id.endsWith("/"))
+		{
 			id = id + "/";
 		}
 

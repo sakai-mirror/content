@@ -23,6 +23,8 @@ package org.sakaiproject.content.impl;
 
 import javax.jcr.Node;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.impl.BaseContentService.BaseCollectionEdit;
 import org.w3c.dom.Element;
@@ -35,6 +37,7 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 {
 
 	private Node node;
+	private static final Log log = LogFactory.getLog(BaseJCRCollectionEdit.class);
 	/**
 	 * @param baseContentService
 	 * @param id
@@ -80,6 +83,7 @@ public class BaseJCRCollectionEdit extends BaseCollectionEdit
 	 */
 	public void setNode(Node node)
 	{
+		log.info("Setting Node on "+this+" to "+node);
 		this.node = node;
 	}
 

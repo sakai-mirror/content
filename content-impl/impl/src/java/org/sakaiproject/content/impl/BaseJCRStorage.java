@@ -24,14 +24,17 @@ package org.sakaiproject.content.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -52,7 +55,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.impl.jcr.DAVConstants;
 import org.sakaiproject.content.impl.jcr.JCRConstants;
+import org.sakaiproject.content.impl.jcr.SakaiConstants;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.IdUnusedException;
@@ -159,7 +164,6 @@ public class BaseJCRStorage
 	{
 		if (isEmpty())
 		{
-
 			Session currentSession = null;
 			boolean reset = false;
 			try
@@ -176,13 +180,27 @@ public class BaseJCRStorage
 				n.save();
 				for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 				{
+					
 					String[] ndef = i.next().split(";");
 					log.info("       Creating " + ndef[0] + " as a " + ndef[1]);
 					n = createNode(ndef[0], ndef[1]);
+					if ( JCRConstants.NT_FOLDER.equals(ndef[1]) ) {
+						n.setProperty(SakaiConstants.CHEF_IS_COLLECTION, "true");
+					} else {
+						n.setProperty(SakaiConstants.CHEF_IS_COLLECTION, "false");				
+					}
+					n.setProperty(SakaiConstants.SAKAI_CONTENT_PRIORITY, "2");
+					n.setProperty(SakaiConstants.CHEF_CREATOR, "admin");
+					n.setProperty(SakaiConstants.SAKAI_ACCESS_MODE, "inherited");
+					n.setProperty(SakaiConstants.CHEF_MODIFIEDBY, "admin");
+					n.setProperty(SakaiConstants.SAKAI_HIDDEN, "false");
+					n.setProperty(DAVConstants.DAV_DISPLAYNAME, ndef[2]);
+					//n.setProperty(DAVConstants.DAV_GETLASTMODIFIED, davDate);
+					//n.setProperty(DAVConstants.DAV_CREATIONDATE, davDate);
 					n.save();
 				}
 				log.info("Session is " + s);
-				s.exportDocumentView("/sakai", System.out, true, false);
+			// TODO: clean up	s.exportDocumentView("/sakai", System.out, true, false);
 				s.save();
 				s.logout();				
 				log.info("Creating Root Node: SUCCESS");
@@ -200,11 +218,6 @@ public class BaseJCRStorage
 				throw new RuntimeException("Unable to create root node cause:"
 						+ e.getMessage(), e);
 			}
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			finally
 			{
 				if (reset)
@@ -215,8 +228,8 @@ public class BaseJCRStorage
 						jcrService.setSession(currentSession);
 						currentSession = jcrService.getSession();
 						log.info("Session is " + currentSession);
-						currentSession.exportDocumentView("/sakai", System.out, true,
-								false);
+// TODO: clean up				//		currentSession.exportDocumentView("/sakai", System.out, true,
+				//				false);
 						for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 						{
 							String[] ndef = i.next().split(";");
@@ -834,16 +847,7 @@ public class BaseJCRStorage
 				throw new Error("Failed to create node " + absPath + " got "
 						+ node.getPath());
 			}
-			try
-			{
-				s.exportDocumentView("/sakai", System.out, true, false);
-			}
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
+			
 		}
 		catch (RepositoryException rex)
 		{
@@ -917,6 +921,9 @@ public class BaseJCRStorage
 		resource.setProperty(JcrConstants.JCR_MIMETYPE, "application/octet-stream");
 		resource.setProperty(JcrConstants.JCR_DATA, "");
 		resource.setProperty(JcrConstants.JCR_ENCODING, "UTF-8");
+		
+		
+		
 	}
 
 	private void populateFolder(Node node) throws RepositoryException
