@@ -15,23 +15,15 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 <!--[if gt IE 6.0]>
 <style type="text/css">
 	 ul.makeMenu ul{top: 10px !important}
-	 ul.makeMenu {border:none }
-	 ul.makeMenu:hover {border:none }
+	 .attach{width:auto !important}
 </style>
 <![endif]-->
 
 #set($num = 0)
-#set($removeCount = 0)
-#set($moveCount = 0)
-#set($copyCount = 0)
-#set($rCount = 0)
-#set($mCount = 0)
-#set($cCount = 0)
 <div class="portletBody">
 	#set($itemsOnLine = 0)
 	#if(!$dropboxMode)
 		#if ($atHome && $atHome == $TRUE)
-			#if($site.canRevise() || $showPermissions)
 				<div class="navIntraTool">
 					$tlang.getString("list.site")
 					| <a href="#toolLink("ResourcesAction" "doShow_webdav")" title="$tlang.getString('dav.webdav')">$tlang.getString("dav.webdav").trim()</a> 
@@ -42,7 +34,6 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					| <a href="#toolLinkParam("ResourcesAction" "doOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$tlang.getString('list.options')">$tlang.getString("list.options").trim()</a>
 					#end
 				</div>
-			#end
 		#end 
 	#end
 	#if ($alertMessage)
@@ -308,7 +299,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 							#set ($itemsOnLine = 0)
 							#foreach($action in $item.pasteActions)
 								#if($itemsOnLine > 0)|#end
-								<a href="#" class=" highlightlink" title="$labeler.getLabel($action) here" onclick="document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
+								<a class=" highlightlink" title="$labeler.getLabel($action) here" href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
 								#set ($itemsOnLine = $itemsOnLine + 1)
 							#end
 						#end
@@ -545,7 +536,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 									#set ($itemsOnLine = 0)
 									#foreach($action in $item.pasteActions)
 										#if($itemsOnLine > 0)|#end
-										<a href="#" class=" highlightlink" title="$labeler.getLabel($action) here" onclick="document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
+										<a class=" highlightlink" title="$labeler.getLabel($action) here" href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
 										#set ($itemsOnLine = $itemsOnLine + 1)
 									#end
 								#end

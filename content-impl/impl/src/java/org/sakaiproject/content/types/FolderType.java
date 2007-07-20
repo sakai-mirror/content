@@ -26,7 +26,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.sakaiproject.authz.api.PermissionsHelper;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -36,15 +40,19 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ExpandableResourceType;
 import org.sakaiproject.content.api.InteractionAction;
 import org.sakaiproject.content.api.ResourceToolAction;
+import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.ResourceToolAction.ActionType;
 import org.sakaiproject.content.util.BaseResourceType;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.util.ResourceLoader;
 
@@ -65,14 +73,14 @@ public class FolderType extends BaseResourceType implements ExpandableResourceTy
 	{
 		this.userDirectoryService = (UserDirectoryService) ComponentManager.get("org.sakaiproject.user.api.UserDirectoryService");
 		
-		actions.put(ResourceToolAction.PASTE_MOVED, new FolderPasteMovedAction());
-		actions.put(ResourceToolAction.PASTE_COPIED, new FolderPasteCopiedAction());
+		//actions.put(ResourceToolAction.PASTE_MOVED, new FolderPasteMovedAction());
+		//actions.put(ResourceToolAction.PASTE_COPIED, new FolderPasteCopiedAction());
 		actions.put(ResourceToolAction.CREATE, new FolderCreateAction());
 		actions.put(ResourceToolAction.REVISE_METADATA, new FolderPropertiesAction());
 		//actions.put(ResourceToolAction.DUPLICATE, new FolderDuplicateAction());
-		actions.put(ResourceToolAction.COPY, new FolderCopyAction());
 		actions.put(ResourceToolAction.PASTE_COPIED, new FolderPasteCopyAction());
 		actions.put(ResourceToolAction.PASTE_MOVED, new FolderPasteMoveAction());
+		actions.put(ResourceToolAction.COPY, new FolderCopyAction());
 		actions.put(ResourceToolAction.MOVE, new FolderMoveAction());
 		actions.put(ResourceToolAction.DELETE, new FolderDeleteAction());
 		actions.put(ResourceToolAction.REORDER, new FolderReorderAction());
@@ -144,7 +152,7 @@ public class FolderType extends BaseResourceType implements ExpandableResourceTy
 
 		public String getLabel()
         {
-	        return null;
+	        return rb.getString("action.pastecopy");
         }
 
 		public String getTypeId()
@@ -194,7 +202,7 @@ public class FolderType extends BaseResourceType implements ExpandableResourceTy
 
 		public String getLabel()
         {
-	        return null;
+	        return rb.getString("action.pastemove");
         }
 
 		public String getTypeId()

@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -319,16 +321,42 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	protected boolean m_caching = false;
 
 	/**
-	 * Configuration: set the locks-in-db
+	 * Configuration: cache, or not. 
 	 * 
-	 * @param path
-	 *        The storage path.
+	 * @param value
+	 *        True/false
 	 */
 	public void setCaching(String value)
 	{
 		try
 		{
 			m_caching = new Boolean(value).booleanValue();
+		}
+		catch (Throwable t)
+		{
+		}
+	}
+
+	/** Configuration: Do we protect attachments in sites with the site AuthZGroup. */
+	// TODO: Make sure to set this to true before the 2.5 release
+	// To be upwards compatible for 2.4 releases - this must be false but
+	// it should be set to true for 2.5 - Chuck - Sat Jul 14 10:59:35 EDT 2007
+	protected boolean m_siteAttachments = false; // Default to true
+
+	/**
+	 * Configuration: Do we protect attachments in sites with the site AuthZGroup. 
+	 * 
+	 * @param value
+	 *        true - We protect the site scoped attachments with the site's AZG
+	 *        false - We use the /content/attachment hierarchy to protect attachments
+	 *
+	 *        Default is true.
+	 */
+	public void setSiteAttachments(String value)
+	{
+		try
+		{
+			 m_siteAttachments = new Boolean(value).booleanValue();
 		}
 		catch (Throwable t)
 		{
@@ -356,7 +384,18 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		try
 		{
-			m_bodyVolumes = StringUtil.split(value, ",");
+			String[] bodyVolumes = StringUtil.split(value, ",");
+			List<String> list = new Vector<String>();
+			for(int i = 0; i < bodyVolumes.length; i++)
+			{
+				String name = bodyVolumes[i];
+				if(name == null || name.trim().equals(""))
+				{
+					continue;
+				}
+				list.add(name.trim());
+			}
+			this.m_bodyVolumes = (String[]) list.toArray();
 		}
 		catch (Throwable t)
 		{
@@ -988,7 +1027,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				{
 					if (isCollection(id))
 					{
-						M_log.info("Find Collection"+id);
 						entity = findCollection(id);
 					}
 					else
@@ -1075,7 +1113,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 */
 	protected boolean unlockCheck(String lock, String id)
 	{
-		boolean isAllowed = m_securityService.isSuperUser();
+		boolean isAllowed = SecurityService.isSuperUser();
 		if(! isAllowed)
 		{
 			lock = convertLockIfDropbox(lock, id);
@@ -1087,7 +1125,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				ref = getReference(id);
 			}
 			
-			isAllowed = ref != null && m_securityService.unlock(lock, ref);
+			isAllowed = ref != null && SecurityService.unlock(lock, ref);
 		}
 		
 		if(isAllowed && lock != null && (lock.startsWith("content.") || lock.startsWith("dropbox.")) && m_availabilityChecksEnabled)
@@ -1483,8 +1521,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		// check security
 		unlock(AUTH_RESOURCE_ADD, id);
-		
-		M_log.info("Adding Collection ["+id+"]");
 
 		return addValidPermittedCollection(id);
 	}
@@ -1557,8 +1593,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		// make sure the containing collection exists
 		String container = isolateContainingId(id);
-		M_log.info("Adding Collection ["+id+"] to ["+container+"]");
-		
 		ContentCollection containingCollection = m_storage.getCollection(container);
 		if (containingCollection == null)
 		{
@@ -1614,7 +1648,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	public void checkCollection(String id) throws IdUnusedException, TypeException, PermissionException
 	{
 		unlock(AUTH_RESOURCE_READ, id);
-		M_log.info("Find Collection"+id);
+
 		ContentCollection collection = findCollection(id);
 		if (collection == null) throw new IdUnusedException(id);
 
@@ -1637,7 +1671,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		unlock(AUTH_RESOURCE_READ, id);
 
-		M_log.info("Find Collection"+id);
 		ContentCollection collection = findCollection(id);
 		if (collection == null) throw new IdUnusedException(id);
 
@@ -1739,7 +1772,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// get the collection members
 		try
 		{
-			M_log.info("Find Collection"+id);
 			ContentCollection collection = findCollection(id);
 			if (collection != null)
 			{
@@ -1828,13 +1860,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			
 			if(collection != null)
 			{
-				M_log.warn("==========SAVING Copy from "+collection);
 				ThreadLocalManager.set("findCollection@" + ref, new BaseCollectionEdit(collection));
 			}
 		}
 		else
 		{
-			M_log.warn("==========Creating new BaseCollectionEdit from thread local cache "+collection);
 			collection = new BaseCollectionEdit(collection);
 		}
 
@@ -2075,7 +2105,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
                                        AUTH_RESOURCE_REMOVE_ANY, getReference(id) );
 
 		// find the collection
-		M_log.info("Find Collection"+id);
 		ContentCollection thisCollection = findCollection(id);
 		if (thisCollection == null) throw new IdUnusedException(id);
 
@@ -2363,6 +2392,27 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 	}
 
+	protected void cacheEntities(List entities)
+    {
+		if(entities == null)
+		{
+			return;
+		}
+		
+		for(ContentEntity entity : (List<ContentEntity>) entities)
+		{
+			String ref = entity.getReference();
+			if(entity instanceof ContentResource)
+			{
+				ThreadLocalManager.set("findResource@" + ref, entity);
+			}
+			else if(entity instanceof ContentCollection)
+			{
+				ThreadLocalManager.set("findCollection@" + ref, entity);
+			}
+		}
+    }
+
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Resources
 	 *********************************************************************************************************************************************************************************************************************************************************/
@@ -2598,7 +2648,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			SortedSet siblings = new TreeSet();
 			try
 			{
-				M_log.info("Find Collection"+collectionId);
 				ContentCollection collection = findCollection(collectionId);
 				siblings.addAll(collection.getMembers());
 			}
@@ -2708,6 +2757,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		
 		String name = basename + extension;
 		String id = collectionId + name;
+		if(id.length() > ContentHostingService.MAXIMUM_RESOURCE_ID_LENGTH)
+		{
+			throw new IdLengthException(id);
+		}
 		
 		BaseResourceEdit edit = null;
 		
@@ -2738,7 +2791,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				SortedSet siblings = new TreeSet();
 				try
 				{
-					M_log.info("Find Collection"+collectionId);
 					ContentCollection collection = findCollection(collectionId);
 					siblings.addAll(collection.getMembers());
 				}
@@ -2987,7 +3039,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			SortedSet siblings = new TreeSet();
 			try
 			{
-				M_log.info("Find Collection"+collectionId);
 				ContentCollection collection = findCollection(collectionId);
 				siblings.addAll(collection.getMembers());
 			}
@@ -3935,7 +3986,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollection thisCollection = null;
 		try
 		{
-			M_log.info("Find Collection"+id);
 			thisCollection = findCollection(id);
 		}
 		catch (TypeException e)
@@ -4371,7 +4421,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		if (M_log.isDebugEnabled()) M_log.debug("copy(" + id + "," + new_id + ")");
 
 		// find the collection
-		M_log.info("Find Collection"+id);
 		ContentCollection thisCollection = findCollection(id);
 		if (thisCollection != null)
 		{
@@ -4684,7 +4733,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				}
 			}
 			String containerId = this.isolateContainingId(new_folder_id);
-			M_log.info("Find Collection"+containerId);
 			ContentCollection containingCollection = findCollection(containerId);
 			SortedSet siblings = new TreeSet();
 			siblings.addAll(containingCollection.getMembers());
@@ -5755,16 +5803,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ResourceProperties props = null;
         try
         {
-        	String id = ref.getId();
-    		boolean collectionHint = id.endsWith(Entity.SEPARATOR);
-    		
-    		
-    		// this is crazy!, if ref does not end with / and it is a colection, then props will be null!
-    		// might as well use the hint!
-	        /*
-	          
-	         props = getProperties(ref.getId());
-	        
+	        props = getProperties(ref.getId());
 			boolean isCollection = false;
 			try
 	        {
@@ -5779,8 +5818,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		        // Log this and assume it's not a collection
 	        	M_log.warn("EntityPropertyTypeException: PROP_IS_COLLECTION not boolean for " + ref.getReference());
 	        }
-	        */
-			if (collectionHint)
+			if (isCollection)
 			{
 				try
 	            {
@@ -5857,6 +5895,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		try
 		{
 			boolean isDropbox = false;
+			boolean attachmentOverride = false;
 			// special check for group-user : the grant's in the user's My Workspace site
 			String parts[] = StringUtil.split(ref.getId(), Entity.SEPARATOR);
 			if ((parts.length > 3) && (parts[1].equals("group-user")))
@@ -5865,10 +5904,28 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				isDropbox = true;
 			}
 
+			// If this is a site-scoped attachment, use the site grant as the only grant
+			// Old attachments format: (use /content/attachment realm)
+			//   /content/attachment/guid/filename.pd
+			// New attachment format:
+			//   /content/attachment/siteid/type/guid/filename.pd
+			// But since we need to protect all paths from 
+			//   /content/attachment/siteid/
+			// and below we simply check to see f the guid is a valid site ID.
+			if ( m_siteAttachments && (parts.length >= 3) && (parts[1].equals("attachment")))
+			{
+				String siteId = parts[2];
+				if ( m_siteService.siteExists(siteId) )
+				{
+					rv.clear();  // Ignore the hierarchical inheritance in /attachment
+					rv.add(m_siteService.siteReference(siteId));
+					attachmentOverride = true;  // Nothing else is needed
+				}
+			}
+
 			ContentEntity entity = null;
 			if(ref.getId().endsWith(Entity.SEPARATOR)) 
 			{
-				M_log.info("Find Collection"+ref.getId());
 				entity = findCollection(ref.getId());
 			} 
 			else 
@@ -5881,15 +5938,18 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				while (entity == null && refId != null )
 				{
 					refId = isolateContainingId(refId);
-					M_log.info("Find Collection"+refId);
 					entity = findCollection(refId);
 				}
 			}
 			
 			boolean inherited = false;
 			AccessMode access = entity.getAccess();
-			
-			if(AccessMode.INHERITED.equals(access))
+
+			if ( attachmentOverride )
+			{
+				// No further inheritance
+			}
+			else if(AccessMode.INHERITED.equals(access))
 			{
 				inherited = true;
 				access = entity.getInheritedAccess();
@@ -6761,25 +6821,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 */
 	public void contextCreated(String context, boolean toolPlacement)
 	{
-		try 
+		if (toolPlacement)
 		{
-			if (toolPlacement)
-			{
-				Site site = m_siteService.getSite(context);
-				if(site.getToolForCommonId("sakai.dropbox") != null)
-				{
-					enableDropbox(context);
-				}
-				if(site.getToolForCommonId("sakai.resources") != null)
-				{
-					enableResources(context);
-				}
-			}
-			
-		} 
-		catch (IdUnusedException e) 
-		{
-			// ignore -- nothing to enable
+			enableResources(context);
 		}
 	}
 	
@@ -6788,25 +6832,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 */
 	public void contextUpdated(String context, boolean toolPlacement)
 	{
-		try 
+		if (toolPlacement)
 		{
-			if (toolPlacement)
-			{
-				Site site = m_siteService.getSite(context);
-				if(site.getToolForCommonId("sakai.dropbox") != null)
-				{
-					enableDropbox(context);
-				}
-				if(site.getToolForCommonId("sakai.resources") != null)
-				{
-					enableResources(context);
-				}
-			}
-			
-		} 
-		catch (IdUnusedException e) 
-		{
-			// ignore -- nothing to enable
+			enableResources(context);
 		}
 	}
 
@@ -6817,25 +6845,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	{
 		// TODO This avoids disabling the collection if the tool still exists, but ...
 		// does it catch the case where the tool is being deleted from the site?
-		try 
+		if (toolPlacement)
 		{
-			if (toolPlacement)
-			{
-				Site site = m_siteService.getSite(context);
-				if(site.getToolForCommonId("sakai.dropbox") == null)
-				{
-					disableDropbox(context);
-				}
-				if(site.getToolForCommonId("sakai.resources") == null)
-				{
-					disableResources(context);
-				}
-			}
-			
-		} 
-		catch (IdUnusedException e) 
-		{
-			// ignore -- nothing to enable
+			disableResources(context);
 		}
 	}
 
@@ -6858,8 +6870,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			Site site = m_siteService.getSite(context);
 			try
 			{
-				M_log.info("Find Collection"+id);
-			ContentCollection collection = findCollection(id);	// getCollection(id);	// 
+				ContentCollection collection = findCollection(id);	// getCollection(id);	// 
 				
 				if(collection == null)
 				{
@@ -6869,13 +6880,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 						ContentCollectionEdit edit = addValidPermittedCollection(id);
 						edit.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, site.getTitle());
 						commitCollection(edit);
-						M_log.info("Find Collection"+id);
 						collection = findCollection(id);
 					}
 					catch (IdUsedException e)
 					{
 						M_log.warn("enableResources: " + e);
-						M_log.info("Find Collection"+id);
 						collection = findCollection(id);
 					}
 					catch (InconsistentException e)
@@ -7353,7 +7362,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollection collection = null;
 		try
 		{
-			M_log.info("Find Collection"+id);
 			collection = findCollection(id);
 		}
 		catch (TypeException ignore)
@@ -7509,7 +7517,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollection collection = null;
 		try
 		{
-			M_log.info("Find Collection"+id);
 			collection = findCollection(id);
 		}
 		catch (TypeException ignore)
@@ -7545,7 +7552,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollection collection = null;
 		try
 		{
-			M_log.info("Find Collection"+id);
 			collection = findCollection(id);
 		}
 		catch (TypeException ignore)
@@ -7624,7 +7630,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				id = id + parts[i] + "/";
 
 				// does it exist?
-				M_log.info("Find Collection"+id);
 				ContentCollection collection = findCollection(id);
 
 				// if not, can we make it
@@ -8096,7 +8101,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		try
 		{
-			M_log.info("Find Collection"+dropbox);
 			// try to create if it doesn't exist
 			if (findCollection(dropbox) == null)
 			{
@@ -8112,6 +8116,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					e.printStackTrace();
 				}
 				
+				// these need to be moved to language bundle
 				props.addProperty(ResourceProperties.PROP_DISPLAY_NAME, siteId + DROPBOX_ID);
 				props.addProperty(ResourceProperties.PROP_DESCRIPTION, PROP_SITE_DROPBOX_DESCRIPTION);
 				commitCollection(edit);
@@ -8152,7 +8157,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			// see if it exists - add if it doesn't
 			try
 			{
-				M_log.info("Find Collection"+userFolder);
 				if (findCollection(userFolder) == null)
 				{
 					ContentCollectionEdit edit = addValidPermittedCollection(userFolder);
@@ -8194,7 +8198,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		try 
 		{
-			M_log.info("Find Collection"+dropbox);
 			if (findCollection(dropbox) == null)
 			{
 				try
@@ -8224,7 +8227,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				// see if it exists - add if it doesn't
 				try
 				{
-					M_log.info("Find Collection"+userFolder);
 					if (findCollection(userFolder) == null)
 					{
 						ContentCollectionEdit edit = addValidPermittedCollection(userFolder);
@@ -8411,8 +8413,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				
 				if(ref.getId().endsWith(Entity.SEPARATOR))
 				{
-					M_log.info("Find Collection"+ref.getId());
-			entity = findCollection(ref.getId());
+					entity = findCollection(ref.getId());
 				}
 				else
 				{
@@ -8905,12 +8906,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			String containerId = isolateContainingId(this.getId());
 			try
 			{
-				M_log.info("Find Collection"+containerId);
 				container = findCollection(containerId);
 			}
 			catch (TypeException e)
 			{
-				M_log.error("Cant find containerId "+containerId,e);
 			}
 			return container;
 		}
@@ -8979,7 +8978,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			// set the id
 			m_id = id;
-			M_log.info("Creating ID as "+m_id);
 
 			// setup for properties
 			m_properties = new BaseResourcePropertiesEdit();
@@ -9013,7 +9011,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 
 			m_id = el.getAttribute("id");
-			M_log.info("ID set from attribute in Element constructor to "+m_id);
 			m_resourceType = ResourceType.TYPE_FOLDER;
 			
 			String refStr = getReference(m_id);
@@ -9116,7 +9113,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			// set the id
 			m_id = other.getId();
-			M_log.info("ID set from other id as "+m_id);
 
 			// copy other's access mode and list of groups
 			m_access = other.getAccess();
@@ -9374,27 +9370,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			return mbrs;
 
 		} // getMemberResources
-
-		protected void cacheEntities(List entities)
-        {
-			if(entities == null)
-			{
-				return;
-			}
-			
-			for(ContentEntity entity : (List<ContentEntity>) entities)
-			{
-				String ref = entity.getReference();
-				if(entity instanceof ContentResource)
-				{
-					ThreadLocalManager.set("findResource@" + ref, entity);
-				}
-				else if(entity instanceof ContentCollection)
-				{
-					ThreadLocalManager.set("findCollection@" + ref, entity);
-				}
-			}
-        }
 
 		protected List copyEntityList(List entities)
         {
@@ -9717,7 +9692,17 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		public int getMemberCount() 
 		{
-			int count = m_storage.getMemberCount(this.m_id);
+			int count = 0;
+			Integer countObj = (Integer) ThreadLocalManager.get("getMemberCount@" + this.m_id);
+			if(countObj == null)
+			{
+				count = m_storage.getMemberCount(this.m_id);
+				ThreadLocalManager.set("getMemberCount@" + this.m_id, new Integer(count));
+			}
+			else
+			{
+				count = countObj.intValue();
+			}
 			return count;
 		}
 
@@ -9739,14 +9724,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			ContentEntity ce  = m_storage.getCollection(nextId);
 			if ( ce == null ) {
-				try
-				{
-					ce = m_storage.getResource(nextId);
-				}
-				catch (TypeException e)
-				{
-					M_log.error("Type Exception ",e);
-				}
+				ce = m_storage.getResource(nextId);
 			}
 			return ce;
 			/*
@@ -9794,7 +9772,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		public BaseResourceEdit(String id)
 		{
 			m_id = id;
-			M_log.info("Sessing ResourceID as "+m_id);
 
 			// setup for properties
 			m_properties = new BaseResourcePropertiesEdit();
@@ -9847,7 +9824,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		protected void set(ContentResource other)
 		{
 			m_id = other.getId();
-			M_log.info("Setting ID from other as "+m_id);
 			m_contentType = other.getContentType();
 			m_contentLength = other.getContentLength();
 			m_resourceType = other.getResourceType();
@@ -9909,7 +9885,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_properties = new BaseResourcePropertiesEdit();
 
 			m_id = el.getAttribute("id");
-			M_log.info("Setting ID from element "+m_id);
 			String contentType = StringUtil.trimToNull(el.getAttribute("content-type"));
 			setContentType(contentType);
 			m_contentLength = 0;
@@ -10582,10 +10557,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		/**
 		 * Return the identified resource, or null if not found.
-		 * @throws TypeException 
-		 * @throws TypeException 
 		 */
-		public ContentResource getResource(String id) throws TypeException;
+		public ContentResource getResource(String id);
 
 		/**
 		 * Return true if the identified resource exists.
@@ -10692,14 +10665,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 		else
 		{
-			try
-			{
-				rv = m_storage.getResource(id);
-			}
-			catch (TypeException e)
-			{
-				M_log.error("Type Exception ",e);
-			}
+			rv = m_storage.getResource(id);
 		}
 
 		return rv;

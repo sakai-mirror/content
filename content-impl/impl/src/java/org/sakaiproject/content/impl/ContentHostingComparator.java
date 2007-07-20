@@ -24,6 +24,8 @@ package org.sakaiproject.content.impl;
 import java.util.Comparator;
 
 import org.sakaiproject.content.api.ContentCollection;
+import org.sakaiproject.content.api.ContentEntity;
+import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;

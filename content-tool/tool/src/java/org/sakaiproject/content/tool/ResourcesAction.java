@@ -668,8 +668,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	protected static final String STATE_LIST_VIEW_SORT = PREFIX + "list_view_sort";
 	
-	private static final String STATE_METADATA_GROUPS = PREFIX + "metadata.types";
-
 	/** The resources, helper or dropbox mode. */
 	public static final String STATE_MODE_RESOURCES = PREFIX + "resources_mode";
 	
@@ -886,7 +884,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	/**
 	* Build the context to show the list of resource properties
 	*/
-	public static String buildMoreContext (	VelocityPortlet portlet,
+	public String buildMoreContext (	VelocityPortlet portlet,
 									Context context,
 									RunData data,
 									SessionState state)
@@ -1020,7 +1018,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			context.put("copyrightTypes", copyrightTypes);
 		}
 
-		metadataGroupsIntoContext(state, context);
+		context.put("DETAILS_FORM_NAME", "detailsForm");
+		//item.metadataGroupsIntoContext(context);
 
 		// String template = (String) getContext(data).get("template");
 		return TEMPLATE_MORE;
@@ -1145,110 +1144,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //
 //	}	// captureMultipleValues
 //
-	protected static void capturePropertyValues(ParameterParser params, ResourcesEditItem item, List properties)
-	{
-		// use the item's properties if they're not supplied
-		if(properties == null)
-		{
-			properties = item.getProperties();
-		}
-		// if max cardinality > 1, value is a list (Iterate over members of list)
-		// else value is an object, not a list
-
-		// if type is nested, object is a Map (iterate over name-value pairs for the properties of the nested object)
-		// else object is type to store value, usually a string or a date/time
-
-		Iterator it = properties.iterator();
-		while(it.hasNext())
-		{
-			ResourcesMetadata prop = (ResourcesMetadata) it.next();
-			String propname = prop.getDottedname();
-
-			if(ResourcesMetadata.WIDGET_NESTED.equals(prop.getWidget()))
-			{
-				// do nothing
-			}
-			else if(ResourcesMetadata.WIDGET_BOOLEAN.equals(prop.getWidget()))
-			{
-				String value = params.getString(propname);
-				if(value == null || Boolean.FALSE.toString().equals(value))
-				{
-					prop.setValue(0, Boolean.FALSE.toString());
-				}
-				else
-				{
-					prop.setValue(0, Boolean.TRUE.toString());
-				}
-			}
-			else if(ResourcesMetadata.WIDGET_DATE.equals(prop.getWidget()) || ResourcesMetadata.WIDGET_DATETIME.equals(prop.getWidget()) || ResourcesMetadata.WIDGET_TIME.equals(prop.getWidget()))
-			{
-				int year = 0;
-				int month = 0;
-				int day = 0;
-				int hour = 0;
-				int minute = 0;
-				int second = 0;
-				int millisecond = 0;
-				String ampm = "";
-
-				if(prop.getWidget().equals(ResourcesMetadata.WIDGET_DATE) ||
-					prop.getWidget().equals(ResourcesMetadata.WIDGET_DATETIME))
-				{
-					year = params.getInt(propname + "_year", year);
-					month = params.getInt(propname + "_month", month);
-					day = params.getInt(propname + "_day", day);
-				}
-				if(prop.getWidget().equals(ResourcesMetadata.WIDGET_TIME) ||
-					prop.getWidget().equals(ResourcesMetadata.WIDGET_DATETIME))
-				{
-					hour = params.getInt(propname + "_hour", hour);
-					minute = params.getInt(propname + "_minute", minute);
-					second = params.getInt(propname + "_second", second);
-					millisecond = params.getInt(propname + "_millisecond", millisecond);
-					ampm = params.getString(propname + "_ampm");
-
-					if("pm".equalsIgnoreCase(ampm))
-					{
-						if(hour < 12)
-						{
-							hour += 12;
-						}
-					}
-					else if(hour == 12)
-					{
-						hour = 0;
-					}
-				}
-				if(hour > 23)
-				{
-					hour = hour % 24;
-					day++;
-				}
-
-				Time value = TimeService.newTimeLocal(year, month, day, hour, minute, second, millisecond);
-				prop.setValue(0, value);
-			}
-			else if(ResourcesMetadata.WIDGET_ANYURI.equals(prop.getWidget()))
-			{
-				String value = params.getString(propname);
-				if(value != null && ! value.trim().equals(""))
-				{
-					Reference ref = EntityManager.newReference(ContentHostingService.getReference(value));
-					prop.setValue(0, ref);
-				}
-			}
-			else
-			{
-				String value = params.getString(propname);
-				if(value != null)
-				{
-					prop.setValue(0, value);
-				}
-			}
-		}
-
-	}	// capturePropertyValues
-
 	/**
 	 *
 	 * put copyright info into context
@@ -1361,7 +1256,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 * @param pipe
 	 * @param state 
 	 */
-	protected static List<ContentCollection> createFolders(SessionState state, ResourceToolActionPipe pipe)
+	public static List<ContentCollection> createFolders(SessionState state, ResourceToolActionPipe pipe)
 	{
 		List<ContentCollection> new_collections = new Vector<ContentCollection>();
 		String collectionId = pipe.getContentEntity().getId();
@@ -1485,10 +1380,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
+				int notification = NotificationService.NOTI_NONE;
 				Object obj = fp.getRevisedListItem();
 				if(obj != null && obj instanceof ListItem)
 				{
 					((ListItem) obj).updateContentResourceEdit(resource);
+					notification = ((ListItem) obj).getNotification();
 				}
 				
 				ResourcePropertiesEdit resourceProperties = resource.getPropertiesEdit();
@@ -1506,7 +1403,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //					resourceProperties.addProperty(ResourceProperties.PROP_CONTENT_ENCODING, UTF_8_ENCODING);
 //				}
 				
-				ContentHostingService.commitResource(resource, NotificationService.NOTI_NONE);
+				ContentHostingService.commitResource(resource, notification);
 				item_added = true;
 				new_resources.add(resource);
 			}
@@ -1532,7 +1429,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (IdLengthException e)
 			{
-				// TODO Auto-generated catch block
+				// TODO Need to give error message to user
 				logger.warn("IdLengthException ", e);
 			}
 			catch (OverQuotaException e)
@@ -2019,10 +1916,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
     public static List<ResourceToolAction> getPasteActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry, List<String> items_to_be_moved, List<String> items_to_be_copied)
     {
-	    Reference ref = EntityManager.newReference(selectedItem.getReference());
-	    
 	    List<ResourceToolAction> actions = new Vector<ResourceToolAction>();
 	    
+	    // if nothing to paste, just return an empty list
+    	if((items_to_be_moved == null || items_to_be_moved.isEmpty()) && (items_to_be_copied == null || items_to_be_copied.isEmpty()))
+    	{
+    		return actions;
+    	}
+    	
+	    Reference ref = EntityManager.newReference(selectedItem.getReference());
+	    	    
 	    Set<String> memberIds = new TreeSet<String>();
 	    if(permissions.contains(ContentPermissions.CREATE))
 	    {
@@ -2658,46 +2561,46 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				item.setCopyrightAlert(false);
 			}
 			
-			Map metadata = new Hashtable();
-			List groups = (List) state.getAttribute(STATE_METADATA_GROUPS);
-			if(groups != null && ! groups.isEmpty())
-			{
-				Iterator it = groups.iterator();
-				while(it.hasNext())
-				{
-					MetadataGroup group = (MetadataGroup) it.next();
-					Iterator propIt = group.iterator();
-					while(propIt.hasNext())
-					{
-						ResourcesMetadata prop = (ResourcesMetadata) propIt.next();
-						String name = prop.getFullname();
-						String widget = prop.getWidget();
-						if(widget.equals(ResourcesMetadata.WIDGET_DATE) || widget.equals(ResourcesMetadata.WIDGET_DATETIME) || widget.equals(ResourcesMetadata.WIDGET_TIME))
-						{
-							Time time = TimeService.newTime();
-							try
-							{
-								time = properties.getTimeProperty(name);
-							}
-							catch(Exception ignore)
-							{
-								// use "now" as default in that case
-							}
-							metadata.put(name, time);
-						}
-						else
-						{
-							String value = properties.getPropertyFormatted(name);
-							metadata.put(name, value);
-						}
-					}
-				}
-				item.setMetadata(metadata);
-			}
-			else
-			{
-				item.setMetadata(new Hashtable());
-			}
+//			Map metadata = new Hashtable();
+//			List groups = (List) state.getAttribute(ListItem.STATE_METADATA_GROUPS);
+//			if(groups != null && ! groups.isEmpty())
+//			{
+//				Iterator it = groups.iterator();
+//				while(it.hasNext())
+//				{
+//					MetadataGroup group = (MetadataGroup) it.next();
+//					Iterator propIt = group.iterator();
+//					while(propIt.hasNext())
+//					{
+//						ResourcesMetadata prop = (ResourcesMetadata) propIt.next();
+//						String name = prop.getFullname();
+//						String widget = prop.getWidget();
+//						if(widget.equals(ResourcesMetadata.WIDGET_DATE) || widget.equals(ResourcesMetadata.WIDGET_DATETIME) || widget.equals(ResourcesMetadata.WIDGET_TIME))
+//						{
+//							Time time = TimeService.newTime();
+//							try
+//							{
+//								time = properties.getTimeProperty(name);
+//							}
+//							catch(Exception ignore)
+//							{
+//								// use "now" as default in that case
+//							}
+//							metadata.put(name, time);
+//						}
+//						else
+//						{
+//							String value = properties.getPropertyFormatted(name);
+//							metadata.put(name, value);
+//						}
+//					}
+//				}
+//				item.setMetadata(metadata);
+//			}
+//			else
+//			{
+//				item.setMetadata(new Hashtable());
+//			}
 			// for collections only
 			if(item.isFolder())
 			{
@@ -3399,70 +3302,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	}	// initCopyContent
 
 	/**
-	 * initialize the metadata context
-	 */
-	private static void initMetadataContext(SessionState state)
-	{
-		// define MetadataSets map
-		List metadataGroups = (List) state.getAttribute(STATE_METADATA_GROUPS);
-		if(metadataGroups == null)
-		{
-			metadataGroups = new Vector();
-			state.setAttribute(STATE_METADATA_GROUPS, metadataGroups);
-		}
-		// define DublinCore
-		if( !metadataGroups.contains(new MetadataGroup(rb.getString("opt_props"))) )
-		{
-			MetadataGroup dc = new MetadataGroup( rb.getString("opt_props") );
-			// dc.add(ResourcesMetadata.PROPERTY_DC_TITLE);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_DESCRIPTION);
-			dc.add(ResourcesMetadata.PROPERTY_DC_ALTERNATIVE);
-			dc.add(ResourcesMetadata.PROPERTY_DC_CREATOR);
-			dc.add(ResourcesMetadata.PROPERTY_DC_PUBLISHER);
-			dc.add(ResourcesMetadata.PROPERTY_DC_SUBJECT);
-			dc.add(ResourcesMetadata.PROPERTY_DC_CREATED);
-			dc.add(ResourcesMetadata.PROPERTY_DC_ISSUED);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_MODIFIED);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_TABLEOFCONTENTS);
-			dc.add(ResourcesMetadata.PROPERTY_DC_ABSTRACT);
-			dc.add(ResourcesMetadata.PROPERTY_DC_CONTRIBUTOR);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_TYPE);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_FORMAT);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_IDENTIFIER);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_SOURCE);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_LANGUAGE);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_COVERAGE);
-			// dc.add(ResourcesMetadata.PROPERTY_DC_RIGHTS);
-			dc.add(ResourcesMetadata.PROPERTY_DC_AUDIENCE);
-			dc.add(ResourcesMetadata.PROPERTY_DC_EDULEVEL);
-			
-			/* Filesystem and file-like mount points */
-			dc.add(ResourcesMetadata.PROPERTY_FSMOUNT_ACTIVE);
-				
-			metadataGroups.add(dc);
-			state.setAttribute(STATE_METADATA_GROUPS, metadataGroups);
-		}
-		/*
-		// define DublinCore
-		if(!metadataGroups.contains(new MetadataGroup("Test of Datatypes")))
-		{
-			MetadataGroup dc = new MetadataGroup("Test of Datatypes");
-			dc.add(ResourcesMetadata.PROPERTY_DC_TITLE);
-			dc.add(ResourcesMetadata.PROPERTY_DC_DESCRIPTION);
-			dc.add(ResourcesMetadata.PROPERTY_DC_ANYURI);
-			dc.add(ResourcesMetadata.PROPERTY_DC_DOUBLE);
-			dc.add(ResourcesMetadata.PROPERTY_DC_DATETIME);
-			dc.add(ResourcesMetadata.PROPERTY_DC_TIME);
-			dc.add(ResourcesMetadata.PROPERTY_DC_DATE);
-			dc.add(ResourcesMetadata.PROPERTY_DC_BOOLEAN);
-			dc.add(ResourcesMetadata.PROPERTY_DC_INTEGER);
-			metadataGroups.add(dc);
-			state.setAttribute(STATE_METADATA_GROUPS, metadataGroups);
-		}
-		*/
-	}
-
-	/**
 	* initialize the copy context
 	*/
 	private static void initMoveContext (SessionState state)
@@ -3507,34 +3346,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		return operations_stack.isEmpty();
 	}
 
-
-	/**
-	 * Add variables and constants to the velocity context to render an editor
-	 * for inputing and modifying optional metadata properties about a resource.
-	 */
-	private static void metadataGroupsIntoContext(SessionState state, Context context)
-	{
-
-		context.put("STRING", ResourcesMetadata.WIDGET_STRING);
-		context.put("TEXTAREA", ResourcesMetadata.WIDGET_TEXTAREA);
-		context.put("BOOLEAN", ResourcesMetadata.WIDGET_BOOLEAN);
-		context.put("INTEGER", ResourcesMetadata.WIDGET_INTEGER);
-		context.put("DOUBLE", ResourcesMetadata.WIDGET_DOUBLE);
-		context.put("DATE", ResourcesMetadata.WIDGET_DATE);
-		context.put("TIME", ResourcesMetadata.WIDGET_TIME);
-		context.put("DATETIME", ResourcesMetadata.WIDGET_DATETIME);
-		context.put("ANYURI", ResourcesMetadata.WIDGET_ANYURI);
-		context.put("WYSIWYG", ResourcesMetadata.WIDGET_WYSIWYG);
-
-		context.put("today", TimeService.newTime());
-
-		List metadataGroups = (List) state.getAttribute(STATE_METADATA_GROUPS);
-		if(metadataGroups != null && !metadataGroups.isEmpty())
-		{
-			context.put("metadataGroups", metadataGroups);
-		}
-
-	}	// metadataGroupsIntoContext
 
 	protected static List newEditItems(String collectionId, String itemtype, String encoding, String defaultCopyrightStatus, boolean preventPublicDisplay, Time defaultRetractDate, int number)
 	{
@@ -3866,7 +3677,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			// update mimetype
 			edit.setContentType(pipe.getRevisedMimeType());
-			ContentHostingService.commitResource(edit);
+			ContentHostingService.commitResource(edit, pipe.getNotification());
 		}
 		catch (PermissionException e)
 		{
@@ -4229,6 +4040,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	{
 		context.put("tlang",trb);
 		
+		context.put("DETAILS_FORM_NAME", "detailsForm");
+
 		String template = "content/sakai_resources_cwiz_finish";
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
@@ -4276,10 +4089,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 			String typeId = pipe.getAction().getTypeId();
 			
-			ListItem parent = new ListItem(pipe.getContentEntity());
+			ListItem parent = new ListItem(collection);
+
 			parent.setPubviewPossible(! preventPublicDisplay);
 			ListItem item = new ListItem(pipe, parent, defaultRetractDate);
 			//item.setPubviewPossible(! preventPublicDisplay);
+			item.metadataGroupsIntoContext(context);
 			
 			context.put("item", item);
 			
@@ -4427,9 +4242,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		context.put("TYPE_UPLOAD", TYPE_UPLOAD);
 		
-		context.put("listStack", new Stack());
-		context.put("tempStack", new Stack());
-
 		context.put("SITE_ACCESS", AccessMode.SITE);
 		context.put("GROUP_ACCESS", AccessMode.GROUPED);
 		context.put("INHERITED_ACCESS", AccessMode.INHERITED);
@@ -4447,7 +4259,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		// find the ContentHosting service
 		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
-		context.put ("service", contentService);
+		//context.put ("service", contentService);
 
 		ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
 		if(registry == null)
@@ -4603,21 +4415,18 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				// context.put("movedItems", movedItems);
 			}
 
-			SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
-			
-			//ContentCollection coll = contentService.getCollection(collectionId);
-			expandedCollections.add(collectionId);
-			context.put("expandedCollections", expandedCollections);
-
 			state.removeAttribute(STATE_PASTE_ALLOWED_FLAG);
-			
-			ContentCollection collection = ContentHostingService.getCollection(collectionId);
 			
 			List<String> items_to_be_copied = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_COPIED);
 			List<String> items_to_be_moved = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_MOVED);
 
 			boolean need_to_expand_all = Boolean.TRUE.toString().equals((String)state.getAttribute(STATE_NEED_TO_EXPAND_ALL));
+			SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+			expandedCollections.add(collectionId);
+			context.put("expandedCollections", expandedCollections);
 
+			ContentCollection collection = ContentHostingService.getCollection(collectionId);
+			
 			ListItem item = ListItem.getListItem(collection, null, registry, need_to_expand_all, expandedCollections, items_to_be_moved, items_to_be_copied, 0, userSelectedSort, false);
 			
 			Map<String, ResourceToolAction> listActions = new HashMap<String, ResourceToolAction>();
@@ -4903,11 +4712,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// build the context for the basic step of delete confirm page
 			template = buildDeleteFinishContext (portlet, context, data, state);
 		}
-		else if (mode.equals (MODE_MORE))
-		{
-			// build the context to display the property list
-			template = buildMoreContext (portlet, context, data, state);
-		}
+//		else if (mode.equals (MODE_MORE))
+//		{
+//			// build the context to display the property list
+//			template = buildMoreContext (portlet, context, data, state);
+//		}
 //		else if (mode.equals (MODE_EDIT))
 //		{
 //			// build the context to display the property list
@@ -5073,6 +4882,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	{
 		context.put("tlang", trb);
 		
+		context.put("DETAILS_FORM_NAME", "detailsForm");
+		
 		ResourceToolAction action = (ResourceToolAction) state.getAttribute(STATE_REVISE_PROPERTIES_ACTION);
 		context.put("action", action);
 		
@@ -5101,6 +4912,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item = getListItem(state);
 			state.setAttribute(STATE_REVISE_PROPERTIES_ITEM, item);
 		}
+		item.metadataGroupsIntoContext(context);
 		context.put("item", item);
 		
 		if(ContentHostingService.isAvailabilityEnabled())
@@ -5950,15 +5762,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 			if(entity.isResource())
 			{
-				try 
-				{
-					pipe.setMimeType(((ContentResource) entity).getContentType());
-					pipe.setContent(((ContentResource) entity).getContent());
-				} 
-				catch (ServerOverloadException e) 
-				{
-					logger.warn(this + ".doDispatchAction ServerOverloadException", e);
-				}
+				pipe.setMimeType(((ContentResource) entity).getContentType());
+				//pipe.setContentStream(((ContentResource) entity).streamContent());
+				//pipe.setContent(((ContentResource) entity).getContent());
 			}
 
 			startHelper(data.getRequest(), iAction.getHelperId());
@@ -6276,34 +6082,34 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	}	// doDelete
 
-    /**
-	 * @param data
-	 */
-	public void doHide_metadata(RunData data)
-	{
-		ParameterParser params = data.getParameters ();
-		String name = params.getString("metadataGroup");
-
-		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
-		List metadataGroups = (List) state.getAttribute(STATE_METADATA_GROUPS);
-		if(metadataGroups != null && ! metadataGroups.isEmpty())
-		{
-			boolean found = false;
-			MetadataGroup group = null;
-			Iterator it = metadataGroups.iterator();
-			while(!found && it.hasNext())
-			{
-				group = (MetadataGroup) it.next();
-				found = (name.equals(Validator.escapeUrl(group.getName())) || name.equals(group.getName()));
-			}
-			if(found)
-			{
-				group.setShowing(false);
-			}
-		}
-
-	}	// doHide_metadata
-
+//    /**
+//	 * @param data
+//	 */
+//	public void doHide_metadata(RunData data)
+//	{
+//		ParameterParser params = data.getParameters ();
+//		String name = params.getString("metadataGroup");
+//
+//		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
+//		List metadataGroups = (List) state.getAttribute(ListItem.STATE_METADATA_GROUPS);
+//		if(metadataGroups != null && ! metadataGroups.isEmpty())
+//		{
+//			boolean found = false;
+//			MetadataGroup group = null;
+//			Iterator it = metadataGroups.iterator();
+//			while(!found && it.hasNext())
+//			{
+//				group = (MetadataGroup) it.next();
+//				found = (name.equals(Validator.escapeUrl(group.getName())) || name.equals(group.getName()));
+//			}
+//			if(found)
+//			{
+//				group.setShowing(false);
+//			}
+//		}
+//
+//	}	// doHide_metadata
+//
 	/**
 	 * @param data
 	 */
@@ -6872,33 +6678,36 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	}	// doSaveOrder
 
-	/**
-	 * @param data
-	 */
-	public void doShow_metadata(RunData data)
-	{
-		ParameterParser params = data.getParameters ();
-		String name = params.getString("metadataGroup");
-
-		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
-		List metadataGroups = (List) state.getAttribute(STATE_METADATA_GROUPS);
-		if(metadataGroups != null && ! metadataGroups.isEmpty())
-		{
-			boolean found = false;
-			MetadataGroup group = null;
-			Iterator it = metadataGroups.iterator();
-			while(!found && it.hasNext())
-			{
-				group = (MetadataGroup) it.next();
-				found = (name.equals(Validator.escapeUrl(group.getName())) || name.equals(group.getName()));
-			}
-			if(found)
-			{
-				group.setShowing(true);
-			}
-		}
-
-	}	// doShow_metadata
+//	/**
+//	 * @param data
+//	 */
+//	public void doShow_metadata(RunData data)
+//	{
+//		ParameterParser params = data.getParameters ();
+//		String name = params.getString("metadataGroup");
+//
+//		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
+//		
+//		
+//		
+//		List metadataGroups = (List) state.getAttribute(ListItem.STATE_METADATA_GROUPS);
+//		if(metadataGroups != null && ! metadataGroups.isEmpty())
+//		{
+//			boolean found = false;
+//			MetadataGroup group = null;
+//			Iterator it = metadataGroups.iterator();
+//			while(!found && it.hasNext())
+//			{
+//				group = (MetadataGroup) it.next();
+//				found = (name.equals(Validator.escapeUrl(group.getName())) || name.equals(group.getName()));
+//			}
+//			if(found)
+//			{
+//				group.setShowing(true);
+//			}
+//		}
+//
+//	}	// doShow_metadata
 
 	/**
 	* Show information about WebDAV
@@ -7199,6 +7008,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case NEW_FOLDER:
 			List<ContentCollection> folders = createFolders(state, pipe);
@@ -7209,6 +7019,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case NEW_URLS:
 			List<ContentResource> urls = createUrls(state, pipe);
@@ -7223,6 +7034,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				expandedCollections.add(pipe.getContentEntity().getId());
 				toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			}
+			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case REVISE_CONTENT:
 			reviseContent(pipe);
@@ -7264,6 +7076,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				edit.setContent(content);
 			}
+			
 			// update properties
 			if(action instanceof InteractionAction)
 			{
@@ -7289,9 +7102,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 				}
 			}
+			
+			int notification = NotificationService.NOTI_NONE;
+			Object obj = pipe.getRevisedListItem();
+			if(obj instanceof ListItem)
+			{
+				notification = ((ListItem) obj).getNotification();
+			}
+			
 			// update mimetype
 			edit.setContentType(pipe.getRevisedMimeType());
-			ContentHostingService.commitResource(edit);
+			ContentHostingService.commitResource(edit, notification);
 		}
 		catch (PermissionException e)
 		{
@@ -7331,7 +7152,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	protected void initState(SessionState state, VelocityPortlet portlet, JetspeedRunData data)
 	{
 		super.initState(state, portlet, data);
-
+		
 		if(state.getAttribute(STATE_INITIALIZED) == null)
 		{
 			initCopyContext(state);
@@ -7545,11 +7366,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 		}
 
-		// get resources mode from tool registry
+		// are optional properties enabled on the server/cluster?
 		String optional_properties = portlet.getPortletConfig().getInitParameter("optional_properties");
 		if(optional_properties != null && "true".equalsIgnoreCase(optional_properties))
 		{
-			initMetadataContext(state);
+			ListItem.setOptionalPropertiesEnabled(true);
 		}
 		
 		state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, Boolean.FALSE);
@@ -7716,6 +7537,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					ref = EntityManager.newReference(contentService.getReference(newId));
 					
 					slAction.finalizeAction(ref);
+					
+					SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+					if(expandedCollections == null)
+					{
+						expandedCollections = new TreeSet();
+						state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
+					}
+					expandedCollections.add(collectionId);
 				}
 				
 				ref = null;
@@ -8203,12 +8032,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
+				int notification = NotificationService.NOTI_NONE;
 				Object obj = fp.getRevisedListItem();
 				if(obj != null && obj instanceof ListItem)
 				{
 					((ListItem) obj).updateContentResourceEdit(resource);
+					notification = ((ListItem) obj).getNotification();
 				}
-				ContentHostingService.commitResource(resource, NotificationService.NOTI_NONE);
+				ContentHostingService.commitResource(resource, notification);
 				item_added = true;
 				new_resources.add(resource);
 			}

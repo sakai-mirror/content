@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -57,6 +59,7 @@ import org.sakaiproject.content.api.ContentTypeImageService;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.event.api.SessionState;
+import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
@@ -200,6 +203,13 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		context.put("DOT", ListItem.DOT);
 		context.put("calendarMap", new HashMap());
 		
+		String mode = (String) state.getAttribute(ResourceToolAction.STATE_MODE);
+
+		if (mode == null)
+		{
+			initHelper(portlet, context, data, state);
+		}
+
 		if(state.getAttribute(ResourcesAction.STATE_MESSAGE) != null)
 		{
 			context.put("itemAlertMessage", state.getAttribute(ResourcesAction.STATE_MESSAGE));
@@ -209,15 +219,52 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ContentTypeImageService contentTypeImageService = (ContentTypeImageService) state.getAttribute(STATE_CONTENT_TYPE_IMAGE_SERVICE);
 		context.put("contentTypeImageService", contentTypeImageService);
 		
-		String mode = (String) state.getAttribute(ResourceToolAction.STATE_MODE);
-
-		if (mode == null)
-		{
-			initHelper(portlet, context, data, state);
-		}
-
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			String attributes = "ResourcesHelperAction.buildMainPanelContext() SAK-8449 dump of state.attributes:\n";
+			List<String> attrNames = state.getAttributeNames();
+			for(String attrName : attrNames)
+			{
+				Object val = state.getAttribute(attrName);
+				if(val instanceof Collection)
+				{
+					int i = 0;
+					for(Object obj : (Collection) val)
+					{
+						attributes += "\t" + attrName + "[" + i + "] ==> " + obj + "\n";
+						i++;
+					}
+				}
+				else
+				{
+					attributes += "\t" + attrName + " ==> " + val + "\n";
+				}
+			}
+			attributes += "ResourcesHelperAction.buildMainPanelContext() SAK-8449 dump of toolSession.attributes:\n";
+			Enumeration toolNames = toolSession.getAttributeNames();
+			while(toolNames.hasMoreElements())
+			{
+				String name = (String) toolNames.nextElement();
+				Object val = toolSession.getAttribute(name);
+				if(val instanceof Collection)
+				{
+					int i = 0;
+					for(Object obj : (Collection) val)
+					{
+						attributes += "\t" + name + "[" + i + "] ==> " + obj + "\n";
+						i++;
+					}
+				}
+				else
+				{
+					attributes += "\t" + name + " ==> " + val + "\n";
+				}
+			}
+			logger.debug(attributes, new Throwable());
+			return null;
+		}
 		if(pipe.isActionCompleted())
 		{
 			return null;
@@ -290,6 +337,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
+		model.metadataGroupsIntoContext(context);
 		// model.setPubviewPossible(! preventPublicDisplay);
 				
 		context.put("model", model);
@@ -343,6 +391,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
+		model.metadataGroupsIntoContext(context);
 		// model.setPubviewPossible(! preventPublicDisplay);
 		
 		context.put("model", model);
@@ -405,6 +454,17 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		//Reference reference = (Reference) toolSession.getAttribute(ResourceToolAction.COLLECTION_REFERENCE);
 		String typeId = pipe.getAction().getTypeId();
 		String mimetype = pipe.getMimeType();
+		
+		// context.put("inDropbox", ContentHostingService.isInDropbox(pipe.getContentEntity().getId()));
+		ResourceTypeRegistry registry = (ResourceTypeRegistry) ComponentManager.get(ResourceTypeRegistry.class);
+		if(registry != null)
+		{
+			ResourceType typedef = registry.getType(typeId);
+			if(typedef != null)
+			{
+				context.put("hasNotificationDialog", typedef.hasNotificationDialog());
+			}
+		}
 		
 		context.put("pipe", pipe);
 
@@ -490,6 +550,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ListItem parent = new ListItem(pipe.getContentEntity());
 		parent.setPubviewPossible(! preventPublicDisplay);
 		ListItem model = new ListItem(pipe, parent, defaultRetractDate);
+		model.metadataGroupsIntoContext(context);
 		// model.setPubviewPossible(! preventPublicDisplay);
 				
 		context.put("model", model);
@@ -563,11 +624,25 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		String resourceType = pipe.getAction().getTypeId();
 		String mimetype = pipe.getMimeType();
 		
+		// notification
+		int noti = NotificationService.NOTI_NONE;
+		// read the notification options
+		String notification = params.getString("notify");
+		if ("r".equals(notification))
+		{
+			noti = NotificationService.NOTI_REQUIRED;
+		}
+		else if ("o".equals(notification))
+		{
+			noti = NotificationService.NOTI_OPTIONAL;
+		}
+		
 		pipe.setRevisedMimeType(pipe.getMimeType());
 		if(ResourceType.TYPE_TEXT.equals(resourceType) || ResourceType.MIME_TYPE_TEXT.equals(mimetype))
 		{
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_TEXT);
 			pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+			pipe.setNotification(noti);
 
 		}
 		else if(ResourceType.TYPE_HTML.equals(resourceType) || ResourceType.MIME_TYPE_HTML.equals(mimetype))
@@ -576,6 +651,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			content = FormattedText.processHtmlDocument(content, alertMsg);
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_HTML);
 			pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+			pipe.setNotification(noti);
 			if (alertMsg.length() > 0)
 			{
 				addAlert(state, alertMsg.toString());
@@ -585,6 +661,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		else if(ResourceType.TYPE_URL.equals(resourceType))
 		{
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
+			pipe.setNotification(noti);
 		}
 		else if(ResourceType.TYPE_FOLDER.equals(resourceType))
 		{
@@ -598,9 +675,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 				ResourceToolActionPipe fp = pipes.get(i);
 				String folderName = params.getString("folder" + (i + 1));
 				fp.setFileName(folderName);
+				fp.setNotification(noti);
 			}
 		}
-	
+		
 		pipe.setRevisedContent(content.getBytes());
 		pipe.setActionCanceled(false);
 		pipe.setErrorEncountered(false);
@@ -678,10 +756,14 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 					newFolder.setId(folderName);
 				}
 			}
-			
+			if(ListItem.isOptionalPropertiesEnabled())
+			{
+				newFolder.initMetadataGroups(null);
+			}
+
 			// capture properties
 			newFolder.captureProperties(params, ListItem.DOT + i);
-			
+
 			fp.setRevisedListItem(newFolder);
 			
 			c++;
@@ -769,6 +851,28 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
             }
             
 			ListItem newFile = new ListItem(filename);
+			// notification
+			int noti = NotificationService.NOTI_NONE;
+			// %%STATE_MODE_RESOURCES%%
+			if (newFile.isDropbox())
+			{
+				// set noti to none if in dropbox mode
+				noti = NotificationService.NOTI_NONE;
+			}
+			else
+			{
+				// read the notification options
+				String notification = params.getString("notify");
+				if ("r".equals(notification))
+				{
+					noti = NotificationService.NOTI_REQUIRED;
+				}
+				else if ("o".equals(notification))
+				{
+					noti = NotificationService.NOTI_OPTIONAL;
+				}
+			}
+			newFile.setNotification(noti);
 			
 			pipe.setRevisedListItem(newFile);
 			
@@ -873,8 +977,35 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 				}
 			}
 			
+			if(ListItem.isOptionalPropertiesEnabled())
+			{
+				newFile.initMetadataGroups(null);
+			}
+			
 			// capture properties
 			newFile.captureProperties(params, ListItem.DOT + i);
+			// notification
+			int noti = NotificationService.NOTI_NONE;
+			// %%STATE_MODE_RESOURCES%%
+			if (newFile.isDropbox())
+			{
+				// set noti to none if in dropbox mode
+				noti = NotificationService.NOTI_NONE;
+			}
+			else
+			{
+				// read the notification options
+				String notification = params.getString("notify");
+				if ("r".equals(notification))
+				{
+					noti = NotificationService.NOTI_REQUIRED;
+				}
+				else if ("o".equals(notification))
+				{
+					noti = NotificationService.NOTI_OPTIONAL;
+				}
+			}
+			newFile.setNotification(noti);
 			
 			//alerts.addAll(newFile.checkRequiredProperties());
 			            
@@ -1039,9 +1170,36 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
     				}
     			}
 
+    			if(ListItem.isOptionalPropertiesEnabled())
+    			{
+    				newFile.initMetadataGroups(null);
+    			}
+
     			// capture properties
     			newFile.captureProperties(params, ListItem.DOT + i);
     			
+    			// notification
+    			int noti = NotificationService.NOTI_NONE;
+    			// %%STATE_MODE_RESOURCES%%
+    			if (newFile.isDropbox())
+    			{
+    				// set noti to none if in dropbox mode
+    				noti = NotificationService.NOTI_NONE;
+    			}
+    			else
+    			{
+    				// read the notification options
+    				String notification = params.getString("notify");
+    				if ("r".equals(notification))
+    				{
+    					noti = NotificationService.NOTI_REQUIRED;
+    				}
+    				else if ("o".equals(notification))
+    				{
+    					noti = NotificationService.NOTI_OPTIONAL;
+    				}
+    			}
+    			newFile.setNotification(noti);
     			// allAlerts.addAll(newFile.checkRequiredProperties());
     			
     			pipe.setRevisedListItem(newFile);

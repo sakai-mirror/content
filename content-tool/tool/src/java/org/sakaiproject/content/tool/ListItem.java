@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +42,7 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
@@ -59,12 +61,15 @@ import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.cover.ContentTypeImageService;
 import org.sakaiproject.content.tool.ResourcesAction.ContentPermissions;
+import org.sakaiproject.content.tool.ResourcesAction.MetadataGroup;
 import org.sakaiproject.entity.api.EntityPropertyNotDefinedException;
 import org.sakaiproject.entity.api.EntityPropertyTypeException;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.SessionState;
+import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
@@ -96,13 +101,16 @@ public class ListItem
     private static final Log logger = LogFactory.getLog(ListItem.class);
     
     protected static Comparator DEFAULT_COMPARATOR = ContentHostingService.newContentHostingComparator(ResourceProperties.PROP_DISPLAY_NAME, true);
+
+	protected static boolean optionalPropertiesEnabled = false;
+
     protected static final Comparator PRIORITY_SORT_COMPARATOR = ContentHostingService.newContentHostingComparator(ResourceProperties.PROP_CONTENT_PRIORITY, true);
 
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
 	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
 
 	public static final String DOT = "_";
-
+	
 	/**
 	 * @param entity
 	 * @param parent
@@ -273,9 +281,24 @@ public class ListItem
 			item.setIconLocation( ContentTypeImageService.getContentTypeImage("folder"));
         }
         
-		item.setOtherActions(ResourcesAction.getActions(entity, item.getPermissions(), registry));
+        List<ResourceToolAction> otherActions = ResourcesAction.getActions(entity, item.getPermissions(), registry);
+        List<ResourceToolAction> pasteActions = ResourcesAction.getPasteActions(entity, item.getPermissions(), registry, items_to_be_moved, items_to_be_copied);
+        
+        if(pasteActions != null && ! pasteActions.isEmpty())
+        {
+        	if(otherActions == null)
+        	{
+        		otherActions = new Vector<ResourceToolAction>(pasteActions);
+        	}
+        	else
+        	{
+        		otherActions.addAll(0, pasteActions);
+        	}
+        }
+        
+		item.setOtherActions(otherActions);
 		
-		item.setPasteActions(ResourcesAction.getPasteActions(entity, item.getPermissions(), registry, items_to_be_moved, items_to_be_copied));
+		item.setPasteActions(pasteActions);
 		
 		return item;
 	}
@@ -368,6 +391,12 @@ public class ListItem
 
 	private String expandIconLocation;
 
+	protected int notification = NotificationService.NOTI_NONE;
+
+	protected List<MetadataGroup> metadataGroups;
+
+	private int constructor;
+
 
 	
 	/**
@@ -375,12 +404,21 @@ public class ListItem
 	 */
 	public ListItem(ContentEntity entity)
 	{
+		this.constructor = 2;
+		set(entity);
+	}
+
+	/**
+     * @param entity
+     */
+    protected void set(ContentEntity entity)
+    {
 		this.entity = entity;
 		if(entity == null)
 		{
 			return;
 		}
-		String refstr = entity.getReference();
+	    String refstr = entity.getReference();
 		Reference ref = EntityManager.newReference(refstr);
 		String contextId = ref.getContext();
 		boolean isUserSite = false;
@@ -414,6 +452,29 @@ public class ListItem
 		this.collection = entity.isCollection();
 		this.id = entity.getId();
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
+		if(name == null || name.trim().equals(""))
+		{
+			String siteCollectionId = contentService.getSiteCollection(ref.getContext());
+			if(siteCollectionId != null && siteCollectionId.equals(id))
+			{
+				Site site;
+                try
+                {
+	                site = SiteService.getSite(ref.getContext());
+	                String siteTitle = site.getTitle();
+	                if(siteTitle == null || siteTitle.trim().equals(""))
+	                {
+	                	siteTitle = site.getId();
+	                }
+					name = trb.getFormattedMessage("title.resources", new String[]{siteTitle});
+                }
+                catch (IdUnusedException e)
+                {
+	                // TODO Auto-generated catch block
+	                logger.warn("IdUnusedException ", e);
+                }
+			}
+		}
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
 		this.permissions = new TreeSet<ContentPermissions>();
@@ -458,7 +519,7 @@ public class ListItem
 			// setup for quota - ADMIN only, site-root collection only
 			if (SecurityService.isSuperUser())
 			{
-				String siteCollectionId = ContentHostingService.getSiteCollection(contextId);
+				String siteCollectionId = contentService.getSiteCollection(contextId);
 				if(siteCollectionId.equals(entity.getId()))
 				{
 					setCanSetQuota(true);
@@ -589,7 +650,11 @@ public class ListItem
 		{
 			for(Group gr : (Collection<Group>) site.getGroups())
 			{
-				if(gr.getId().equals(site.getId()))
+				if(gr == null)
+				{
+					// ignore?
+				}
+				else if(gr.getId().equals(site.getId()))
 				{
 					// ignore
 				}
@@ -599,6 +664,10 @@ public class ListItem
 				}
 			}
 		}
+//		if(isOptionalPropertiesEnabled())
+//		{
+//			initMetadataGroups(props);
+//		}
 				
 		setSiteGroups(site_groups);
 		
@@ -696,10 +765,9 @@ public class ListItem
 			this.retractDate = retractDate;
 		}
 		this.isAvailable = entity.isAvailable();
+    }
 
-	}
-
-	private void setSizzle(String sizzle) 
+	protected void setSizzle(String sizzle) 
 	{
 		this.sizzle = sizzle;
 	}
@@ -727,8 +795,10 @@ public class ListItem
 
 	public ListItem(ResourceToolActionPipe pipe, ListItem parent, Time defaultRetractTime)
 	{
+		this.constructor = 3;
 		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
 		this.entity = null;
+		//this.initMetadataGroups(null);
 		this.containingCollectionId = parent.getId();
 		ResourceTypeRegistry registry = (ResourceTypeRegistry) ComponentManager.get("org.sakaiproject.content.api.ResourceTypeRegistry");
 		this.resourceType = pipe.getAction().getTypeId();
@@ -873,12 +943,44 @@ public class ListItem
 	 */
 	public ListItem(String entityId)
 	{
+		this.constructor = 1;
 		this.id = entityId;
-		this.containingCollectionId = ContentHostingService.getContainingCollectionId(entityId);
+		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
 		
-		String refstr = ContentHostingService.getReference(id);
-		this.isSiteCollection = this.siteCollection(refstr);
+		ContentEntity entity = null;
+		try
+        {
+			if(contentService.isCollection(entityId))
+			{
+				entity = contentService.getCollection(entityId);
+		        set(entity);
+			}
+			else
+			{
+				entity = contentService.getResource(entityId);
+		        set(entity);
+			}
+        }
+        catch (IdUnusedException e)
+        {
+            // TODO Auto-generated catch block
+            logger.warn("IdUnusedException " + e);
+        }
+        catch (TypeException e)
+        {
+            // TODO Auto-generated catch block
+            logger.warn("TypeException " + e);
+        }
+        catch (PermissionException e)
+        {
+            // TODO Auto-generated catch block
+            logger.warn("PermissionException " + e);
+        }
 
+		this.containingCollectionId = contentService.getContainingCollectionId(entityId);
+		
+		String refstr = contentService.getReference(id);
+		this.isSiteCollection = this.siteCollection(refstr);
 	}
 
 	/**
@@ -949,7 +1051,11 @@ public class ListItem
     	
     	for(Group gr : this.allowedRemoveGroups)
     	{
-    		if(gr.getId().equals(group.getId()))
+    		if(gr == null)
+    		{
+    			// ignore?
+    		}
+    		else if(gr.getId().equals(group.getId()))
     		{
     			allowed = true;
     			break;
@@ -1135,6 +1241,10 @@ public class ListItem
 		{
 			captureMimetypeChange(params, index);
 		}
+		if(this.metadataGroups != null && ! this.metadataGroups.isEmpty())
+		{
+			this.captureOptionalPropertyValues(params, index);
+		}
 	}
 
 	protected void captureMimetypeChange(ParameterParser params, String index) 
@@ -1264,7 +1374,12 @@ public class ListItem
 		{
 			checkParent();
 			//Site has *NO* groups and public-view is *NOT* enabled on the server 
-			if(this.parent != null)
+			if(this.parent == null)
+			{
+				label = trb.getString("access.site.noparent");
+				logger.warn("ListItem.getLongAccessLabel(): Unable to display label because isSiteOnly == true and parent == null and constructor == " + this.constructor);  
+			}
+			else
 			{
 				label = trb.getFormattedMessage("access.site.nochoice", new String[]{parent.getName()});
 			}
@@ -1277,7 +1392,12 @@ public class ListItem
 		else if(isPubviewInherited())
 		{
 			checkParent();
-			if(parent != null)
+			if(parent == null)
+			{
+				label = trb.getString("access.public.noparent");
+				logger.warn("ListItem.getLongAccessLabel(): Unable to display label because isPubviewInherited == true and parent == null and constructor == " + this.constructor);  
+			}
+			else
 			{
 				label = trb.getFormattedMessage("access.public.nochoice", new String[]{parent.getName()});
 			}
@@ -1304,6 +1424,11 @@ public class ListItem
 	    {
 	    	if(this.containingCollectionId == null)
 	    	{
+	    		if(this.id == null)
+	    		{
+					logger.warn("ListItem.checkParent(): parent == null, containingCollectionId == null, id == null and constructor == " + this.constructor, new Throwable());  
+	    			return;
+	    		}
 	    		this.containingCollectionId = ContentHostingService.getContainingCollectionId(this.id);
 	    	}
 	    	try
@@ -1352,7 +1477,7 @@ public class ListItem
     	return addActions;
     }
 	
-	private Collection<Group> getAllowedRemoveGroupRefs() 
+	protected Collection<Group> getAllowedRemoveGroupRefs() 
 	{
 		// TODO Auto-generated method stub
 		return new TreeSet<Group>(this.allowedAddGroups);
@@ -1498,8 +1623,15 @@ public class ListItem
     	}
     	for(Group group : groups)
     	{
-    		names[index] = group.getTitle();
-    		index++;
+    		if(group == null)
+    		{
+    			// ignore
+    		}
+    		else
+    		{
+	    		names[index] = group.getTitle();
+	    		index++;
+    		}
     	}
     	
     	return names;
@@ -1562,7 +1694,7 @@ public class ListItem
 		return label;
     }
 	
-	private int getNumberOfGroups()
+	protected int getNumberOfGroups()
     {
 		int size = 0;
     	
@@ -1601,7 +1733,10 @@ public class ListItem
     	SortedSet<String> refs = new TreeSet<String>();
     	for(Group group : this.groups)
     	{
-    		refs.add(group.getReference());
+    		if(group != null)
+    		{
+    			refs.add(group.getReference());
+    		}
     	}
     	return refs;
     }
@@ -1646,7 +1781,10 @@ public class ListItem
     	SortedSet<String> refs = new TreeSet<String>();
     	for(Group group : this.inheritedGroups)
     	{
-    		refs.add(group.getReference());
+    		if(group != null)
+    		{
+    			refs.add(group.getReference());
+    		}
     	}
     	return refs;
     }
@@ -1730,7 +1868,10 @@ public class ListItem
     	SortedSet<String> refs = new TreeSet<String>();
     	for(Group group : this.possibleGroups)
     	{
-    		refs.add(group.getReference());
+    		if(group != null)
+    		{
+    			refs.add(group.getReference());
+    		}
     	}
     	return refs;
     }
@@ -1867,7 +2008,11 @@ public class ListItem
     	
     	for(Group gr : this.groups)
     	{
-    		if(gr.getId().equals(group.getId()))
+    		if(gr == null)
+    		{
+    			// ignore
+    		}
+    		else if(gr.getId().equals(group.getId()))
     		{
     			isLocal = true;
     			break;
@@ -1906,7 +2051,11 @@ public class ListItem
     	
     	for(Group gr : groupsToCheck)
     	{
-    		if(gr.getId().equals(group.getId()))
+    		if(gr == null)
+    		{
+    			// ignore
+    		}
+    		else if(gr.getId().equals(group.getId()))
     		{
     			isPossible = true;
     			break;
@@ -2052,7 +2201,7 @@ public class ListItem
     	this.createdBy = createdBy;
     }
 
-	private void setCreatedTime(String createdTime) 
+	protected void setCreatedTime(String createdTime) 
 	{
 		this.createdTime = createdTime;
 	}
@@ -2199,7 +2348,7 @@ public class ListItem
 		this.mimetype = mimetype;
 	}
 
-	private void setModifiedBy(String modifiedBy) 
+	protected void setModifiedBy(String modifiedBy) 
 	{
 		this.modifiedBy = modifiedBy;
 	}
@@ -2290,7 +2439,10 @@ public class ListItem
     	this.siteGroupsMap.clear();
         for(Group group : siteGroups)
         {
-        	this.siteGroupsMap.put(group.getId(), group);
+        	if(group != null)
+        	{
+        		this.siteGroupsMap.put(group.getId(), group);
+        	}
         }
     }
 
@@ -2440,6 +2592,10 @@ public class ListItem
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		setQuotaOnEntity(props);
+		if(isOptionalPropertiesEnabled())
+		{
+			this.setMetadataPropertiesOnEntity(props);
+		}
 	}
 	
 	protected void setQuotaOnEntity(ResourcePropertiesEdit props) 
@@ -2543,6 +2699,10 @@ public class ListItem
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
 		{
 			setMimetypeOnEntity(edit, props);
+		}
+		if(isOptionalPropertiesEnabled())
+		{
+			this.setMetadataPropertiesOnEntity(props);
 		}
 	}
 
@@ -2782,6 +2942,360 @@ public class ListItem
     {
     	this.expandIconLocation = expandIconLocation;
     }
+
+	public void setNotification(int noti)
+    {
+	    this.notification = noti;
+    }
+
+	/**
+     * @return the notification
+     */
+    public int getNotification()
+    {
+    	return notification;
+    }
+    
+	/**
+	 * initialize the metadata context
+	 */
+	public void initMetadataGroups(ResourceProperties properties)
+	{
+		if(isOptionalPropertiesEnabled() && typeSupportsOptionalProperties())
+		{
+			if(this.metadataGroups == null)
+			{
+				metadataGroups =  new Vector<MetadataGroup>();
+			}
+			boolean optionalPropertiesDefined = false;
+			String opt_prop_name = rb.getString("opt_props");
+			
+			for(MetadataGroup group : this.metadataGroups)
+			{
+				if(group == null)
+				{
+					continue;
+				}
+				if(opt_prop_name.equals(group.getName()))
+				{
+					optionalPropertiesDefined = true;
+					break;
+				}
+			}
+			// define DublinCore
+			if( !optionalPropertiesDefined )
+			{
+				MetadataGroup dc = new MetadataGroup( rb.getString("opt_props") );
+				// dc.add(ResourcesMetadata.PROPERTY_DC_TITLE);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_DESCRIPTION);
+				dc.add(ResourcesMetadata.PROPERTY_DC_ALTERNATIVE);
+				dc.add(ResourcesMetadata.PROPERTY_DC_CREATOR);
+				dc.add(ResourcesMetadata.PROPERTY_DC_PUBLISHER);
+				dc.add(ResourcesMetadata.PROPERTY_DC_SUBJECT);
+				dc.add(ResourcesMetadata.PROPERTY_DC_CREATED);
+				dc.add(ResourcesMetadata.PROPERTY_DC_ISSUED);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_MODIFIED);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_TABLEOFCONTENTS);
+				dc.add(ResourcesMetadata.PROPERTY_DC_ABSTRACT);
+				dc.add(ResourcesMetadata.PROPERTY_DC_CONTRIBUTOR);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_TYPE);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_FORMAT);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_IDENTIFIER);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_SOURCE);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_LANGUAGE);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_COVERAGE);
+				// dc.add(ResourcesMetadata.PROPERTY_DC_RIGHTS);
+				dc.add(ResourcesMetadata.PROPERTY_DC_AUDIENCE);
+				dc.add(ResourcesMetadata.PROPERTY_DC_EDULEVEL);
+				
+				/* Filesystem and file-like mount points */
+				//dc.add(ResourcesMetadata.PROPERTY_FSMOUNT_ACTIVE);
+					
+				metadataGroups.add(dc);
+			}
+
+			//Map metadata = new Hashtable();
+			if(this.metadataGroups != null && ! this.metadataGroups.isEmpty())
+			{
+				for(MetadataGroup metadata_group : this.metadataGroups)
+				{
+					if(metadata_group == null)
+					{
+						continue;
+					}
+					for(ResourcesMetadata prop : (List<ResourcesMetadata>) metadata_group)
+					{
+						if(prop == null)
+						{
+							continue;
+						}
+						String name = prop.getFullname();
+						String widget = prop.getWidget();
+						if(widget.equals(ResourcesMetadata.WIDGET_DATE) || widget.equals(ResourcesMetadata.WIDGET_DATETIME) || widget.equals(ResourcesMetadata.WIDGET_TIME))
+						{
+							Time time = null;
+							if(properties == null)
+							{
+								// use "now" as default in that case
+								time = TimeService.newTime();
+							}
+							else
+							{
+								try
+								{
+									time = properties.getTimeProperty(name);
+								}
+								catch(Exception e)
+								{
+									// use "now" as default in that case
+									time = TimeService.newTime();
+								}
+							}
+							prop.setValue(name, time);
+						}
+						else
+						{
+							if(properties != null)
+							{
+								String value = properties.getPropertyFormatted(name);
+								prop.setValue(name, value);
+							}
+						}
+					}
+				}
+			}
+			/*
+			// define DublinCore
+			if(!metadataGroups.contains(new MetadataGroup("Test of Datatypes")))
+			{
+				MetadataGroup dc = new MetadataGroup("Test of Datatypes");
+				dc.add(ResourcesMetadata.PROPERTY_DC_TITLE);
+				dc.add(ResourcesMetadata.PROPERTY_DC_DESCRIPTION);
+				dc.add(ResourcesMetadata.PROPERTY_DC_ANYURI);
+				dc.add(ResourcesMetadata.PROPERTY_DC_DOUBLE);
+				dc.add(ResourcesMetadata.PROPERTY_DC_DATETIME);
+				dc.add(ResourcesMetadata.PROPERTY_DC_TIME);
+				dc.add(ResourcesMetadata.PROPERTY_DC_DATE);
+				dc.add(ResourcesMetadata.PROPERTY_DC_BOOLEAN);
+				dc.add(ResourcesMetadata.PROPERTY_DC_INTEGER);
+				metadataGroups.add(dc);
+				state.setAttribute(STATE_METADATA_GROUPS, metadataGroups);
+			}
+			*/
+		}
+	}
 	
+	/**
+	 * Add variables and constants to the velocity context to render an editor
+	 * for inputing and modifying optional metadata properties about a resource.
+	 */
+	protected void metadataGroupsIntoContext(Context context)
+	{
+
+		context.put("STRING", ResourcesMetadata.WIDGET_STRING);
+		context.put("TEXTAREA", ResourcesMetadata.WIDGET_TEXTAREA);
+		context.put("BOOLEAN", ResourcesMetadata.WIDGET_BOOLEAN);
+		context.put("INTEGER", ResourcesMetadata.WIDGET_INTEGER);
+		context.put("DOUBLE", ResourcesMetadata.WIDGET_DOUBLE);
+		context.put("DATE", ResourcesMetadata.WIDGET_DATE);
+		context.put("TIME", ResourcesMetadata.WIDGET_TIME);
+		context.put("DATETIME", ResourcesMetadata.WIDGET_DATETIME);
+		context.put("ANYURI", ResourcesMetadata.WIDGET_ANYURI);
+		context.put("WYSIWYG", ResourcesMetadata.WIDGET_WYSIWYG);
+
+		context.put("today", TimeService.newTime());
+		
+		if(this.metadataGroups == null && isOptionalPropertiesEnabled() && typeSupportsOptionalProperties())
+		{
+			ResourceProperties props = null;
+			if(this.entity != null)
+			{
+				props = this.entity.getProperties();
+			}
+			this.initMetadataGroups(props);
+		}
+		
+//		if(metadataGroups != null && !metadataGroups.isEmpty())
+//		{
+//			context.put("metadataGroups", metadataGroups);
+//		}
+
+	}	// metadataGroupsIntoContext
+
+	protected void captureOptionalPropertyValues(ParameterParser params, String index)
+	{
+		if(this.metadataGroups == null)
+		{
+			return;
+		}
+		
+		for(MetadataGroup group : this.metadataGroups)
+		{
+			if(group == null)
+			{
+				continue;
+			}
+			
+			Iterator<ResourcesMetadata> it = group.iterator();
+			while(it.hasNext())
+			{
+				ResourcesMetadata prop = it.next();
+				String propname = prop.getFullname() + index;
+	
+				if(ResourcesMetadata.WIDGET_NESTED.equals(prop.getWidget()))
+				{
+					// do nothing
+				}
+				else if(ResourcesMetadata.WIDGET_BOOLEAN.equals(prop.getWidget()))
+				{
+					String value = params.getString(propname);
+					if(value == null || Boolean.FALSE.toString().equals(value))
+					{
+						prop.setValue(0, Boolean.FALSE.toString());
+					}
+					else
+					{
+						prop.setValue(0, Boolean.TRUE.toString());
+					}
+				}
+				else if(ResourcesMetadata.WIDGET_DATE.equals(prop.getWidget()) || ResourcesMetadata.WIDGET_DATETIME.equals(prop.getWidget()) || ResourcesMetadata.WIDGET_TIME.equals(prop.getWidget()))
+				{
+					int year = 0;
+					int month = 0;
+					int day = 0;
+					int hour = 0;
+					int minute = 0;
+					int second = 0;
+					int millisecond = 0;
+					String ampm = "";
+	
+					if(prop.getWidget().equals(ResourcesMetadata.WIDGET_DATE) ||
+						prop.getWidget().equals(ResourcesMetadata.WIDGET_DATETIME))
+					{
+						year = params.getInt(prop.getFullname() + "_year" + index, year);
+						month = params.getInt(prop.getFullname() + "_month" + index, month);
+						day = params.getInt(prop.getFullname() + "_day" + index, day);
+					}
+					if(prop.getWidget().equals(ResourcesMetadata.WIDGET_TIME) ||
+						prop.getWidget().equals(ResourcesMetadata.WIDGET_DATETIME))
+					{
+						hour = params.getInt(prop.getFullname() + "_hour" + index, hour);
+						minute = params.getInt(prop.getFullname() + "_minute" + index, minute);
+						second = params.getInt(prop.getFullname() + "_second" + index, second);
+						millisecond = params.getInt(prop.getFullname() + "_millisecond" + index, millisecond);
+						ampm = params.getString(prop.getFullname() + "_ampm" + index);
+	
+						if("pm".equalsIgnoreCase(ampm))
+						{
+							if(hour < 12)
+							{
+								hour += 12;
+							}
+						}
+						else if(hour == 12)
+						{
+							hour = 0;
+						}
+					}
+					if(hour > 23)
+					{
+						hour = hour % 24;
+						day++;
+					}
+	
+					Time value = TimeService.newTimeLocal(year, month, day, hour, minute, second, millisecond);
+					prop.setValue(0, value);
+				}
+				else if(ResourcesMetadata.WIDGET_ANYURI.equals(prop.getWidget()))
+				{
+					String value = params.getString(propname);
+					if(value != null && ! value.trim().equals(""))
+					{
+						Reference ref = EntityManager.newReference(ContentHostingService.getReference(value));
+						prop.setValue(0, ref);
+					}
+				}
+				else
+				{
+					String value = params.getString(propname);
+					if(value != null)
+					{
+						prop.setValue(0, value);
+					}
+				}
+			}
+		}
+
+	}	// capturePropertyValues
+	
+	protected void setMetadataPropertiesOnEntity(ResourcePropertiesEdit props) 
+	{
+		if(this.metadataGroups == null || this.metadataGroups.isEmpty())
+		{
+			return;
+		}
+		
+		for(MetadataGroup metadataGroup : this.metadataGroups)
+		{
+			if(metadataGroup == null)
+			{
+				continue;
+			}
+
+			for(ResourcesMetadata prop : (List<ResourcesMetadata>) metadataGroup)
+			{
+				if(prop == null || prop.getValue(0) == null)
+				{
+					continue;
+				}
+				
+				props.addProperty(prop.getFullname(), prop.getValue(0).toString());
+			}
+		}
+	}
+
+	public static void setOptionalPropertiesEnabled(boolean b)
+    {
+	    optionalPropertiesEnabled = b;
+    }
+
+	/**
+     * @return the optionalPropertiesEnabled
+     */
+    public static boolean isOptionalPropertiesEnabled()
+    {
+    	return optionalPropertiesEnabled;
+    }
+
+	/**
+     * @return the metadataGroups
+     */
+    public List<MetadataGroup> getMetadataGroups()
+    {
+    	if(this.metadataGroups == null && isOptionalPropertiesEnabled() && typeSupportsOptionalProperties())
+    	{
+    		
+    		ResourceProperties properties = null;
+    		if(this.entity != null)
+    		{
+    			properties = this.entity.getProperties();
+    		}
+			this.initMetadataGroups(properties );
+    	}
+    	return metadataGroups;
+    }
+
+	private boolean typeSupportsOptionalProperties()
+    {
+		boolean typeSupportsOptionalProperties = true;
+		ResourceType typeDef = this.getResourceTypeDef();
+		if(typeDef != null)
+		{
+			typeSupportsOptionalProperties = typeDef.hasOptionalPropertiesDialog();
+		}
+	    return typeSupportsOptionalProperties;
+    }
+
+
 }
 

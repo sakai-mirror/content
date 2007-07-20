@@ -30,12 +30,15 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.InteractionAction;
 import org.sakaiproject.content.api.ResourceToolAction;
+import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.ResourceToolAction.ActionType;
