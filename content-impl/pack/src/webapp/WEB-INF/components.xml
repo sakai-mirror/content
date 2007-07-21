@@ -3,16 +3,15 @@
 
 <beans>
 
-<!-- Uncomment this import to actiate JCR 
- -->
+
+
+
+
    <import resource="components-jcr.xml" />
 
 
     <!-- database beans -->
     
-    <!--
-    Comment The DbBeans to acivate JCR  FROM HERE========================= 
-    - - >
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlDb2"       class="org.sakaiproject.content.impl.ContentServiceSqlDb2"     singleton="true"/>
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlDefault"   class="org.sakaiproject.content.impl.ContentServiceSqlDefault" singleton="true"/>
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlHSql"      class="org.sakaiproject.content.impl.ContentServiceSqlHSql"    singleton="true"/>
@@ -59,9 +58,6 @@
         </property>
   	</bean>
 
-    <! - -
-    Comment The DbBeans to acivate JCR  TO HERE========================= 
-    -->
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
 			class="org.sakaiproject.content.impl.ContentHostingHandlerResolverImpl"
