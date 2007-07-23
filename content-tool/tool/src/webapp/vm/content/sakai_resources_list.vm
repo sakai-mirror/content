@@ -818,21 +818,23 @@ div.scrollDescription {
 			}
 		}
 		
+	timeout=null;
 		$(document).ready(
 			function() {
 		
 				$("div.resourceLink").hover(
-					function() {  
-						$(this).children("div:eq(0)").css("display","inline");
+					function() { that=this; timeout=setTimeout(function(){ 
+						$(that).children("div:eq(0)").css("display","inline");
 						
-						maxHeight = parseInt($(this).children("div:eq(0)").css("max-height"));
-						divHeight = parseInt($(this).children("div:eq(0)").height());
+						maxHeight = parseInt($(that).children("div:eq(0)").css("max-height"));
+						divHeight = parseInt($(that).children("div:eq(0)").height());
 						if (divHeight >= maxHeight) {
 							$(this).children("div:eq(0)").addClass("scrollDescription");
 						}
 		
-					}, 
+					}, 300);}, 
 					function() { 
+						clearTimeout(timeout);
 						$(this).children("div:eq(0)").css("display","none");
 				});	
 					
@@ -851,8 +853,7 @@ div.scrollDescription {
 						$(this).next("div:eq(0)").css("display","none");
 					}
 				);
-		});
-		
+		});	
 		
 	//-->
 </script>
