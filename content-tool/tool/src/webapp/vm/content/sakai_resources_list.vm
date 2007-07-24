@@ -818,7 +818,8 @@ div.scrollDescription {
 			}
 		}
 		
-	timeout=null;
+		timeout=null;
+		timeoutDelay=400;
 		$(document).ready(
 			function() {
 		
@@ -832,7 +833,7 @@ div.scrollDescription {
 							$(this).children("div:eq(0)").addClass("scrollDescription");
 						}
 		
-					}, 300);}, 
+					}, timeoutDelay);}, 
 					function() { 
 						clearTimeout(timeout);
 						$(this).children("div:eq(0)").css("display","none");
@@ -853,9 +854,24 @@ div.scrollDescription {
 						$(this).next("div:eq(0)").css("display","none");
 					}
 				);
+				$("ul.makeMenu li").hover(
+					function(){ that=this; timeout=setTimeout(function(){
+						$(that).children("ul").show();
+					},timeoutDelay);},
+					function() {
+						clearTimeout(timeout);
+						$(this).children("ul").hide();
+				});
+				
 		});	
 		
 	//-->
 </script>
+<style type="text/css">
+ul.makeMenu li:hover > ul {
+   display:none;
+}
+
+</style>
 
 	
