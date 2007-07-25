@@ -1480,6 +1480,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			id = id + Entity.SEPARATOR;
 		}
+		
+		String containerId = isolateContainingId(id);
+		ThreadLocalManager.set("members@" + containerId, null);
+		ThreadLocalManager.set("getCollections@" + containerId, null);
+		//ThreadLocalManager.set("getResources@" + containerId, null);
 
 		// check security
 		unlock(AUTH_RESOURCE_ADD, id);
@@ -2148,6 +2153,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// the collection has changed so we must remove the old version from thread-local cache
 		String ref = edit.getReference();
 		ThreadLocalManager.set("findCollection@" + ref, null);
+		String containerId = isolateContainingId(edit.getId());
+		ThreadLocalManager.set("findCollection@" + getReference( containerId ), null);
+		ThreadLocalManager.set("members@" + containerId, null);
+		ThreadLocalManager.set("getCollections@" + containerId, null);
+		//ThreadLocalManager.set("getResources@" + containerId, null);
 
 		// track it (no notification)
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseCollectionEdit) edit).getEvent(), edit.getReference(), true,
@@ -2780,6 +2790,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			
 		}
+		
+		ThreadLocalManager.set("members@" + collectionId, null);
+		//ThreadLocalManager.set("getCollections@" + collectionId, null);
+		ThreadLocalManager.set("getResources@" + collectionId, null);
+
 //		if (edit == null)
 //		{
 //			throw new IdUniquenessException(id);
@@ -4834,6 +4849,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// so we get new version if we try to retrieve it in same thread
 		String ref = edit.getReference();
 		ThreadLocalManager.set("findResource@" + ref, null);
+		String containerId = isolateContainingId(edit.getId());
+		ThreadLocalManager.set("findCollection@" +  getReference( containerId ), null);
+		ThreadLocalManager.set("members@" + containerId, null);
+		//ThreadLocalManager.set("getCollections@" + containerId, null);
+		ThreadLocalManager.set("getResources@" + containerId, null);
 
 		// track it
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(), true,
@@ -9238,7 +9258,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				if ((!m_caching) || (m_cache == null) || (m_cache.disabled()))
 				{
 					// TODO: current service caching
-					mbrs = m_storage.getCollections(this);
+					mbrs.addAll(m_storage.getCollections(this));
 					mbrs.addAll(m_storage.getResources(this));
 				}
 	
@@ -9248,7 +9268,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					if (m_cache.isComplete(getReference()))
 					{
 						// get just this collection's members
-						mbrs = m_cache.getAll(getReference());
+						mbrs.addAll(m_cache.getAll(getReference()));
 					}
 	
 					// otherwise get all the members from storage
@@ -9263,7 +9283,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 							if (m_cache.isComplete(getReference()))
 							{
 								// get just this collection's members
-								mbrs = m_cache.getAll(getReference());
+								mbrs.addAll(m_cache.getAll(getReference()));
 							}
 							else
 							{
@@ -9272,7 +9292,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	
 								// read from storage - resources and collections, but just those
 								// whose path is this's path (i.e. just mine!)
-								mbrs = m_storage.getCollections(this);
+								mbrs.addAll(m_storage.getCollections(this));
 								mbrs.addAll(m_storage.getResources(this));
 	
 								// update the cache, and mark it complete
