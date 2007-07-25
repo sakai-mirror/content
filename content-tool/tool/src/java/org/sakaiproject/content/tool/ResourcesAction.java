@@ -4491,7 +4491,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		// find the ContentHosting service
 		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
 		context.put ("service", contentService);
-
+		
 		ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
 		if(registry == null)
 		{
@@ -4516,7 +4516,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			//context.put("dropboxMode", Boolean.FALSE);
 		}
-
+		
 		// make sure the channedId is set
 		String collectionId = (String) state.getAttribute (STATE_COLLECTION_ID);
 		context.put ("collectionId", collectionId);
@@ -4540,6 +4540,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			catch (TypeException e) {}
 			catch (PermissionException e) {}
 		}
+		
 		if(!inMyWorkspace && !dropboxMode && atHome && SiteService.allowUpdateSite(ToolManager.getCurrentPlacement().getContext()))
 		{
 			context.put("showPermissions", Boolean.TRUE.toString());
@@ -4555,7 +4556,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 
 		}
-
+		
 		context.put("atHome", Boolean.toString(atHome));
 
 		if(ContentHostingService.isAvailabilityEnabled())
@@ -4650,7 +4651,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 			List<String> items_to_be_copied = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_COPIED);
 			List<String> items_to_be_moved = (List<String>) state.getAttribute(STATE_ITEMS_TO_BE_MOVED);
-
+			
 			boolean need_to_expand_all = Boolean.TRUE.toString().equals((String)state.getAttribute(STATE_NEED_TO_EXPAND_ALL));
 			SortedSet<String> expandedCollections = (SortedSet<String>) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
 			expandedCollections.add(collectionId);
@@ -4695,6 +4696,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				item.setName(trb.getFormattedMessage("title.resources", args));
 			}
 			
+			
 //			if(atHome && dropboxMode)
 //			{
 //				item.setName(siteTitle + " " + rb.getString("gen.drop"));
@@ -4707,7 +4709,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			context.put("site", items);
 
 			boolean show_all_sites = false;
-
+			
 			String allowed_to_see_other_sites = (String) state.getAttribute(STATE_SHOW_ALL_SITES);
 			String show_other_sites = (String) state.getAttribute(STATE_SHOW_OTHER_SITES);
 			context.put("show_other_sites", show_other_sites);
@@ -4716,7 +4718,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				context.put("allowed_to_see_other_sites", Boolean.TRUE.toString());
 				show_all_sites = Boolean.TRUE.toString().equals(show_other_sites);
 			}
-
+			
 			if(atHome && show_all_sites)
 			{
 				state.setAttribute(STATE_HIGHLIGHTED_ITEMS, highlightedItems);
@@ -4815,7 +4817,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			addAlert(state, rb.getString("notpermis1"));
 			context.put ("collectionFlag", Boolean.FALSE.toString());
 		}
-
+		
 		context.put("homeCollection", (String) state.getAttribute (STATE_HOME_COLLECTION_ID));
 		context.put("siteTitle", state.getAttribute(STATE_SITE_TITLE));
 		context.put ("resourceProperties", contentService.newResourceProperties ());
@@ -4833,16 +4835,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		context.put("expandallflag", state.getAttribute(STATE_EXPAND_ALL_FLAG));
 		state.removeAttribute(STATE_NEED_TO_EXPAND_ALL);
-
+		
 		// inform the observing courier that we just updated the page...
 		// if there are pending requests to do so they can be cleared
 		justDelivered(state);
 
 		// pick the "show" template based on the standard template name
 		// String template = (String) getContext(data).get("template");
-
-		context.put("labeler", new ResourceTypeLabeler());
 		
+		context.put("labeler", new ResourceTypeLabeler());
+				
 		return TEMPLATE_NEW_LIST;
 
 	}	// buildListContext
