@@ -5992,15 +5992,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 			if(entity.isResource())
 			{
-				try 
-				{
-					pipe.setMimeType(((ContentResource) entity).getContentType());
-					pipe.setContent(((ContentResource) entity).getContent());
-				} 
-				catch (ServerOverloadException e) 
-				{
-					logger.warn(this + ".doDispatchAction ServerOverloadException", e);
-				}
+				pipe.setMimeType(((ContentResource) entity).getContentType());
+				//pipe.setContentStream(((ContentResource) entity).streamContent());
+				//pipe.setContent(((ContentResource) entity).getContent());
 			}
 
 			startHelper(data.getRequest(), iAction.getHelperId());

@@ -4528,7 +4528,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				edit = addResource(new_id);
 				edit.setContentType(resource.getContentType());
-				edit.setContent(resource.getContent());
+				
+				// use stream instead of byte array
+				// edit.setContent(resource.getContent());
+				edit.setContent(resource.streamContent());
+				
 				edit.setResourceType(resource.getResourceType());
 				ResourcePropertiesEdit newProps = edit.getPropertiesEdit();
 				
@@ -6479,7 +6483,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 								// add resource
 								ContentResourceEdit edit = addResource(nId);
 								edit.setContentType(((ContentResource) oResource).getContentType());
-								edit.setContent(((ContentResource) oResource).getContent());
+								edit.setContent(((ContentResource) oResource).streamContent());
+								//edit.setContent(((ContentResource) oResource).getContent());
 								// import properties
 								ResourcePropertiesEdit p = edit.getPropertiesEdit();
 								p.clear();
@@ -6994,6 +6999,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		byte[] content = null;
 		try
 		{
+			// TODO use stream instead of byte array
 			// get the content bytes
 			content = resource.getContent();
 		}
