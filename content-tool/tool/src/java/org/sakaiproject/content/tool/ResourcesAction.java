@@ -4444,6 +4444,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			
 			
+			 
+			
+			
+			
 //			if(atHome && dropboxMode)
 //			{
 //				item.setName(siteTitle + " " + rb.getString("gen.drop"));
@@ -4591,6 +4595,30 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		// String template = (String) getContext(data).get("template");
 		
 		context.put("labeler", new ResourceTypeLabeler());
+		
+		
+		try {
+			//context.put("quotaUsed", contentService.getQuota(contentService.getCollection(homeCollectionId)));
+			//context.put("quotaMax", contentService.getBodySizeK(contentService.getCollection(homeCollectionId)));
+			
+			ContentCollection homeCollection = contentService.getCollection(homeCollectionId);
+			
+			context.put("quotaUsed", homeCollection.getBodySizeK());
+			context.put("quotaMax", contentService.getQuota(homeCollection));
+		
+		
+		} catch (IdUnusedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TypeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PermissionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 				
 		return TEMPLATE_NEW_LIST;
 

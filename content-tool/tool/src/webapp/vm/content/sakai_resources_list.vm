@@ -87,6 +87,12 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 				#end
 			</h3>
 		</div>	
+		
+		### QUOTA DISPLAY ###
+		
+		QUOTA: Used $quotaUsed KB of $quotaMax KB <br/><br/>
+		
+		
 		#if($listActions)
 			<div class="navIntraToolLink" >
 				#set ($itemsOnLine = 0)
