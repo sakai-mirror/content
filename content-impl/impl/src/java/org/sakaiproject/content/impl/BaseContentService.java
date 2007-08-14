@@ -9601,16 +9601,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 							ContentCollectionEdit entity = editCollection(name);
 							ResourcePropertiesEdit props = entity.getPropertiesEdit();
 							props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, priority.toString());
-							//commitCollection(entity);
-							// complete the edit
-							m_storage.commitCollection(entity);
-
-							// close the edit object
-							((BaseCollectionEdit) entity).closeEdit();
-
-							// the collection has changed so we must remove the old version from thread-local cache
-							String ref = entity.getReference();
-							ThreadLocalManager.set("findCollection@" + ref, null);
+							commitCollection(entity);
 						}
 						else
 						{
@@ -9618,17 +9609,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 							ResourcePropertiesEdit props = entity.getPropertiesEdit();
 							props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, priority.toString());
 							
-							// complete the edit
-							m_storage.commitResource(entity);
-
-							// close the edit object
-							((BaseResourceEdit) entity).closeEdit();
-
-							// must remove old version of this edit from thread-local cache
-							// so we get new version if we try to retrieve it in same thread
-							String ref = entity.getReference();
-							ThreadLocalManager.set("findResource@" + ref, null);
-							
+							// Soo Il Kim (kimsooil@bu.edu): added parameter to eliminate notifications
+							commitResource(entity, NotificationService.NOTI_NONE);
 							// close the edit object
 							((BaseResourceEdit) entity).closeEdit();
 						}
@@ -9636,27 +9618,32 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					catch(TypeException e)
 					{
 						// TODO Auto-generated catch block
-						M_log.warn("TypeException",e);
+						e.printStackTrace();
 					} 
 					catch (IdUnusedException e) 
 					{
 						// TODO Auto-generated catch block
-						M_log.warn("IdUnusedException",e);
+						e.printStackTrace();
 					} 
 					catch (PermissionException e) 
 					{
 						// TODO Auto-generated catch block
-						M_log.warn("PermissionException",e);
+						e.printStackTrace();
 					} 
 					catch (InUseException e) 
 					{
 						// TODO Auto-generated catch block
-						M_log.warn("InUseException",e);
+						e.printStackTrace();
+					} 
+					catch (OverQuotaException e) 
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					} 
 					catch (ServerOverloadException e) 
 					{
 						// TODO Auto-generated catch block
-						M_log.warn("ServerOverloadException",e);
+						e.printStackTrace();
 					}
 				}
 				
