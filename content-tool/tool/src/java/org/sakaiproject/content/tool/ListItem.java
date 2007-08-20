@@ -2738,7 +2738,7 @@ public class ListItem
 			{
 				edit.clearGroupAccess();
 			}
-			else if(ContentHostingService.isPubView(this.id) && ! this.isPubview)
+			else if(ContentHostingService.isPubView(edit.getId()) && ! this.isPubview)
 			{
 				edit.clearPublicAccess();
 			}
