@@ -9610,8 +9610,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 							ResourcePropertiesEdit props = entity.getPropertiesEdit();
 							props.addProperty(ResourceProperties.PROP_CONTENT_PRIORITY, priority.toString());
 							
-							// Soo Il Kim (kimsooil@bu.edu): added parameter to eliminate notifications
-							commitResource(entity, NotificationService.NOTI_NONE);
+							// complete the edit
+							m_storage.commitResource(entity);
+
 							// close the edit object
 							((BaseResourceEdit) entity).closeEdit();
 
@@ -9626,32 +9627,27 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					catch(TypeException e)
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						M_log.warn("TypeException",e);
 					} 
 					catch (IdUnusedException e) 
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						M_log.warn("IdUnusedException",e);
 					} 
 					catch (PermissionException e) 
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						M_log.warn("PermissionException",e);
 					} 
 					catch (InUseException e) 
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} 
-					catch (OverQuotaException e) 
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						M_log.warn("InUseException",e);
 					} 
 					catch (ServerOverloadException e) 
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						M_log.warn("ServerOverloadException",e);
 					}
 				}
 				
