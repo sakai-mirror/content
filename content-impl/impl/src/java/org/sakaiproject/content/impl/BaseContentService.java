@@ -8419,6 +8419,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 					for (Iterator i = groups.iterator(); i.hasNext();)
 					{
 						Group group = (Group) i.next();
+						if(group == null)
+						{
+							continue;
+						}
 						Collection azGroups = new Vector(hierarchy);
 						azGroups.add(group.getReference());
 						
@@ -8641,7 +8645,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			{
 				String ref = (String) it.next();
 				Group group = m_siteService.findGroup(ref);
-				groups.add(group);
+				if(group != null)
+				{
+					groups.add(group);
+				}
 			}
 			return groups;
 			
