@@ -1256,7 +1256,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		else if (fileitem.getFileName() == null || fileitem.getFileName().length() == 0)
 		{
-			addAlert(state, hrb.getString("choosefile7"));
+			addAlert(state, crb.getString("choosefile7"));
 		}
 		else if (fileitem.getFileName().length() > 0)
 		{
@@ -1330,15 +1330,15 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				catch (PermissionException e)
 				{
-					addAlert(state, hrb.getString("notpermis4"));
+					addAlert(state, crb.getString("notpermis4"));
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(state, hrb.getString("overquota"));
+					addAlert(state, crb.getString("overquota"));
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(state, hrb.getString("failed"));
+					addAlert(state, crb.getString("failed"));
 				}
 				catch(IdInvalidException ignore)
 				{
@@ -1355,12 +1355,12 @@ public class FilePickerAction extends PagedResourceHelperAction
 				catch(RuntimeException e)
 				{
 					logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
-					addAlert(state, hrb.getString("failed"));
+					addAlert(state, crb.getString("failed"));
 				}
 			}
 			else
 			{
-				addAlert(state, hrb.getString("choosefile7"));
+				addAlert(state, crb.getString("choosefile7"));
 			}
 		}
 
@@ -1435,19 +1435,19 @@ public class FilePickerAction extends PagedResourceHelperAction
 		catch(MalformedURLException e)
 		{
 			// invalid url
-			addAlert(state, hrb.getString("validurl") + " \"" + url + "\" " + hrb.getString("invalid"));
+			addAlert(state, trb.getFormattedMessage("url.invalid", new String[]{url}) + crb.getString("validurl"));
 		}
 		catch (PermissionException e)
 		{
-			addAlert(state, hrb.getString("notpermis4"));
+			addAlert(state, crb.getString("notpermis4"));
 		}
 		catch(OverQuotaException e)
 		{
-			addAlert(state, hrb.getString("overquota"));
+			addAlert(state, crb.getString("overquota"));
 		}
 		catch(ServerOverloadException e)
 		{
-			addAlert(state, hrb.getString("failed"));
+			addAlert(state, crb.getString("failed"));
 		}
 		catch(IdInvalidException ignore)
 		{
@@ -1464,7 +1464,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		catch(RuntimeException e)
 		{
 			logger.debug("ResourcesAction.doAttachurl ***** Unknown Exception ***** " + e.getMessage());
-			addAlert(state, hrb.getString("failed"));
+			addAlert(state, crb.getString("failed"));
 		}
 
 		toolSession.setAttribute(STATE_FILEPICKER_MODE, MODE_ATTACHMENT_SELECT_INIT);
@@ -1779,15 +1779,15 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch (PermissionException e)
 			{
-				addAlert(state, hrb.getString("notpermis4"));
+				addAlert(state, crb.getString("notpermis4"));
 			}
 			catch(OverQuotaException e)
 			{
-				addAlert(state, hrb.getString("overquota"));
+				addAlert(state, crb.getString("overquota"));
 			}
 			catch(ServerOverloadException e)
 			{
-				addAlert(state, hrb.getString("failed"));
+				addAlert(state, crb.getString("failed"));
 			}
 			catch(IdInvalidException ignore)
 			{
@@ -1812,7 +1812,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			catch(RuntimeException e)
 			{
 				logger.debug("ResourcesAction.attachItem ***** Unknown Exception ***** " + e.getMessage());
-				addAlert(state, hrb.getString("failed"));
+				addAlert(state, crb.getString("failed"));
 			}
 			finally
 			{
@@ -1919,7 +1919,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch (PermissionException e)
 			{
-				addAlert(state, hrb.getString("notpermis4"));
+				addAlert(state, crb.getString("notpermis4"));
 			}
 			catch(TypeException ignore)
 			{
@@ -1932,7 +1932,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			catch(RuntimeException e)
 			{
 				logger.debug("ResourcesAction.attachItem ***** Unknown Exception ***** " + e.getMessage());
-				addAlert(state, hrb.getString("failed"));
+				addAlert(state, crb.getString("failed"));
 			}
 		}
 		toolSession.setAttribute(STATE_ADDED_ITEMS, new_items);
@@ -2189,12 +2189,13 @@ public class FilePickerAction extends PagedResourceHelperAction
 			} 
 			catch (ServerOverloadException e) 
 			{
-				logger.warn("ServerOverloadException", e);
+				addAlert(state, crb.getString("failed"));
+				//logger.warn("ServerOverloadException", e);
 			}
 			catch (OverQuotaException e)
 			{
-				// TODO Auto-generated catch block
-				logger.warn("OverQuotaException ", e);
+				addAlert(state, crb.getString("overquota"));
+				//logger.warn("OverQuotaException ", e);
 			}
             catch (IdUniquenessException e)
             {
@@ -3183,7 +3184,8 @@ public class FilePickerAction extends PagedResourceHelperAction
                 }
                 catch (PermissionException e)
                 {
-	                // TODO Auto-generated catch block
+                	addAlert(state, crb.getString("notpermis2"));
+                	// TODO Auto-generated catch block
 	                logger.warn("PermissionException (FilePickerAction.readAllResources()) collId == " + collId + " --> " + e);
                 }
 			}
