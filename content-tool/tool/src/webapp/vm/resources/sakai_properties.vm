@@ -397,34 +397,37 @@
 									<td>
 									</td>
 									<td>
-										<input name="use_start_date_0" id="use_start_date_0" value="true" type="checkbox">
-									</td>
-									<td colspan="3">
-										<label for="use_start_date_0">
-											Only if the following condition is met:
-										</label>
-									</td>
-								</tr>
-								<tr>
-									<td>
 									</td>
 									<td>
 									</td>
-									<td>
-									</td>
+									<script type="text/javascript">
+									  function changeCondition(selectIndex)
+									  {
+									  if (selectIndex > 4) {
+									    document.getElementById("grade_argument_span").style.display = "inline";
+									  } else {
+									      document.getElementById("grade_argument_span").style.display = "none";
+									  }
+									  }
+									</script> 
 									<td>Gradebook 
 									  <select>
 										  <option>Homework 1</option>
 										  <option>Homework 2</option>
 										  <option>Quiz 1</option>
 									  </select>
-									  <select>
-									      <option>is released to students.</option>
-									      <option>is not released to students.</option>
-									      <option>grade is less than:</option>
-									      <option selected="true">grade is greater than or equal to:</option>
+									  <select onchange="changeCondition(this.options[this.selectedIndex].value);">
+										  <option value="1">due date has passed.</option>
+										  <option value="2">due date has not passed.</option>
+									      <option value="3">is released to students.</option>
+									      <option value="4">is not released to students.</option>
+									      <option value="5">grade is less than:</option>
+									      <option value="6"selected="true">grade is greater than or equal to:</option>
 									  </select> 
-									  <input type="text" size="3" name="assignment_grade" /></td>
+									  <span id="grade_argument_span" class="display:none;">
+									  <input type="text" size="3" name="assignment_grade" />
+									  </span>
+									  </td>
 								</tr>
 				<tr>
 					<td>
