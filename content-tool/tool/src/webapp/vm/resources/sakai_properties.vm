@@ -394,6 +394,10 @@
 					</td>
 				</tr>
 				<tr>
+					<td>CONDITIONS WILL GO</td>
+					<td colspan="4">HERE</td>
+				</tr>
+				<tr>
 					<td>
 						<input type="radio" name="hidden${DOT}$i" id="hidden_true${DOT}$i" value="true" #if($model.isHidden())checked="checked" #end/>
 					</td>
