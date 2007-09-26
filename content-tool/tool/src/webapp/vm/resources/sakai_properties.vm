@@ -394,9 +394,38 @@
 					</td>
 				</tr>
 				<tr>
-					<td>CONDITIONS WILL GO</td>
-					<td colspan="4">HERE</td>
-				</tr>
+									<td>
+									</td>
+									<td>
+										<input name="use_start_date_0" id="use_start_date_0" value="true" type="checkbox">
+									</td>
+									<td colspan="3">
+										<label for="use_start_date_0">
+											Only if the following condition is met:
+										</label>
+									</td>
+								</tr>
+								<tr>
+									<td>
+									</td>
+									<td>
+									</td>
+									<td>
+									</td>
+									<td>Gradebook 
+									  <select>
+										  <option>Homework 1</option>
+										  <option>Homework 2</option>
+										  <option>Quiz 1</option>
+									  </select>
+									  <select>
+									      <option>is released to students.</option>
+									      <option>is not released to students.</option>
+									      <option>grade is less than:</option>
+									      <option selected="true">grade is greater than or equal to:</option>
+									  </select> 
+									  <input type="text" size="3" name="assignment_grade" /></td>
+								</tr>
 				<tr>
 					<td>
 						<input type="radio" name="hidden${DOT}$i" id="hidden_true${DOT}$i" value="true" #if($model.isHidden())checked="checked" #end/>
