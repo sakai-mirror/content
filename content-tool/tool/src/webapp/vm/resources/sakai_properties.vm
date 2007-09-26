@@ -397,6 +397,18 @@
 									<td>
 									</td>
 									<td>
+										<input name="use_start_date_0" id="use_start_date_0" value="true" type="checkbox">
+									</td>
+									<td colspan="3">
+										<label for="use_start_date_0">
+											Only if the following condition is met:
+										</label>
+									</td>
+								</tr>
+				<tr>
+									<td>
+									</td>
+									<td>
 									</td>
 									<td>
 									</td>
