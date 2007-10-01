@@ -20,5 +20,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/util-util"/>
 	<classpathentry kind="src" path="/cm-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/conditions"/>
+	<classpathentry kind="var" path="MAVEN_REPO/commons-collections/jars/commons-collections-3.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

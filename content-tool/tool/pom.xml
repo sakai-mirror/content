@@ -27,8 +27,29 @@
     </dependency>
     
     <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-content-api</artifactId>
+      <version>${sakai.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-conditions-api</artifactId>
+      <version>${sakai.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-conditions-impl</artifactId>
       <version>${sakai.version}</version>
       <scope>provided</scope>
     </dependency>

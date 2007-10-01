@@ -56,10 +56,13 @@ import org.sakaiproject.cheftool.PagedResourceHelperAction;
 import org.sakaiproject.cheftool.PortletConfig;
 import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
-import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.conditions.api.ConditionService;
+import org.sakaiproject.conditions.api.EventKey;
+import org.sakaiproject.conditions.api.Rule;
+import org.sakaiproject.conditions.cover.ConditionService;
+import org.sakaiproject.conditions.impl.MockEventKey;
+import org.sakaiproject.conditions.impl.MockRule;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -6554,6 +6557,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				try 
 				{
 					// we'll want to persist any conditional release Command here
+					EventKey assignmentGradingKey = new MockEventKey();
+					Rule resourceConditionRule = new MockRule();
+					ConditionService.addRule("gradebook", assignmentGradingKey, resourceConditionRule);
 					
 					if(item.isCollection())
 					{
