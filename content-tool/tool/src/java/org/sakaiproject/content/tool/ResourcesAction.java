@@ -6553,6 +6553,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
+					// we'll want to persist any conditional release Command here
+					
 					if(item.isCollection())
 					{
 						ContentCollectionEdit entity = ContentHostingService.editCollection(entityId);
