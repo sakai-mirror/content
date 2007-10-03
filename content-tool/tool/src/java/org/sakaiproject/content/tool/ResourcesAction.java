@@ -6562,11 +6562,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					Rule resourceConditionRule = new MockRule();
 					ConditionService.addRule("gradebook", assignmentGradingKey, resourceConditionRule);
 					// what about the NotificationService? It might work just as well for this
-					NotificationEdit notification = NotificationService.addNotification();
+					NotificationEdit notification = NotificationService.addTransientNotification();
 					notification.addFunction("gradebook.newItem");
 					notification.setAction(resourceConditionRule);
-					notification.setResourceFilter("/gradebook/1/Homework #4");
-					NotificationService.commitEdit(notification);
+					notification.setResourceFilter("/gradebook/1");
 					
 					if(item.isCollection())
 					{
