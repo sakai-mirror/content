@@ -91,6 +91,7 @@ import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.NotificationEdit;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.api.UsageSession;
 import org.sakaiproject.event.cover.NotificationService;
@@ -6560,6 +6561,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					EventKey assignmentGradingKey = new MockEventKey();
 					Rule resourceConditionRule = new MockRule();
 					ConditionService.addRule("gradebook", assignmentGradingKey, resourceConditionRule);
+					// what about the NotificationService? It might work just as well for this
+					NotificationEdit notification = NotificationService.addNotification();
+					notification.addFunction("gradebook.newItem");
+					notification.setAction(resourceConditionRule);
+					notification.setResourceFilter("/gradebook/1/Homework #4");
+					NotificationService.commitEdit(notification);
 					
 					if(item.isCollection())
 					{
