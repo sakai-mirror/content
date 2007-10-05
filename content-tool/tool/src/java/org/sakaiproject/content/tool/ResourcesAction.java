@@ -45,6 +45,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.PermissionsHelper;
@@ -61,8 +62,10 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.conditions.api.EventKey;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
+import org.sakaiproject.conditions.impl.AssignmentGrading;
 import org.sakaiproject.conditions.impl.MockEventKey;
 import org.sakaiproject.conditions.impl.MockRule;
+import org.sakaiproject.conditions.impl.ResourceReleaseRule;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -6557,15 +6560,23 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
-					// we'll want to persist any conditional release Command here
-					EventKey assignmentGradingKey = new MockEventKey();
-					Rule resourceConditionRule = new MockRule();
-					ConditionService.addRule("gradebook", assignmentGradingKey, resourceConditionRule);
+					String resourceId = item.getId();
+					List<Predicate> predicates = new ArrayList();
+					Predicate resourcePredicate = new Predicate() {
+						public boolean evaluate(Object arg) {
+							AssignmentGrading grading = (AssignmentGrading)arg;
+							return grading.getScore() < 80;
+						}
+					};
+					
+					predicates.add(resourcePredicate);
+					
+					Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
 					// what about the NotificationService? It might work just as well for this
 					NotificationEdit notification = NotificationService.addTransientNotification();
-					notification.addFunction("gradebook.newItem");
+					notification.addFunction("gradebook.updateItemScore");
 					notification.setAction(resourceConditionRule);
-					notification.setResourceFilter("/gradebook/1");
+					notification.setResourceFilter("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3");
 					
 					if(item.isCollection())
 					{
