@@ -22,12 +22,15 @@
 // package
 package org.sakaiproject.content.tool;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.sakaiproject.content.api.ContentHostingHandler;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
@@ -41,6 +44,8 @@ public class ResourcesMetadata
 {
 	/** Resource bundle using current language locale */
 	private static ResourceLoader rb = new ResourceLoader("content");
+	
+	static final Log logger = LogFactory.getLog(ResourcesMetadata.class);
     
 	public static final String WIDGET_STRING = "string";
 	public static final String WIDGET_TEXTAREA = "textarea";
@@ -623,7 +628,7 @@ public class ResourcesMetadata
 
 	public static ResourcesMetadata[] getProperties(String[] names)
 	{
-		List results = new Vector();
+		List results = new ArrayList();
 		for(int i = 0; i < names.length; i++)
 		{
 			if(names[i] == null)
@@ -726,15 +731,15 @@ public class ResourcesMetadata
 		m_maxCardinality = 1;
 		m_currentCount = 1;
 		m_enumeration = null;
-		m_currentValues = new Vector();
-		m_nested = new Vector();
+		m_currentValues = new ArrayList();
+		m_nested = new ArrayList();
 		m_pattern = Pattern.compile(".*");
 		m_minInclusive = true;
 		m_maxInclusive = true;
 		m_depth = 0;
-		m_dottedparts = new Vector();
-		m_nestedinstances = new Vector();
-		m_instances = new Vector();
+		m_dottedparts = new ArrayList();
+		m_nestedinstances = new ArrayList();
+		m_instances = new ArrayList();
 		m_parent = null;
 		m_container = null;
 		m_length = DEFAULT_LENGTH;
@@ -761,17 +766,17 @@ public class ResourcesMetadata
 		}
 		else
 		{
-			m_enumeration = new Vector(other.m_enumeration);
+			m_enumeration = new ArrayList(other.m_enumeration);
 		}
-		m_currentValues = new Vector();
+		m_currentValues = new ArrayList();
 		m_pattern = other.m_pattern;
 		m_minInclusive = other.m_minInclusive;
 		m_maxInclusive = other.m_maxInclusive;
 		m_depth = other.m_depth;
-		m_dottedparts = new Vector(other.m_dottedparts);
-		m_nestedinstances = new Vector();
-		m_instances = new Vector();
-		m_nested = new Vector();
+		m_dottedparts = new ArrayList(other.m_dottedparts);
+		m_nestedinstances = new ArrayList();
+		m_instances = new ArrayList();
+		m_nested = new ArrayList();
 		Iterator it = other.m_nested.iterator();
 		while(it.hasNext())
 		{
@@ -983,11 +988,11 @@ public class ResourcesMetadata
 	{
 		if(m_ns2abbrev == null)
 		{
-			m_ns2abbrev = new Hashtable();
+			m_ns2abbrev = new HashMap();
 		}
 		if(m_abbrev2ns == null)
 		{
-			m_abbrev2ns = new Hashtable();
+			m_abbrev2ns = new HashMap();
 		}
 		setNamespaceAbbrev(NAMESPACE_DC, NAMESPACE_DC_ABBREV);
 		setNamespaceAbbrev(NAMESPACE_DCTERMS, NAMESPACE_DCTERMS_ABBREV);
@@ -1032,7 +1037,7 @@ public class ResourcesMetadata
 			{
 				if(this.m_currentValues == null)
 				{
-					this.m_currentValues = new Vector();
+					this.m_currentValues = new ArrayList();
 				}
 				
 				if(this.m_currentValues.size() > 0)
@@ -1083,13 +1088,16 @@ public class ResourcesMetadata
 	public Object getValue(int index)
 	{
 		Object rv = null;
-		try
+		if(m_currentValues != null && ! m_currentValues.isEmpty())
 		{
-			rv = m_currentValues.get(index);
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			// return null
+			try
+			{
+				rv = m_currentValues.get(index);
+			}
+			catch(ArrayIndexOutOfBoundsException e)
+			{
+				// return null
+			}
 		}
 		return rv;
 	}
@@ -1104,11 +1112,11 @@ public class ResourcesMetadata
 	
 	public List getInstanceValues()
 	{
-		List values = new Vector();
+		List values = new ArrayList();
 		values.addAll(this.m_currentValues);
 		if(this.m_instances == null)
 		{
-			this.m_instances = new Vector();
+			this.m_instances = new ArrayList();
 		}
 		Iterator it = this.m_instances.iterator();
 		while(it.hasNext())
@@ -1125,13 +1133,21 @@ public class ResourcesMetadata
 	 */
 	public void setValue(int index, Object value)
 	{
+		if(m_currentValues == null)
+		{
+			m_currentValues = new ArrayList();
+		}
 		try
 		{
 			m_currentValues.set(index, value);
 		}
-		catch(ArrayIndexOutOfBoundsException e)
+		catch(IndexOutOfBoundsException e)
 		{
 			m_currentValues.add(value);
+		}
+		catch(Exception e)
+		{
+			logger.warn("ResourcesMetadata[" + this.m_id + "].setValue(" + index + "," + value + ") " + e);
 		}
 	}
 	
@@ -1236,11 +1252,11 @@ public class ResourcesMetadata
 		List rv;
 		if(m_enumeration == null)
 		{
-			rv = new Vector();
+			rv = new ArrayList();
 		}
 		else
 		{
-			rv = new Vector(m_enumeration);
+			rv = new ArrayList(m_enumeration);
 		}
 		return rv;
 	}
@@ -1250,7 +1266,7 @@ public class ResourcesMetadata
 	 */
 	public void setEnumeration(List enumeration) 
 	{
-		m_enumeration = new Vector(enumeration);
+		m_enumeration = new ArrayList(enumeration);
 	}
 	
 	public boolean isNested()
@@ -1265,7 +1281,7 @@ public class ResourcesMetadata
 	{
 		if(m_nested == null)
 		{
-			m_nested = new Vector();
+			m_nested = new ArrayList();
 		}
 		return m_nested;
 	}
@@ -1275,10 +1291,10 @@ public class ResourcesMetadata
 	 */
 	public List getNestedInstances() 
 	{
-		List instances = new Vector();
+		List instances = new ArrayList();
 		if(m_nested == null)
 		{
-			m_nested = new Vector();
+			m_nested = new ArrayList();
 		}
 		Iterator it = this.m_nested.iterator();
 		while(it.hasNext())
@@ -1422,7 +1438,7 @@ public class ResourcesMetadata
 	{
 		if(m_dottedparts == null)
 		{
-			m_dottedparts = new Vector();
+			m_dottedparts = new ArrayList();
 		}
 		if(index >= 0 && m_dottedparts.size() < index)
 		{
@@ -1438,7 +1454,7 @@ public class ResourcesMetadata
 	{
 		if(m_dottedparts == null)
 		{
-			m_dottedparts = new Vector();
+			m_dottedparts = new ArrayList();
 		}
 		if(index >= 0 && index < m_dottedparts.size())
 		{
@@ -1497,7 +1513,7 @@ public class ResourcesMetadata
 	public void setDottedparts(String path)
 	{
 		String[] names = path.split(DOT_REGEX);
-		m_dottedparts = new Vector();
+		m_dottedparts = new ArrayList();
 		for(int i = 0; i < names.length; i++)
 		{
 			m_dottedparts.add(names[i]);
@@ -1516,7 +1532,7 @@ public class ResourcesMetadata
 	 */
 	public List getFlatList()
 	{
-		List rv = new Vector();
+		List rv = new ArrayList();
 		rv.add(this);
 
 		Iterator it = this.getNested().iterator();
@@ -1535,7 +1551,7 @@ public class ResourcesMetadata
 					else
 					{
 						copy = new ResourcesMetadata(prop);
-						List parts = new Vector(this.getDottedparts());
+						List parts = new ArrayList(this.getDottedparts());
 						parts.add(copy.getLocalname());
 						parts.add(Integer.toString(i));
 						copy.setDottedparts(parts);
@@ -1575,7 +1591,7 @@ public class ResourcesMetadata
 				else
 				{
 					copy = new ResourcesMetadata(prop);
-					List parts = new Vector(this.getDottedparts());
+					List parts = new ArrayList(this.getDottedparts());
 					parts.add(copy.getLocalname());
 					copy.setDottedparts(parts);
 					copy.setContainer(this);
@@ -1621,7 +1637,7 @@ public class ResourcesMetadata
 		}
 		ResourcesMetadata copy = new ResourcesMetadata(this);
 		copy.setContainer(this.m_container);
-		List parts = new Vector(this.getDottedparts());
+		List parts = new ArrayList(this.getDottedparts());
 		if(this.getMaxCardinality() > 1 && this.m_parent == null)
 		{
 			parts.add(Integer.toString(this.m_instances.size()));
