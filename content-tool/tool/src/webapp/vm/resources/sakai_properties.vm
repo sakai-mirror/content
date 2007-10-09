@@ -397,7 +397,7 @@
 									<td>
 									</td>
 									<td>
-										<input name="use_start_date_0" id="use_start_date_0" value="true" type="checkbox">
+										<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
 									</td>
 									<td colspan="3">
 										<label for="use_start_date_0">
@@ -411,6 +411,7 @@
 									<td>
 									</td>
 									<td>
+										Gradebook
 									</td>
 									<script type="text/javascript">
 									  function changeCondition(selectIndex)
@@ -422,7 +423,7 @@
 									  }
 									  }
 									</script> 
-									<td>Gradebook 
+									<td> 
 									  <select>
 										  <option>Homework 1</option>
 										  <option>Homework 2</option>
@@ -440,7 +441,150 @@
 									  <input type="text" size="3" name="assignment_grade" />
 									  </span>
 									  </td>
-								</tr>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Student Name
+					</td>
+					<td>
+						<select>
+							<option>contains</option>
+							<option>does not contain</option>
+						</select>
+						<input type="text" size="25" name="studentName" />
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Student Id
+					</td>
+					<td>
+						<select>
+							<option>contains</option>
+							<option>does not contain</option>
+						</select>
+						<input type="text" size="25" name="" />
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Course Grade
+					</td>
+					<td>
+						<select>
+							<option>greater than</option>
+							<option>less than</option>
+							<option>equals</option>
+						</select>
+						<input type="text" size="2" name="" />
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Selected Assignment
+					</td>
+					<td>
+						<select>
+							<option>greater than</option>
+							<option>less than</option>
+							<option>equals</option>
+						</select>
+						<input type="text" size="2" name="" />
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Released to Students
+					</td>
+					<td>
+						<select>
+							<option>true</option>
+							<option>false</option>
+						</select>
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Included in Course Grade
+					</td>
+					<td>
+						<select>
+							<option>true</option>
+							<option>false</option>
+						</select>
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Assignment Title
+					</td>
+					<td>
+						<select>
+							<option>contains</option>
+							<option>equals</option>
+						</select>
+						<input type="text" size="25" name="" />
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Due date
+					</td>
+					<td>
+						<select>
+							<option>has passed</option>
+							<option>has not passed</option>
+						</select>
+					 </td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+					</td>
+					<td>
+						Grade editor
+					</td>
+					<td>
+						<select>
+							<option>contains</option>
+							<option>equals</option>
+						</select>
+						<input type="text" size="25" name="" />
+					 </td>
+				</tr>
 				<tr>
 					<td>
 						<input type="radio" name="hidden${DOT}$i" id="hidden_true${DOT}$i" value="true" #if($model.isHidden())checked="checked" #end/>
