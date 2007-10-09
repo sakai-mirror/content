@@ -22,6 +22,8 @@
 package org.sakaiproject.content.tool;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -60,9 +62,11 @@ import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.conditions.api.EventKey;
+import org.sakaiproject.conditions.api.Operator;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.conditions.impl.AssignmentGrading;
+import org.sakaiproject.conditions.impl.BooleanExpression;
 import org.sakaiproject.conditions.impl.MockEventKey;
 import org.sakaiproject.conditions.impl.MockRule;
 import org.sakaiproject.conditions.impl.ResourceReleaseRule;
@@ -6560,23 +6564,30 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
-					String resourceId = item.getId();
-					List<Predicate> predicates = new ArrayList();
-					Predicate resourcePredicate = new Predicate() {
-						public boolean evaluate(Object arg) {
-							AssignmentGrading grading = (AssignmentGrading)arg;
-							return grading.getScore() < 80;
+					// we need to get these values from the submitted template
+					String submittedFunctionName = "gradebook.udpateItemScore";
+					String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
+					String missingTermQuery = "getScore";
+					String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+					Operator operator = new Operator() {
+						public int getType() {
+							return Operator.LESS_THAN;
 						}
 					};
+					final Object argument = new Double(80.0);
+					
+					String resourceId = item.getId();
+					List<Predicate> predicates = new ArrayList();
+					Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
 					
 					predicates.add(resourcePredicate);
 					
 					Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
 					// what about the NotificationService? It might work just as well for this
 					NotificationEdit notification = NotificationService.addTransientNotification();
-					notification.addFunction("gradebook.updateItemScore");
+					notification.addFunction(submittedFunctionName);
 					notification.setAction(resourceConditionRule);
-					notification.setResourceFilter("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3");
+					notification.setResourceFilter(submittedResourceFilter);
 					
 					if(item.isCollection())
 					{
