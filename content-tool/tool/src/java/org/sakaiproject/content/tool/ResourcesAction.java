@@ -6564,30 +6564,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
-					// we need to get these values from the submitted template
-					String submittedFunctionName = "gradebook.udpateItemScore";
-					String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
-					String missingTermQuery = "getScore";
-					String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
-					Operator operator = new Operator() {
-						public int getType() {
-							return Operator.LESS_THAN;
-						}
-					};
-					final Object argument = new Double(80.0);
-					
-					String resourceId = item.getId();
-					List<Predicate> predicates = new ArrayList();
-					Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
-					
-					predicates.add(resourcePredicate);
-					
-					Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
-					// what about the NotificationService? It might work just as well for this
-					NotificationEdit notification = NotificationService.addTransientNotification();
-					notification.addFunction(submittedFunctionName);
-					notification.setAction(resourceConditionRule);
-					notification.setResourceFilter(submittedResourceFilter);
+					saveCondition(item);
 					
 					if(item.isCollection())
 					{
@@ -6645,6 +6622,34 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			state.setAttribute(STATE_MODE, MODE_LIST);
 		}
+	}
+
+	private void saveCondition(ListItem item) {
+		// we need to get these values from the submitted template
+		// they will be part of the ListItem
+		String submittedFunctionName = "gradebook.udpateItemScore";
+		String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
+		String missingTermQuery = "getScore";
+		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+		Operator operator = new Operator() {
+			public int getType() {
+				return Operator.LESS_THAN;
+			}
+		};
+		final Object argument = new Double(80.0);
+		
+		String resourceId = item.getId();
+		List<Predicate> predicates = new ArrayList();
+		Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
+		
+		predicates.add(resourcePredicate);
+		
+		Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
+		// what about the NotificationService? It might work just as well for this
+		NotificationEdit notification = NotificationService.addTransientNotification();
+		notification.addFunction(submittedFunctionName);
+		notification.setAction(resourceConditionRule);
+		notification.setResourceFilter(submittedResourceFilter);
 	}
 
 	/**
