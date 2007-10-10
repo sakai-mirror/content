@@ -436,60 +436,17 @@
 									      <option value="4">is not released to students.</option>
 									      <option value="5">grade is less than:</option>
 									      <option value="6"selected="true">grade is greater than or equal to:</option>
+									      <option value="7">student name contains:</option>
+									      <option value="8">student name does not contain:</option>
+									      <option value="9">student Id contains:</option>
+									      <option value="10">student Id does not contain:</option>
+									      <option value="11">assignment title contains:</option>
+									      <option value="12">assignment title does not contain:</option>
 									  </select> 
 									  <span id="grade_argument_span" class="display:none;">
 									  <input type="text" size="3" name="assignment_grade" />
 									  </span>
 									  </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Student Name
-					</td>
-					<td>
-						<select>
-							<option>contains</option>
-							<option>does not contain</option>
-						</select>
-						<input type="text" size="25" name="studentName" />
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Student Id
-					</td>
-					<td>
-						<select>
-							<option>contains</option>
-							<option>does not contain</option>
-						</select>
-						<input type="text" size="25" name="" />
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Course Grade
-					</td>
-					<td>
-						<select>
-							<option>greater than</option>
-							<option>less than</option>
-							<option>equals</option>
-						</select>
-						<input type="text" size="2" name="" />
-					 </td>
 				</tr>
 				<tr>
 					<td>
@@ -514,58 +471,12 @@
 					<td>
 					</td>
 					<td>
-						Released to Students
-					</td>
-					<td>
-						<select>
-							<option>true</option>
-							<option>false</option>
-						</select>
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
 						Included in Course Grade
 					</td>
 					<td>
 						<select>
 							<option>true</option>
 							<option>false</option>
-						</select>
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Assignment Title
-					</td>
-					<td>
-						<select>
-							<option>contains</option>
-							<option>equals</option>
-						</select>
-						<input type="text" size="25" name="" />
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Due date
-					</td>
-					<td>
-						<select>
-							<option>has passed</option>
-							<option>has not passed</option>
 						</select>
 					 </td>
 				</tr>
