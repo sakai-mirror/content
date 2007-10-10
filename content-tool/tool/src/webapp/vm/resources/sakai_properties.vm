@@ -416,10 +416,15 @@
 									<script type="text/javascript">
 									  function changeCondition(selectIndex)
 									  {
-									  if (selectIndex > 4) {
-									    document.getElementById("grade_argument_span").style.display = "inline";
+									  if (selectIndex < 6) {
+									    document.getElementById("grade_argument_span").style.display = "none";
+									    document.getElementById("grade_tools_span").style.display = "none";
+									  } else if (selectIndex < 9) {
+									      document.getElementById("grade_argument_span").style.display = "inline";
+									      document.getElementById("grade_tools_span").style.display = "none";
 									  } else {
 									      document.getElementById("grade_argument_span").style.display = "none";
+									      document.getElementById("grade_tools_span").style.display = "inline";	
 									  }
 									  }
 									</script> 
@@ -434,67 +439,23 @@
 										  <option value="2">due date has not passed.</option>
 									      <option value="3">is released to students.</option>
 									      <option value="4">is not released to students.</option>
-									      <option value="5">grade is less than:</option>
-									      <option value="6"selected="true">grade is greater than or equal to:</option>
-									      <option value="7">student name contains:</option>
-									      <option value="8">student name does not contain:</option>
-									      <option value="9">student Id contains:</option>
-									      <option value="10">student Id does not contain:</option>
-									      <option value="11">assignment title contains:</option>
-									      <option value="12">assignment title does not contain:</option>
+										  <option value="5">is included in course grade.</option>
+										  <option value="6">is not included in course grade.</option>
+									      <option value="7" selected="true">grade is less than:</option>
+									      <option value="8">grade is greater than or equal to:</option>
+										  <option value="9">source tool is:</option>
 									  </select> 
-									  <span id="grade_argument_span" class="display:none;">
+									  <span id="grade_argument_span" style="display:inline;">
 									  <input type="text" size="3" name="assignment_grade" />
 									  </span>
+									  <span id="grade_tools_span" style="display:none;">
+									    <select>
+										    <option value="assignments">Assignments</option>
+										    <option value="samigo">Tests & Quizzes</option>
+										    <option value="gradebook">Gradebook</option>
+										</select>
+									  </span>
 									  </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Selected Assignment
-					</td>
-					<td>
-						<select>
-							<option>greater than</option>
-							<option>less than</option>
-							<option>equals</option>
-						</select>
-						<input type="text" size="2" name="" />
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Included in Course Grade
-					</td>
-					<td>
-						<select>
-							<option>true</option>
-							<option>false</option>
-						</select>
-					 </td>
-				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					</td>
-					<td>
-						Grade editor
-					</td>
-					<td>
-						<select>
-							<option>contains</option>
-							<option>equals</option>
-						</select>
-						<input type="text" size="25" name="" />
-					 </td>
 				</tr>
 				<tr>
 					<td>
