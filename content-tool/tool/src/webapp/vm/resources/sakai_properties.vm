@@ -416,7 +416,7 @@
 									<script type="text/javascript">
 									  function changeCondition(selectIndex)
 									  {
-									  if (selectIndex < 6) {
+									  if (selectIndex < 7) {
 									    document.getElementById("grade_argument_span").style.display = "none";
 									    document.getElementById("grade_tools_span").style.display = "none";
 									  } else if (selectIndex < 9) {
