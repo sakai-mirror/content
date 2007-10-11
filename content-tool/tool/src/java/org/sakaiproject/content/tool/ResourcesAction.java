@@ -6564,7 +6564,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
-					saveCondition(item);
+					saveCondition(item, params);
 					
 					if(item.isCollection())
 					{
@@ -6624,32 +6624,53 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	private void saveCondition(ListItem item) {
+	private void saveCondition(ListItem item, ParameterParser params) {
+		boolean cbSelected = Boolean.valueOf(params.get("cbCondition"));
+		if (cbSelected) {
+			String selectedConditionValue = params.get("selectCondition");
+			System.out.println("Selected condition value: " + selectedConditionValue);
+			//The selectCondition value must be broken up so we can get at the values
+			//that make up the submittedResource and missingTermQuery
+			String[] conditionTokens = selectedConditionValue.split("\\|");
+			//We are only interested in the second value in the array 
+			//so we can split it again to get our final values
+			String conditionToken = conditionTokens[1];
+			conditionTokens = conditionToken.split("\\:");
+			String submittedFunctionName = conditionTokens[0];
+			String missingTermQuery = conditionTokens[1];
+			System.out.println("submittedFunctionName: " + submittedFunctionName);
+			System.out.println("missingTermQuery: " + missingTermQuery);
+			
+		
+		} else {
+			System.out.println("CB NOT Selected");			
+		}
+		
 		// we need to get these values from the submitted template
 		// they will be part of the ListItem
-		String submittedFunctionName = "gradebook.udpateItemScore";
-		String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
-		String missingTermQuery = "getScore";
-		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
-		Operator operator = new Operator() {
-			public int getType() {
-				return Operator.LESS_THAN;
-			}
-		};
-		final Object argument = new Double(80.0);
-		
-		String resourceId = item.getId();
-		List<Predicate> predicates = new ArrayList();
-		Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
-		
-		predicates.add(resourcePredicate);
-		
-		Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
-		// what about the NotificationService? It might work just as well for this
-		NotificationEdit notification = NotificationService.addTransientNotification();
-		notification.addFunction(submittedFunctionName);
-		notification.setAction(resourceConditionRule);
-		notification.setResourceFilter(submittedResourceFilter);
+//		String submittedFunctionName = "gradebook.udpateItemScore";
+//		String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
+//		String missingTermQuery = "getScore";
+//		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+//		Operator operator = new Operator() {
+//			public int getType() {
+//				return Operator.LESS_THAN;
+//			}
+//		};
+//		final Object argument = new Double(80.0);
+//		
+//		String resourceId = item.getId();
+//		List<Predicate> predicates = new ArrayList();
+//		Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
+//		
+//		predicates.add(resourcePredicate);
+//		
+//		Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
+//		// what about the NotificationService? It might work just as well for this
+//		NotificationEdit notification = NotificationService.addTransientNotification();
+//		notification.addFunction(submittedFunctionName);
+//		notification.setAction(resourceConditionRule);
+//		notification.setResourceFilter(submittedResourceFilter);
 	}
 
 	/**
