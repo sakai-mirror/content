@@ -4934,6 +4934,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 		context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
 		
+		context.put("resourceSelections", state.getAttribute("resourceSelections"));
+		
 		return TEMPLATE_REVISE_METADATA;
 	}
 
@@ -5860,6 +5862,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					state.setAttribute (STATE_MODE, MODE_REVISE_METADATA);
 					ListItem item = getListItem(state);
 					state.setAttribute(STATE_REVISE_PROPERTIES_ITEM, item);
+					loadConditionData(state);
 					// sAction.finalizeAction(reference);
 					break;
 				case CUSTOM_TOOL_ACTION:
@@ -6632,17 +6635,32 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			//The selectCondition value must be broken up so we can get at the values
 			//that make up the submittedResource and missingTermQuery
 			String[] conditionTokens = selectedConditionValue.split("\\|");
-			//We are only interested in the second value in the array 
-			//so we can split it again to get our final values
+			int selectedIndex = Integer.valueOf(conditionTokens[0]);
 			String conditionToken = conditionTokens[1];
 			conditionTokens = conditionToken.split("\\:");
 			String submittedFunctionName = conditionTokens[0];
 			String missingTermQuery = conditionTokens[1];
 			System.out.println("submittedFunctionName: " + submittedFunctionName);
 			System.out.println("missingTermQuery: " + missingTermQuery);
+			String submittedResourceFitler = params.get("selectResource");
+			System.out.println("submittedResourceFitler: " + submittedResourceFitler);
+			//TODO This value needs to be looked up based on the value of submittedFunctionName
+			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+			String argument = null;
+			if ((selectedIndex == 7) || (selectedIndex == 8)) {
+				argument = params.get("assignment_grade");
+				System.out.println("argument: " + argument);
+			} 
+			Operator operator = new Operator() {
+				public int getType() {
+					return Operator.LESS_THAN;
+				}
+			};
 			
-		
+
+			
 		} else {
+			//Do we remove the condition at this point?
 			System.out.println("CB NOT Selected");			
 		}
 		
@@ -6671,6 +6689,18 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //		notification.addFunction(submittedFunctionName);
 //		notification.setAction(resourceConditionRule);
 //		notification.setResourceFilter(submittedResourceFilter);
+	}
+
+	private void loadConditionData(SessionState state) {
+		//TODO look this data up
+		System.out.println("Loading condition data");
+		Map resourceSelections = new HashMap();
+		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #1", "Homework 1");
+		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #2", "Homework 2");
+		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3", "Homework 3");
+		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Quiz #1", "Quiz 1");
+		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
+		state.setAttribute("resourceSelections", resourceSelections);
 	}
 
 	/**

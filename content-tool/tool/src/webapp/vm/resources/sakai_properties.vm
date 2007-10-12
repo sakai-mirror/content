@@ -431,11 +431,11 @@
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					</td>
 					<td colspan="3">
-						Gradebook
-						<select>
-							<option>Homework 1</option>
-							<option>Homework 2</option>
-							<option>Quiz 1</option>
+						Gradebook 
+						<select name="selectResource">
+						#foreach ($key in $resourceSelections.keySet())
+							<option value="${key}">${resourceSelections.get(${key})}</option>
+						#end
 						</select>
 						<select name="selectCondition" onchange="changeCondition(this.options[this.selectedIndex].value);">
 							<option value="1|gradebook.udpateItemScore:getScore">due date has passed.</option>
