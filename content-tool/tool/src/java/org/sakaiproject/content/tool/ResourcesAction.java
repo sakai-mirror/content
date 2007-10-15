@@ -6693,11 +6693,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	private void loadConditionData(SessionState state) {
 		//TODO look this data up
 		logger.debug("Loading condition data");
-		Map resourceSelections = new HashMap();
-		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #1", "Homework 1");
-		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #2", "Homework 2");
-		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3", "Homework 3");
-		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Quiz #1", "Quiz 1");
+		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
+		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
 	}
