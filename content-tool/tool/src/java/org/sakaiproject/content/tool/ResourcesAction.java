@@ -6567,6 +6567,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				try 
 				{
+					String autoDdl = ServerConfigurationService.getString("auto.ddl");
 					saveCondition(item, params);
 					
 					if(item.isCollection())
@@ -6642,8 +6643,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			String missingTermQuery = conditionTokens[1];
 			logger.debug("submittedFunctionName: " + submittedFunctionName);
 			logger.debug("missingTermQuery: " + missingTermQuery);
-			String submittedResourceFitler = params.get("selectResource");
-			logger.debug("submittedResourceFitler: " + submittedResourceFitler);
+			String submittedResourceFilter = params.get("selectResource");
+			logger.debug("submittedResourceFitler: " + submittedResourceFilter);
 			//TODO This value needs to be looked up based on the value of submittedFunctionName
 			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
 			String argument = null;
@@ -6656,6 +6657,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					return Operator.LESS_THAN;
 				}
 			};
+			String resourceId = item.getId();
+			List<Predicate> predicates = new ArrayList();
+			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
+			
+			predicates.add(resourcePredicate);
+			
+			Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
+			NotificationEdit notification = NotificationService.addTransientNotification();
+			notification.addFunction(submittedFunctionName);
+			notification.setAction(resourceConditionRule);
+			notification.setResourceFilter(submittedResourceFilter);
 			
 
 			
@@ -6676,19 +6688,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //			}
 //		};
 //		final Object argument = new Double(80.0);
-//		
-//		String resourceId = item.getId();
-//		List<Predicate> predicates = new ArrayList();
-//		Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
-//		
-//		predicates.add(resourcePredicate);
-//		
-//		Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
-//		// what about the NotificationService? It might work just as well for this
-//		NotificationEdit notification = NotificationService.addTransientNotification();
-//		notification.addFunction(submittedFunctionName);
-//		notification.setAction(resourceConditionRule);
-//		notification.setResourceFilter(submittedResourceFilter);
 	}
 
 	private void loadConditionData(SessionState state) {
