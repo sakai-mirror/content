@@ -6631,7 +6631,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		boolean cbSelected = Boolean.valueOf(params.get("cbCondition"));
 		if (cbSelected) {
 			String selectedConditionValue = params.get("selectCondition");
-			System.out.println("Selected condition value: " + selectedConditionValue);
+			logger.debug("Selected condition value: " + selectedConditionValue);
 			//The selectCondition value must be broken up so we can get at the values
 			//that make up the submittedResource and missingTermQuery
 			String[] conditionTokens = selectedConditionValue.split("\\|");
@@ -6640,16 +6640,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			conditionTokens = conditionToken.split("\\:");
 			String submittedFunctionName = conditionTokens[0];
 			String missingTermQuery = conditionTokens[1];
-			System.out.println("submittedFunctionName: " + submittedFunctionName);
-			System.out.println("missingTermQuery: " + missingTermQuery);
+			logger.debug("submittedFunctionName: " + submittedFunctionName);
+			logger.debug("missingTermQuery: " + missingTermQuery);
 			String submittedResourceFitler = params.get("selectResource");
-			System.out.println("submittedResourceFitler: " + submittedResourceFitler);
+			logger.debug("submittedResourceFitler: " + submittedResourceFitler);
 			//TODO This value needs to be looked up based on the value of submittedFunctionName
 			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
 			String argument = null;
 			if ((selectedIndex == 7) || (selectedIndex == 8)) {
 				argument = params.get("assignment_grade");
-				System.out.println("argument: " + argument);
+				logger.debug("argument: " + argument);
 			} 
 			Operator operator = new Operator() {
 				public int getType() {
@@ -6661,7 +6661,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 		} else {
 			//Do we remove the condition at this point?
-			System.out.println("CB NOT Selected");			
+			logger.debug("CB NOT Selected");			
 		}
 		
 		// we need to get these values from the submitted template
@@ -6693,7 +6693,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	private void loadConditionData(SessionState state) {
 		//TODO look this data up
-		System.out.println("Loading condition data");
+		logger.debug("Loading condition data");
 		Map resourceSelections = new HashMap();
 		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #1", "Homework 1");
 		resourceSelections.put("/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #2", "Homework 2");
