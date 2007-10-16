@@ -6647,9 +6647,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			logger.debug("submittedResourceFitler: " + submittedResourceFilter);
 			//TODO This value needs to be looked up based on the value of submittedFunctionName
 			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
-			String argument = null;
+			Object argument = null;
 			if ((selectedIndex == 7) || (selectedIndex == 8)) {
-				argument = params.get("assignment_grade");
+				argument = new Double(params.get("assignment_grade"));
 				logger.debug("argument: " + argument);
 			} 
 			Operator operator = new Operator() {

@@ -438,15 +438,15 @@
 						#end
 						</select>
 						<select name="selectCondition" onchange="changeCondition(this.options[this.selectedIndex].value);">
-							<option value="1|gradebook.udpateItemScore:getScore">due date has passed.</option>
-							<option value="2|gradebook.udpateItemScore:getScore">due date has not passed.</option>
-							<option value="3|gradebook.udpateItemScore:getScore">is released to students.</option>
-							<option value="4|gradebook.udpateItemScore:getScore">is not released to students.</option>
-							<option value="5|gradebook.udpateItemScore:getScore">is included in course grade.</option>
-							<option value="6|gradebook.udpateItemScore:getScore">is not included in course grade.</option>
-							<option value="7|gradebook.udpateItemScore:getScore" selected="true">grade is less than:</option>
-							<option value="8|gradebook.udpateItemScore:getScore">grade is greater than or equal to:</option>
-							<option value="9|gradebook.udpateItemScore:getScore">source tool is:</option>
+							<option value="1|gradebook.updateItemScore:getScore">due date has passed.</option>
+							<option value="2|gradebook.updateItemScore:getScore">due date has not passed.</option>
+							<option value="3|gradebook.updateItemScore:getScore">is released to students.</option>
+							<option value="4|gradebook.updateItemScore:getScore">is not released to students.</option>
+							<option value="5|gradebook.updateItemScore:getScore">is included in course grade.</option>
+							<option value="6|gradebook.updateItemScore:getScore">is not included in course grade.</option>
+							<option value="7|gradebook.updateItemScore:getScore" selected="true">grade is less than:</option>
+							<option value="8|gradebook.updateItemScore:getScore">grade is greater than or equal to:</option>
+							<option value="9|gradebook.updateItemScore:getScore">source tool is:</option>
 						</select> 
 						<span id="grade_argument_span" style="display:inline;">
 							<input type="text" size="3" name="assignment_grade" />
