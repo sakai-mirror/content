@@ -22,8 +22,6 @@
 package org.sakaiproject.content.tool;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -36,6 +34,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,15 +60,10 @@ import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.conditions.api.EventKey;
 import org.sakaiproject.conditions.api.Operator;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
-import org.sakaiproject.conditions.impl.AssignmentGrading;
 import org.sakaiproject.conditions.impl.BooleanExpression;
-import org.sakaiproject.conditions.impl.MockEventKey;
-import org.sakaiproject.conditions.impl.MockRule;
-import org.sakaiproject.conditions.impl.ResourceReleaseRule;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -4935,7 +4929,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
 		
 		context.put("resourceSelections", state.getAttribute("resourceSelections"));
-		
+		context.put("conditionSelections", state.getAttribute("conditionSelections"));
+				
 		return TEMPLATE_REVISE_METADATA;
 	}
 
@@ -6651,7 +6646,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			if ((selectedIndex == 7) || (selectedIndex == 8)) {
 				argument = new Double(params.get("assignment_grade"));
 				logger.debug("argument: " + argument);
-			} 
+			} else if (selectedIndex == 9) {
+				argument = params.get("selectSourceTool");				
+				logger.debug("source tool: " + argument);
+			}
 			Operator operator = new Operator() {
 				public int getType() {
 					return Operator.LESS_THAN;
@@ -6691,12 +6689,25 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	}
 
 	private void loadConditionData(SessionState state) {
-		//TODO look this data up
 		logger.debug("Loading condition data");
 		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
 		
+		//TODO look this data up
+		//Using LinkedHashMap to maintain order
+		Map<String,String> conditionSelections = new LinkedHashMap<String,String>();
+		conditionSelections.put("1|gradebook.udpateItemScore:getScore","due date has passed.");
+		conditionSelections.put("2|gradebook.udpateItemScore:getScore","due date has not passed.");
+		conditionSelections.put("3|gradebook.udpateItemScore:getScore","is released to students.");
+		conditionSelections.put("4|gradebook.udpateItemScore:getScore","is not released to students.");
+		conditionSelections.put("5|gradebook.udpateItemScore:getScore","is included in course grade.");
+		conditionSelections.put("6|gradebook.udpateItemScore:getScore","is not included in course grade.");
+		conditionSelections.put("7|gradebook.udpateItemScore:getScore","grade is less than:");
+		conditionSelections.put("8|gradebook.udpateItemScore:getScore","grade is greater than or equal to:");
+		conditionSelections.put("9|gradebook.udpateItemScore:getScore","source tool is:");		
+		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
+		state.setAttribute("conditionSelections", conditionSelections);
 	}
 
 	/**
