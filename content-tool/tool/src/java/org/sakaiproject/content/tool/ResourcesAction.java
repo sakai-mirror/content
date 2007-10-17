@@ -6665,7 +6665,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			NotificationEdit notification = NotificationService.addTransientNotification();
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
-			notification.setResourceFilter(submittedResourceFilter);
+			notification.setResourceFilter(submittedResourceFilter);//notification.geti
 			
 
 			
@@ -6695,15 +6695,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//TODO look this data up
 		//Using LinkedHashMap to maintain order
 		Map<String,String> conditionSelections = new LinkedHashMap<String,String>();
-		conditionSelections.put("1|gradebook.udpateItemScore:getScore","due date has passed.");
-		conditionSelections.put("2|gradebook.udpateItemScore:getScore","due date has not passed.");
-		conditionSelections.put("3|gradebook.udpateItemScore:getScore","is released to students.");
-		conditionSelections.put("4|gradebook.udpateItemScore:getScore","is not released to students.");
-		conditionSelections.put("5|gradebook.udpateItemScore:getScore","is included in course grade.");
-		conditionSelections.put("6|gradebook.udpateItemScore:getScore","is not included in course grade.");
-		conditionSelections.put("7|gradebook.udpateItemScore:getScore","grade is less than:");
-		conditionSelections.put("8|gradebook.udpateItemScore:getScore","grade is greater than or equal to:");
-		conditionSelections.put("9|gradebook.udpateItemScore:getScore","source tool is:");		
+		conditionSelections.put("1|gradebook.updateItemScore:getScore","due date has passed.");
+		conditionSelections.put("2|gradebook.updateItemScore:getScore","due date has not passed.");
+		conditionSelections.put("3|gradebook.updateItemScore:getScore","is released to students.");
+		conditionSelections.put("4|gradebook.updateItemScore:getScore","is not released to students.");
+		conditionSelections.put("5|gradebook.updateItemScore:getScore","is included in course grade.");
+		conditionSelections.put("6|gradebook.updateItemScore:getScore","is not included in course grade.");
+		conditionSelections.put("7|gradebook.updateItemScore:getScore","grade is less than:");
+		conditionSelections.put("8|gradebook.updateItemScore:getScore","grade is greater than or equal to:");
+		conditionSelections.put("9|gradebook.updateItemScore:getScore","source tool is:");		
 		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
