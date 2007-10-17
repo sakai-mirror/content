@@ -6666,12 +6666,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);//notification.geti
+			item.setUseConditionalRelease(true);
 			
 
 			
 		} else {
 			//Do we remove the condition at this point?
-			logger.debug("CB NOT Selected");			
+			logger.debug("CB NOT Selected");	
+			item.setUseConditionalRelease(false);
 		}
 		
 		// we need to get these values from the submitted template

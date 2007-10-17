@@ -361,8 +361,8 @@ public class ListItem
 	protected boolean useReleaseDate;
 	protected Time releaseDate;
 	protected boolean useRetractDate;
-
 	protected Time retractDate;
+	protected boolean useConditionalRelease = false;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -1939,6 +1939,11 @@ public class ListItem
     {
     	return isAvailable;
     }
+    
+    public boolean useConditionalRelease()
+    {
+    	return useConditionalRelease;
+    }
 
 	/**
 	 * @return the collection
@@ -2264,6 +2269,11 @@ public class ListItem
     {
     	this.hidden = hidden;
     }
+    
+    public void setUseConditionalRelease(boolean useConditionalRelease)
+    {
+    	this.useConditionalRelease = useConditionalRelease;
+    }
 
 	/**
 	 * @param hover
@@ -2572,6 +2582,7 @@ public class ListItem
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
+		setConditionalReleaseOnEntity(props);
 		//setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
@@ -2606,6 +2617,7 @@ public class ListItem
 	protected void setAvailabilityOnEntity(GroupAwareEdit edit)
 	{
 		edit.setAvailability(hidden, releaseDate, retractDate);
+		edit.setConditionallyReleased(useConditionalRelease);
 	}
 
 	protected void setCopyrightOnEntity(ResourcePropertiesEdit props) 
@@ -2682,6 +2694,7 @@ public class ListItem
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		setCopyrightOnEntity(props);
+		setConditionalReleaseOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
@@ -2709,6 +2722,11 @@ public class ListItem
 		{
 			props.addProperty(ResourceProperties.PROP_DISPLAY_NAME, this.name);
 		}
+	}
+	
+	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
+	{
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
 	}
 
 	public String getCopyrightStatus() 

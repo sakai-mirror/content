@@ -8523,6 +8523,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		/** The availability of the item */
 		protected boolean m_hidden = false;
+		
+		private boolean m_isConditionallyReleased = false;
 
 		/** The Collection of group-ids for groups with access to this entity. */
 		protected Collection m_groups = new Vector();
@@ -8783,7 +8785,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			boolean available = !m_hidden;
 			
-			if(available && (this.m_releaseDate != null || this.m_retractDate != null))
+			if(available && (this.m_releaseDate != null || this.m_retractDate != null || isConditionallyReleased()))
 			{
 				Time now = TimeService.newTime();
 				if(this.m_releaseDate != null)
@@ -8793,6 +8795,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				if(available && this.m_retractDate != null)
 				{
 					available = this.m_retractDate.after(now);
+				}
+				if(available && isConditionallyReleased())
+				{
+					Collection acl = (Collection)this.m_properties.get("conditional_access_list");
+					if (acl == null) {
+						available = false;
+					} else {
+						// acl acts as a white list for availability
+						available = acl.contains(SessionManager.getCurrentSessionUserId());
+					}
 				}
 			}
 			if(!available)
@@ -8942,6 +8954,20 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		public void setResourceType(String type)
 		{
 			m_resourceType = type;
+		}
+
+		public boolean isConditionallyReleased() {
+			try {
+				return this.m_properties.getBooleanProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE);
+			} catch (EntityPropertyNotDefinedException e) {
+				return false;
+			} catch (EntityPropertyTypeException e) {
+				return false;
+			}
+		}
+
+		public void setConditionallyReleased(boolean isConditionallyReleased) {
+			m_isConditionallyReleased = isConditionallyReleased;
 		}
 
 	}	// BasicGroupAwareEntity

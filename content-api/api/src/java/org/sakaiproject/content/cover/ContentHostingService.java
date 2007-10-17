@@ -53,6 +53,8 @@ public class ContentHostingService
 	}
 
 	private static org.sakaiproject.content.api.ContentHostingService m_instance = null;
+	
+	public static java.lang.String PROP_CONDITIONAL_RELEASE = org.sakaiproject.content.api.ContentHostingService.PROP_CONDITIONAL_RELEASE;
 
 	public static java.lang.String APPLICATION_ID = org.sakaiproject.content.api.ContentHostingService.APPLICATION_ID;
 

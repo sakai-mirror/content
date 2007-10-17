@@ -96,6 +96,9 @@ public interface ContentHostingService extends EntityProducer
 {
 	/** The type string for this application: should not change over time as it may be stored in various parts of persistent entities. */
 	static final String APPLICATION_ID = "sakai:content";
+	
+	/** Property for whether or not to apply a condition on the release of this entity [boolean] */
+	static final String PROP_CONDITIONAL_RELEASE = "SAKAI:conditionalrelease";
 
 	/** This string starts the references to resources in this service. */
 	public static final String REFERENCE_ROOT = Entity.SEPARATOR + "content";
