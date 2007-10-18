@@ -6629,17 +6629,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			String selectedConditionValue = params.get("selectCondition");
 			logger.debug("Selected condition value: " + selectedConditionValue);
 			//The selectCondition value must be broken up so we can get at the values
-			//that make up the submittedResource and missingTermQuery
+			//that make up the index, submittedFunctionName, missingTermQuery, and operatorValue in that order
 			String[] conditionTokens = selectedConditionValue.split("\\|");
 			int selectedIndex = Integer.valueOf(conditionTokens[0]);
-			String conditionToken = conditionTokens[1];
-			conditionTokens = conditionToken.split("\\:");
-			String submittedFunctionName = conditionTokens[0];
-			String missingTermQuery = conditionTokens[1];
+			String submittedFunctionName = conditionTokens[1];
+			String missingTermQuery = conditionTokens[2];
+			String operatorValue = conditionTokens[3];
 			logger.debug("submittedFunctionName: " + submittedFunctionName);
 			logger.debug("missingTermQuery: " + missingTermQuery);
+			logger.debug("operatorValue: " + operatorValue);			
 			String submittedResourceFilter = params.get("selectResource");
-			logger.debug("submittedResourceFitler: " + submittedResourceFilter);
+			logger.debug("submittedResourceFilter: " + submittedResourceFilter);
 			//TODO This value needs to be looked up based on the value of submittedFunctionName
 			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
 			Object argument = null;
@@ -6650,14 +6650,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				argument = params.get("selectSourceTool");				
 				logger.debug("source tool: " + argument);
 			}
-			Operator operator = new Operator() {
-				public int getType() {
-					return Operator.LESS_THAN;
-				}
-			};
+
 			String resourceId = item.getId();
 			List<Predicate> predicates = new ArrayList();
-			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operator, argument);
+			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operatorValue, argument);
 			
 			predicates.add(resourcePredicate);
 			
@@ -6665,7 +6661,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			NotificationEdit notification = NotificationService.addTransientNotification();
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
-			notification.setResourceFilter(submittedResourceFilter);//notification.geti
+			notification.setResourceFilter(submittedResourceFilter);
 			item.setUseConditionalRelease(true);
 			
 
@@ -6676,18 +6672,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item.setUseConditionalRelease(false);
 		}
 		
-		// we need to get these values from the submitted template
-		// they will be part of the ListItem
-//		String submittedFunctionName = "gradebook.udpateItemScore";
-//		String submittedResourceFilter = "/gradebook/c206c1ee-cfc4-485e-009b-d4be705ac972/Homework #3";
-//		String missingTermQuery = "getScore";
-//		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
-//		Operator operator = new Operator() {
-//			public int getType() {
-//				return Operator.LESS_THAN;
-//			}
-//		};
-//		final Object argument = new Double(80.0);
 	}
 
 	private void loadConditionData(SessionState state) {
@@ -6697,15 +6681,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//TODO look this data up
 		//Using LinkedHashMap to maintain order
 		Map<String,String> conditionSelections = new LinkedHashMap<String,String>();
-		conditionSelections.put("1|gradebook.updateAssignment:dueDateHasPassed","due date has passed.");
-		conditionSelections.put("2|gradebook.updateAssignment:dueDateHasNotPassed","due date has not passed.");
-		conditionSelections.put("3|gradebook.updateAssignment:isReleasedToStudents","is released to students.");
-		conditionSelections.put("4|gradebook.updateAssignment:isNotReleasedToStudents","is not released to students.");
-		conditionSelections.put("5|gradebook.updateAssignment:isIncludedInCourseGrade","is included in course grade.");
-		conditionSelections.put("6|gradebook.updateAssignment:isNotIncludedInCourseGrade","is not included in course grade.");
-		conditionSelections.put("7|gradebook.updateItemScore:getScore","grade is less than:");
-		conditionSelections.put("8|gradebook.updateItemScore:getScore","grade is greater than or equal to:");
-		conditionSelections.put("9|gradebook.updateItemScore:getScore","source tool is:");		
+		conditionSelections.put("1|gradebook.updateAssignment|dueDateHasPassed|no_operator","due date has passed.");
+		conditionSelections.put("2|gradebook.updateAssignment|dueDateHasNotPassed|no_operator","due date has not passed.");
+		conditionSelections.put("3|gradebook.updateAssignment|isReleasedToStudents|no_operator","is released to students.");
+		conditionSelections.put("4|gradebook.updateAssignment|isNotReleasedToStudents|no_operator","is not released to students.");
+		conditionSelections.put("5|gradebook.updateAssignment|isIncludedInCourseGrade|no_operator","is included in course grade.");
+		conditionSelections.put("6|gradebook.updateAssignment|isNotIncludedInCourseGrade|no_operator","is not included in course grade.");
+		conditionSelections.put("7|gradebook.updateItemScore|getScore|less_than","grade is less than:");
+		conditionSelections.put("8|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");
+		conditionSelections.put("9|gradebook.updateItemScore|getScore|no_operator","source tool is:");		
 		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
