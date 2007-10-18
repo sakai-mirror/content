@@ -6697,12 +6697,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//TODO look this data up
 		//Using LinkedHashMap to maintain order
 		Map<String,String> conditionSelections = new LinkedHashMap<String,String>();
-		conditionSelections.put("1|gradebook.updateItemScore:getScore","due date has passed.");
-		conditionSelections.put("2|gradebook.updateItemScore:getScore","due date has not passed.");
-		conditionSelections.put("3|gradebook.updateItemScore:getScore","is released to students.");
-		conditionSelections.put("4|gradebook.updateItemScore:getScore","is not released to students.");
-		conditionSelections.put("5|gradebook.updateItemScore:getScore","is included in course grade.");
-		conditionSelections.put("6|gradebook.updateItemScore:getScore","is not included in course grade.");
+		conditionSelections.put("1|gradebook.updateAssignment:dueDateHasPassed","due date has passed.");
+		conditionSelections.put("2|gradebook.updateAssignment:dueDateHasNotPassed","due date has not passed.");
+		conditionSelections.put("3|gradebook.updateAssignment:isReleasedToStudents","is released to students.");
+		conditionSelections.put("4|gradebook.updateAssignment:isNotReleasedToStudents","is not released to students.");
+		conditionSelections.put("5|gradebook.updateAssignment:isIncludedInCourseGrade","is included in course grade.");
+		conditionSelections.put("6|gradebook.updateAssignment:isNotIncludedInCourseGrade","is not included in course grade.");
 		conditionSelections.put("7|gradebook.updateItemScore:getScore","grade is less than:");
 		conditionSelections.put("8|gradebook.updateItemScore:getScore","grade is greater than or equal to:");
 		conditionSelections.put("9|gradebook.updateItemScore:getScore","source tool is:");		
