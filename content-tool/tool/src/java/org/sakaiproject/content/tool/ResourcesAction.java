@@ -60,7 +60,6 @@ import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.conditions.api.Operator;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.conditions.impl.BooleanExpression;
@@ -92,7 +91,10 @@ import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.Notification;
 import org.sakaiproject.event.api.NotificationEdit;
+import org.sakaiproject.event.api.NotificationLockedException;
+import org.sakaiproject.event.api.NotificationNotDefinedException;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.api.UsageSession;
 import org.sakaiproject.event.cover.NotificationService;
@@ -6563,7 +6565,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				try 
 				{
 					String autoDdl = ServerConfigurationService.getString("auto.ddl");
-					saveCondition(item, params);
+					saveCondition(item, params, state);
 					
 					if(item.isCollection())
 					{
@@ -6623,34 +6625,34 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	private void saveCondition(ListItem item, ParameterParser params) {
+	private void saveCondition(ListItem item, ParameterParser params, SessionState state) {
 		boolean cbSelected = Boolean.valueOf(params.get("cbCondition"));
-		if (cbSelected) {
-			String selectedConditionValue = params.get("selectCondition");
-			logger.debug("Selected condition value: " + selectedConditionValue);
-			//The selectCondition value must be broken up so we can get at the values
-			//that make up the index, submittedFunctionName, missingTermQuery, and operatorValue in that order
-			String[] conditionTokens = selectedConditionValue.split("\\|");
-			int selectedIndex = Integer.valueOf(conditionTokens[0]);
-			String submittedFunctionName = conditionTokens[1];
-			String missingTermQuery = conditionTokens[2];
-			String operatorValue = conditionTokens[3];
-			logger.debug("submittedFunctionName: " + submittedFunctionName);
-			logger.debug("missingTermQuery: " + missingTermQuery);
-			logger.debug("operatorValue: " + operatorValue);			
-			String submittedResourceFilter = params.get("selectResource");
-			logger.debug("submittedResourceFilter: " + submittedResourceFilter);
-			//TODO This value needs to be looked up based on the value of submittedFunctionName
-			String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
-			Object argument = null;
-			if ((selectedIndex == 7) || (selectedIndex == 8)) {
-				argument = new Double(params.get("assignment_grade"));
-				logger.debug("argument: " + argument);
-			} else if (selectedIndex == 9) {
-				argument = params.get("selectSourceTool");				
-				logger.debug("source tool: " + argument);
-			}
+		String selectedConditionValue = params.get("selectCondition");
+		logger.debug("Selected condition value: " + selectedConditionValue);
+		//The selectCondition value must be broken up so we can get at the values
+		//that make up the index, submittedFunctionName, missingTermQuery, and operatorValue in that order
+		String[] conditionTokens = selectedConditionValue.split("\\|");
+		int selectedIndex = Integer.valueOf(conditionTokens[0]);
+		String submittedFunctionName = conditionTokens[1];
+		String missingTermQuery = conditionTokens[2];
+		String operatorValue = conditionTokens[3];
+		logger.debug("submittedFunctionName: " + submittedFunctionName);
+		logger.debug("missingTermQuery: " + missingTermQuery);
+		logger.debug("operatorValue: " + operatorValue);			
+		String submittedResourceFilter = params.get("selectResource");
+		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
+		//TODO This value needs to be looked up based on the value of submittedFunctionName
+		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+		Object argument = null;
+		if ((selectedIndex == 7) || (selectedIndex == 8)) {
+			argument = new Double(params.get("assignment_grade"));
+			logger.debug("argument: " + argument);
+		} else if (selectedIndex == 9) {
+			argument = params.get("selectSourceTool");				
+			logger.debug("source tool: " + argument);
+		}
 
+		if (cbSelected) {
 			String resourceId = item.getId();
 			List<Predicate> predicates = new ArrayList();
 			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operatorValue, argument);
@@ -6662,13 +6664,20 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
-			item.setUseConditionalRelease(true);
-			
-
-			
+			item.setUseConditionalRelease(true);						
 		} else {
 			//Do we remove the condition at this point?
-			logger.debug("CB NOT Selected");	
+			logger.debug("Removing condition");	
+			Notification notification = NotificationService.findNotification(submittedFunctionName, submittedResourceFilter);
+			try {
+				NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
+				NotificationService.removeNotification(notificationToRemove);
+			} catch (NotificationLockedException e) {
+				addAlert(state, rb.getString("disable.condition.error"));				
+			} catch (NotificationNotDefinedException e) {
+				addAlert(state, rb.getString("disable.condition.error"));								
+			}
+			
 			item.setUseConditionalRelease(false);
 		}
 		
