@@ -6642,7 +6642,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		String submittedResourceFilter = params.get("selectResource");
 		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
 		//TODO This value needs to be looked up based on the value of submittedFunctionName
-		String eventDataClass = "org.sakaiproject.conditions.impl.AssignmentGrading";
+		String eventDataClass = ConditionService.getClassNameForEvent(submittedFunctionName);
 		Object argument = null;
 		if ((selectedIndex == 7) || (selectedIndex == 8)) {
 			argument = new Double(params.get("assignment_grade"));
@@ -6666,7 +6666,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.setResourceFilter(submittedResourceFilter);
 			item.setUseConditionalRelease(true);						
 		} else {
-			//Do we remove the condition at this point?
 			logger.debug("Removing condition");	
 			Notification notification = NotificationService.findNotification(submittedFunctionName, submittedResourceFilter);
 			try {
