@@ -8523,8 +8523,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		/** The availability of the item */
 		protected boolean m_hidden = false;
-		
-		private boolean m_isConditionallyReleased = false;
 
 		/** The Collection of group-ids for groups with access to this entity. */
 		protected Collection m_groups = new Vector();
@@ -8967,7 +8965,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 
 		public void setConditionallyReleased(boolean isConditionallyReleased) {
-			m_isConditionallyReleased = isConditionallyReleased;
+			m_properties.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(isConditionallyReleased));
 		}
 
 	}	// BasicGroupAwareEntity
