@@ -450,6 +450,8 @@ public class ListItem
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
+		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
+		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
 		
