@@ -6664,18 +6664,20 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
-			item.setUseConditionalRelease(true);						
+			item.setUseConditionalRelease(true);
+			item.setSubmittedFunctionName(submittedFunctionName);
+			item.setSubmittedResourceFilter(submittedResourceFilter);
 		} else {
 			logger.debug("Removing condition");	
-			Notification notification = NotificationService.findNotification(submittedFunctionName, submittedResourceFilter);
-			try {
-				NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
-				NotificationService.removeNotification(notificationToRemove);
-			} catch (NotificationLockedException e) {
-				addAlert(state, rb.getString("disable.condition.error"));				
-			} catch (NotificationNotDefinedException e) {
-				addAlert(state, rb.getString("disable.condition.error"));								
-			}
+//			Notification notification = NotificationService.findNotification(submittedFunctionName, submittedResourceFilter);
+//			try {
+//				NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
+//				NotificationService.removeNotification(notificationToRemove);
+//			} catch (NotificationLockedException e) {
+//				addAlert(state, rb.getString("disable.condition.error"));				
+//			} catch (NotificationNotDefinedException e) {
+//				addAlert(state, rb.getString("disable.condition.error"));								
+//			}
 			
 			item.setUseConditionalRelease(false);
 		}
@@ -6698,6 +6700,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		conditionSelections.put("7|gradebook.updateItemScore|getScore|less_than","grade is less than:");
 		conditionSelections.put("8|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");
 		conditionSelections.put("9|gradebook.updateItemScore|getScore|no_operator","source tool is:");		
+		
 		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);

@@ -100,6 +100,12 @@ public interface ContentHostingService extends EntityProducer
 	/** Property for whether or not to apply a condition on the release of this entity [boolean] */
 	static final String PROP_CONDITIONAL_RELEASE = "SAKAI:conditionalrelease";
 
+	/** Property for storing the submittedFunctionName for conditional release on this entity */
+	static final String PROP_SUBMITTED_FUNCTION_NAME = "SAKAI:submittedFunctionName";
+
+	/** Property for storing the submittedResourceFilter for conditional release on this entity */
+	static final String PROP_SUBMITTED_RESOURCE_FILTER = "SAKAI:submittedResourceFilter";
+	
 	/** This string starts the references to resources in this service. */
 	public static final String REFERENCE_ROOT = Entity.SEPARATOR + "content";
 

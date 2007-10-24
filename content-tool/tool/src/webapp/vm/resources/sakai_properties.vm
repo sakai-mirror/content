@@ -394,17 +394,21 @@
 					</td>
 				</tr>
 				<tr>
-									<td>
-									</td>
-									<td>
-										<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
-									</td>
-									<td colspan="3">
-										<label for="use_start_date_0">
-											Only if the following condition is met:
-										</label>
-									</td>
-								</tr>
+					<td>
+					</td>
+					<td>
+					#if($model.useConditionalRelease())
+						<input name="cbCondition" id="cbCondition" value="true" type="checkbox" checked="checked">
+					#else
+						<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
+					#end
+					</td>
+					<td colspan="3">
+						<label for="use_start_date_0">
+							Only if the following condition is met:
+						</label>
+					</td>
+				</tr>
 			</table>					
 			<table>
 				<tr>

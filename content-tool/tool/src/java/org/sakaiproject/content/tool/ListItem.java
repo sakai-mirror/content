@@ -363,6 +363,8 @@ public class ListItem
 	protected boolean useRetractDate;
 	protected Time retractDate;
 	protected boolean useConditionalRelease = false;
+	private String submittedFunctionName;
+	private String submittedResourceFilter;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -1945,7 +1947,17 @@ public class ListItem
     	return useConditionalRelease;
     }
 
-	/**
+    public String getSubmittedFunctionName()
+    {
+    	return submittedFunctionName;
+    }
+    
+    public String getSubmittedResourceFilter()
+    {
+    	return submittedResourceFilter;
+    }
+    
+    /**
 	 * @return the collection
 	 */
 	public boolean isCollection()
@@ -2275,7 +2287,17 @@ public class ListItem
     	this.useConditionalRelease = useConditionalRelease;
     }
 
-	/**
+    public void setSubmittedFunctionName(String submittedFunctionName)
+    {
+    	this.submittedFunctionName = submittedFunctionName;
+    }
+    
+    public void setSubmittedResourceFilter(String submittedResourceFilter)
+    {
+    	this.submittedResourceFilter = submittedResourceFilter;
+    }
+    
+    /**
 	 * @param hover
 	 */
 	public void setHoverText(String hover)
@@ -2583,6 +2605,8 @@ public class ListItem
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		setConditionalReleaseOnEntity(props);
+		setSubmittedFunctionNameOnEntity(props);
+		setSubmittedResourceFilterOnEntity(props);		
 		//setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
@@ -2695,6 +2719,8 @@ public class ListItem
 		setDescriptionOnEntity(props);
 		setCopyrightOnEntity(props);
 		setConditionalReleaseOnEntity(props);
+		setSubmittedFunctionNameOnEntity(props);
+		setSubmittedResourceFilterOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
@@ -2727,6 +2753,14 @@ public class ListItem
 	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
 	{
 		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
+	}
+
+	protected void setSubmittedFunctionNameOnEntity(ResourcePropertiesEdit props) {
+		props.addProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME, this.submittedFunctionName);
+	}
+	
+	protected void setSubmittedResourceFilterOnEntity(ResourcePropertiesEdit props) {
+		props.addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, this.submittedResourceFilter);
 	}
 
 	public String getCopyrightStatus() 
