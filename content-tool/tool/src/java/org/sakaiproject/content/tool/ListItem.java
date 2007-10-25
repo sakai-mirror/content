@@ -451,6 +451,8 @@ public class ListItem
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
 		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
+		this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
+		this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;

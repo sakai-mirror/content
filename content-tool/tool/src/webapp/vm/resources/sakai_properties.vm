@@ -397,7 +397,7 @@
 					<td>
 					</td>
 					<td>
-					#if($model.useConditionalRelease())
+					#if($item.useConditionalRelease())
 						<input name="cbCondition" id="cbCondition" value="true" type="checkbox" checked="checked">
 					#else
 						<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
@@ -422,9 +422,6 @@
 							} else if (selectIndex < 9) {
 								document.getElementById("grade_argument_span").style.display = "inline";
 								document.getElementById("grade_tools_span").style.display = "none";
-							} else {
-								document.getElementById("grade_argument_span").style.display = "none";
-								document.getElementById("grade_tools_span").style.display = "inline";	
 							}
 						}
 					</script> 		
@@ -448,13 +445,6 @@
 						</select> 
 						<span id="grade_argument_span" style="display:none;">
 							<input type="text" size="3" name="assignment_grade" />
-						</span>
-						<span id="grade_tools_span" style="display:none;">
-							<select name="selectSourceTool">
-								<option value="assignments">Assignments</option>
-								<option value="samigo">Tests & Quizzes</option>
-								<option value="gradebook">Gradebook</option>
-							</select>
 						</span>
 					</td>
 				</tr>

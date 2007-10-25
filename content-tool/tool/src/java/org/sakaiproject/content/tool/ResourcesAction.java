@@ -6641,18 +6641,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		logger.debug("operatorValue: " + operatorValue);			
 		String submittedResourceFilter = params.get("selectResource");
 		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
-		//TODO This value needs to be looked up based on the value of submittedFunctionName
 		String eventDataClass = ConditionService.getClassNameForEvent(submittedFunctionName);
 		Object argument = null;
 		if ((selectedIndex == 7) || (selectedIndex == 8)) {
 			argument = new Double(params.get("assignment_grade"));
 			logger.debug("argument: " + argument);
-		} else if (selectedIndex == 9) {
-			argument = params.get("selectSourceTool");				
-			logger.debug("source tool: " + argument);
 		}
 
 		if (cbSelected) {
+			if (item.useConditionalRelease) {
+				logger.debug("Previous condition exists. Removing related notification");
+				removeExistingNotification(item, state);
+			}
+			
 			String resourceId = item.getId();
 			List<Predicate> predicates = new ArrayList();
 			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operatorValue, argument);
@@ -6664,26 +6665,21 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.addFunction(submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
+			
 			item.setUseConditionalRelease(true);
 			item.setSubmittedFunctionName(submittedFunctionName);
 			item.setSubmittedResourceFilter(submittedResourceFilter);
 		} else {
-			logger.debug("Removing condition");	
-//			Notification notification = NotificationService.findNotification(submittedFunctionName, submittedResourceFilter);
-//			try {
-//				NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
-//				NotificationService.removeNotification(notificationToRemove);
-//			} catch (NotificationLockedException e) {
-//				addAlert(state, rb.getString("disable.condition.error"));				
-//			} catch (NotificationNotDefinedException e) {
-//				addAlert(state, rb.getString("disable.condition.error"));								
-//			}
-			
-			item.setUseConditionalRelease(false);
+			//only remove the condition if it previously existed
+			if (item.useConditionalRelease) {
+				item.setUseConditionalRelease(false);
+				removeExistingNotification(item, state);
+			}			
 		}
 		
 	}
 
+	
 	private void loadConditionData(SessionState state) {
 		logger.debug("Loading condition data");
 		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
@@ -6698,15 +6694,31 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		conditionSelections.put("5|gradebook.updateAssignment|isIncludedInCourseGrade|no_operator","is included in course grade.");
 		conditionSelections.put("6|gradebook.updateAssignment|isNotIncludedInCourseGrade|no_operator","is not included in course grade.");
 		conditionSelections.put("7|gradebook.updateItemScore|getScore|less_than","grade is less than:");
-		conditionSelections.put("8|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");
-		conditionSelections.put("9|gradebook.updateItemScore|getScore|no_operator","source tool is:");		
-		
+		conditionSelections.put("8|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");	
 		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
 		state.setAttribute("conditionSelections", conditionSelections);
 	}
 
+	private void removeExistingNotification(ListItem item, SessionState state) {
+		logger.debug("Removing condition");	
+		String previousSubmittedFunctionName = item.getSubmittedFunctionName();
+		String previousSubmittedResourceFilter = item.getSubmittedResourceFilter();
+		logger.debug("Previous submittedFunctionName: " + previousSubmittedFunctionName);
+		logger.debug("Previous submittedResourceFilter: " + previousSubmittedResourceFilter);
+				
+		Notification notification = NotificationService.findNotification(previousSubmittedFunctionName, previousSubmittedResourceFilter);
+		try {
+			NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
+			NotificationService.removeNotification(notificationToRemove);
+		} catch (NotificationLockedException e) {
+			addAlert(state, rb.getString("disable.condition.error"));				
+		} catch (NotificationNotDefinedException e) {
+			addAlert(state, rb.getString("disable.condition.error"));								
+		}		
+	}
+	
 	/**
 	* Sort based on the given property
 	*/
