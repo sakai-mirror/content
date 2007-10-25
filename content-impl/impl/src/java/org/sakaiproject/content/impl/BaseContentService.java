@@ -8796,12 +8796,18 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				}
 				if(available && isConditionallyReleased())
 				{
-					Collection acl = (Collection)this.m_properties.get("conditional_access_list");
-					if (acl == null) {
-						available = false;
+					// first check for global rule satisfaction
+					String satisfiesRule = this.m_properties.getProperty("resource.satisfies.rule");
+					if (satisfiesRule == null) {
+						Collection acl = (Collection)this.m_properties.get("conditional_access_list");
+						if (acl == null) {
+							available = false;
+						} else {
+							// acl acts as a white list for availability
+							available = acl.contains(SessionManager.getCurrentSessionUserId());
+						}
 					} else {
-						// acl acts as a white list for availability
-						available = acl.contains(SessionManager.getCurrentSessionUserId());
+						available = Boolean.parseBoolean(satisfiesRule);
 					}
 				}
 			}
