@@ -435,12 +435,24 @@
 						Gradebook 
 						<select name="selectResource">
 						#foreach ($key in $resourceSelections.keySet())
-							<option value="${key}">${resourceSelections.get(${key})}</option>
+							#if($key.equals($item.getSubmittedResourceFilter()) && $item.useConditionalRelease())
+								<option value="${key}" selected="selected">${resourceSelections.get(${key})}</option>
+							#else
+								<option value="${key}">${resourceSelections.get(${key})}</option>
+							#end
+						
 						#end
 						</select>
 						<select name="selectCondition" onchange="changeCondition(this.options[this.selectedIndex].value);">
-						#foreach ($key in $conditionSelections.keySet())
-							<option value="${key}">${conditionSelections.get(${key})}</option>
+						#foreach ($key in $conditionSelections.keySet())							
+							#if($key.equals($item.getSelectedConditionKey()) && $item.useConditionalRelease())
+								<option value="${key}" selected="selected">${conditionSelections.get(${key})}</option>
+								<script type="text/javascript">								
+									changeCondition("$key");
+								</script>							
+							#else
+								<option value="${key}">${conditionSelections.get(${key})}</option>							
+							#end
 						#end
 						</select> 
 						<span id="grade_argument_span" style="display:none;">

@@ -365,6 +365,7 @@ public class ListItem
 	protected boolean useConditionalRelease = false;
 	private String submittedFunctionName;
 	private String submittedResourceFilter;
+	private String selectedConditionKey;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -453,6 +454,7 @@ public class ListItem
 		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
 		this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
 		this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
+		this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
@@ -1960,7 +1962,11 @@ public class ListItem
     {
     	return submittedResourceFilter;
     }
-    
+
+    public String getSelectedConditionKey()
+    {
+    	return selectedConditionKey;
+    }
     /**
 	 * @return the collection
 	 */
@@ -2301,6 +2307,11 @@ public class ListItem
     	this.submittedResourceFilter = submittedResourceFilter;
     }
     
+    public void setSelectedConditionKey(String selectedConditionKey)
+    {
+    	this.selectedConditionKey = selectedConditionKey;
+    }
+    
     /**
 	 * @param hover
 	 */
@@ -2611,6 +2622,7 @@ public class ListItem
 		setConditionalReleaseOnEntity(props);
 		setSubmittedFunctionNameOnEntity(props);
 		setSubmittedResourceFilterOnEntity(props);		
+		setSelectedConditionKeyOnEntity(props);
 		//setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
@@ -2725,6 +2737,7 @@ public class ListItem
 		setConditionalReleaseOnEntity(props);
 		setSubmittedFunctionNameOnEntity(props);
 		setSubmittedResourceFilterOnEntity(props);
+		setSelectedConditionKeyOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
@@ -2767,6 +2780,11 @@ public class ListItem
 		props.addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, this.submittedResourceFilter);
 	}
 
+	protected void setSelectedConditionKeyOnEntity(ResourcePropertiesEdit props) 
+	{
+		props.addProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY, this.selectedConditionKey);
+	}
+	
 	public String getCopyrightStatus() 
 	{
 		return copyrightStatus;

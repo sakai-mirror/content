@@ -6669,6 +6669,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item.setUseConditionalRelease(true);
 			item.setSubmittedFunctionName(submittedFunctionName);
 			item.setSubmittedResourceFilter(submittedResourceFilter);
+			item.setSelectedConditionKey(selectedConditionValue);
 		} else {
 			//only remove the condition if it previously existed
 			if (item.useConditionalRelease) {

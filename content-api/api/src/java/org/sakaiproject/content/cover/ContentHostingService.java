@@ -60,6 +60,8 @@ public class ContentHostingService
 
 	public static java.lang.String PROP_SUBMITTED_RESOURCE_FILTER = org.sakaiproject.content.api.ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER;
 
+	public static java.lang.String PROP_SELECTED_CONDITION_KEY = org.sakaiproject.content.api.ContentHostingService.PROP_SELECTED_CONDITION_KEY;
+	
 	public static java.lang.String APPLICATION_ID = org.sakaiproject.content.api.ContentHostingService.APPLICATION_ID;
 
 	public static java.lang.String REFERENCE_ROOT = org.sakaiproject.content.api.ContentHostingService.REFERENCE_ROOT;
