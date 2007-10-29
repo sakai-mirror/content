@@ -1,6 +1,6 @@
 /**********************************************************************************
- * $URL:  $
- * $Id:  $
+ * $URL:	 $
+ * $Id:	$
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007 The Sakai Foundation.
@@ -9,7 +9,7 @@
  * you may not use this file except in compliance with the License. 
  * You may obtain a copy of the License at
  * 
- *      http://www.opensource.org/licenses/ecl1.php
+ *		  http://www.opensource.org/licenses/ecl1.php
  * 
  * Unless required by applicable law or agreed to in writing, software 
  * distributed under the License is distributed on an "AS IS" BASIS, 
@@ -24,6 +24,7 @@ package org.sakaiproject.content.tool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,8 +81,8 @@ import org.sakaiproject.util.Validator;
 public class ResourcesHelperAction extends VelocityPortletPaneledAction 
 {
 	/** the logger for this class */
-    private static final Log logger = LogFactory.getLog(ResourcesHelperAction.class);
-    
+	 private static final Log logger = LogFactory.getLog(ResourcesHelperAction.class);
+	 
 	/** Resource bundle using current language locale */
 	private static ResourceLoader rb = new ResourceLoader("types");
 	
@@ -313,7 +314,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	}
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
-    {
+	 {
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
@@ -355,7 +356,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ResourcesAction.publicDisplayChoicesIntoContext(state, context);
 		
 		return CREATE_URLS_TEMPLATE;
-    }
+	 }
 
 
 
@@ -685,7 +686,15 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			}
 		}
 		
-		pipe.setRevisedContent(content.getBytes());
+		try 
+		{
+			pipe.setRevisedContent(content.getBytes(ResourcesAction.UTF_8_ENCODING));
+		} 
+		catch (UnsupportedEncodingException e) 
+		{
+			logger.warn("Unsupported Content Encoding");
+			addAlert(state, rb.getString("alert.utf8encoding"));
+		}
 		pipe.setActionCanceled(false);
 		pipe.setErrorEncountered(false);
 		pipe.setActionCompleted(true);
@@ -844,46 +853,46 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		{
 			String filename = Validator.getFileName(fileitem.getFileName());
 			InputStream stream;
-            stream = fileitem.getInputStream();
-            if(stream == null)
-            {
-            	byte[] bytes = fileitem.get();
-            	pipe.setRevisedContent(bytes);
-            }
-            else
-            {
-                pipe.setRevisedContentStream(stream);
-            }
-            String contentType = fileitem.getContentType();
-            //pipe.setRevisedContent(bytes);
-            pipe.setRevisedMimeType(contentType);
-            pipe.setFileName(filename);
-            
-            if(ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType))
-            {
-            	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
-            }
-            else if(pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) != null)
-            {
-            	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, (String) pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING));
-            }
-            
+				stream = fileitem.getInputStream();
+				if(stream == null)
+				{
+					byte[] bytes = fileitem.get();
+					pipe.setRevisedContent(bytes);
+				}
+				else
+				{
+					 pipe.setRevisedContentStream(stream);
+				}
+				String contentType = fileitem.getContentType();
+				//pipe.setRevisedContent(bytes);
+				pipe.setRevisedMimeType(contentType);
+				pipe.setFileName(filename);
+				
+				if(ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType))
+				{
+					pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+				}
+				else if(pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) != null)
+				{
+					pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, (String) pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING));
+				}
+				
 			ListItem newFile = new ListItem(pipe.getContentEntity());
 			// notification
 			int noti = NotificationService.NOTI_NONE;
 			// %%STATE_MODE_RESOURCES%%
 			if (newFile.isDropbox())
 			{
-   				boolean notification = params.getBoolean("notify_dropbox");
-   				if(notification)
-   				{
-   					noti = NotificationService.NOTI_REQUIRED;
-   				}
-   				else
-   				{
-   					// set noti to none if in dropbox mode
-   					noti = NotificationService.NOTI_NONE;
-   				}
+					boolean notification = params.getBoolean("notify_dropbox");
+					if(notification)
+					{
+						noti = NotificationService.NOTI_REQUIRED;
+					}
+					else
+					{
+						// set noti to none if in dropbox mode
+						noti = NotificationService.NOTI_NONE;
+					}
 			}
 			else
 			{
@@ -959,28 +968,28 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			ResourceToolActionPipe pipe = pipes.get(actualCount);
 			
 			String url = params.getString("content" + ListItem.DOT + i );
-            if(url == null)
-            {
-            	continue;
-            }
-            else
-            {
-            	try
-                {
-	                url = ResourcesAction.validateURL(url);
-                }
-                catch (MalformedURLException e)
-                {
-                	addAlert(state, rb.getFormattedMessage("url.invalid", new String[]{url}));
-	                continue;
-                }
-            	
-                pipe.setRevisedContent(url.getBytes());
-            }
-            
-            pipe.setFileName(Validator.escapeResourceName(url));
-            pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
-            
+				if(url == null)
+				{
+					continue;
+				}
+				else
+				{
+					try
+					 {
+						 url = ResourcesAction.validateURL(url);
+					 }
+					 catch (MalformedURLException e)
+					 {
+						addAlert(state, rb.getFormattedMessage("url.invalid", new String[]{url}));
+						 continue;
+					 }
+					
+					 pipe.setRevisedContent(url.getBytes());
+				}
+				
+				pipe.setFileName(Validator.escapeResourceName(url));
+				pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
+				
 			ListItem newFile = (ListItem) pipe.getRevisedListItem();
 			if(newFile == null)
 			{
@@ -1015,16 +1024,16 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			// %%STATE_MODE_RESOURCES%%
 			if (newFile.isDropbox())
 			{
-   				boolean notification = params.getBoolean("notify_dropbox");
-  				if(notification)
-   				{
-   					noti = NotificationService.NOTI_REQUIRED;
-   				}
-   				else
-   				{
-   					// set noti to none if in dropbox mode
-   					noti = NotificationService.NOTI_NONE;
-   				}
+					boolean notification = params.getBoolean("notify_dropbox");
+				if(notification)
+					{
+						noti = NotificationService.NOTI_REQUIRED;
+					}
+					else
+					{
+						// set noti to none if in dropbox mode
+						noti = NotificationService.NOTI_NONE;
+					}
 			}
 			else
 			{
@@ -1042,9 +1051,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			newFile.setNotification(noti);
 			
 			//alerts.addAll(newFile.checkRequiredProperties());
-			            
+							
 			pipe.setRevisedListItem(newFile);
-    			
+				
 			actualCount++;
 			
 		}
@@ -1156,98 +1165,85 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			else if (fileitem.getFileName().length() > 0)
 			{
 				String filename = Validator.getFileName(fileitem.getFileName());
-				InputStream stream;
-                stream = fileitem.getInputStream();
-                if(stream == null)
-                {
-                	byte[] bytes = fileitem.get();
-                	pipe.setRevisedContent(bytes);
-                }
-                else
-                {
-                    pipe.setRevisedContentStream(stream);
-                }
-                String contentType = fileitem.getContentType();
-                //pipe.setRevisedContent(bytes);
-                pipe.setRevisedMimeType(contentType);
-                
-//                if(ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType))
-//                {
-//                	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
-//                }
-//                else if(pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) != null)
-//                {
-//                	pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, (String) pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING));
-//                }
-                
-                pipe.setFileName(filename);
-                
-    			ListItem newFile = (ListItem) pipe.getRevisedListItem();
-    			if(newFile == null)
-    			{
-    				if(parent == null)
-    				{
-    					newFile = new ListItem(filename);
-    				}
-    				else
-    				{
-    					Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
-    					if(defaultRetractDate == null)
-    					{
-    						defaultRetractDate = TimeService.newTime();
-    						state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
-    					}
+				pipe.setRevisedContent( fileitem.get() );
+				String contentType = fileitem.getContentType();
+				pipe.setRevisedMimeType(contentType);
+				
+				// If no encoding specified, default to UTF-8 encoding
+				if ( (ResourceType.MIME_TYPE_HTML.equals(contentType) || ResourceType.MIME_TYPE_TEXT.equals(contentType)) &&
+						pipe.getPropertyValue(ResourceProperties.PROP_CONTENT_ENCODING) == null)
+				{
+						pipe.setRevisedResourceProperty(ResourceProperties.PROP_CONTENT_ENCODING, ResourcesAction.UTF_8_ENCODING);
+				}
+				
+				pipe.setFileName(filename);
+					 
+				ListItem newFile = (ListItem) pipe.getRevisedListItem();
+				if(newFile == null)
+				{
+					if(parent == null)
+					{
+						newFile = new ListItem(filename);
+					}
+					else
+					{
+						Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
+						if(defaultRetractDate == null)
+						{
+							defaultRetractDate = TimeService.newTime();
+							state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractDate);
+						}
 
-    					newFile = new ListItem(pipe, parent, defaultRetractDate);
-    					newFile.setName(filename);
-    					newFile.setId(filename);
-    				}
-    			}
+						newFile = new ListItem(pipe, parent, defaultRetractDate);
+						newFile.setName(filename);
+						newFile.setId(filename);
+					}
+				}
 
-    			if(ListItem.isOptionalPropertiesEnabled())
-    			{
-    				newFile.initMetadataGroups(null);
-    			}
+				if(ListItem.isOptionalPropertiesEnabled())
+				{
+					newFile.initMetadataGroups(null);
+				}
 
-    			// capture properties
-    			newFile.captureProperties(params, ListItem.DOT + i);
-    			
-    			// notification
-    			int noti = NotificationService.NOTI_NONE;
-    			// %%STATE_MODE_RESOURCES%%
-    			if (newFile.isDropbox())
-    			{
-    				boolean notification = params.getBoolean("notify_dropbox");
-      				if(notification)
-       				{
-       					noti = NotificationService.NOTI_REQUIRED;
-       				}
-       				else
-       				{
-       					// set noti to none if in dropbox mode
-       					noti = NotificationService.NOTI_NONE;
-       				}
-    			}
-    			else
-    			{
-    				// read the notification options
-    				String notification = params.getString("notify");
-    				if ("r".equals(notification))
-    				{
-    					noti = NotificationService.NOTI_REQUIRED;
-    				}
-    				else if ("o".equals(notification))
-    				{
-    					noti = NotificationService.NOTI_OPTIONAL;
-    				}
-    			}
-    			newFile.setNotification(noti);
-    			// allAlerts.addAll(newFile.checkRequiredProperties());
-    			
-    			pipe.setRevisedListItem(newFile);
-    			
-    			uploadCount++;
-    			
+				// capture properties
+				newFile.captureProperties(params, ListItem.DOT + i);
+				
+				// notification
+				int noti = NotificationService.NOTI_NONE;
+				// %%STATE_MODE_RESOURCES%%
+				if (newFile.isDropbox())
+				{
+					boolean notification = params.getBoolean("notify_dropbox");
+						if(notification)
+						{
+							noti = NotificationService.NOTI_REQUIRED;
+						}
+						else
+						{
+							// set noti to none if in dropbox mode
+							noti = NotificationService.NOTI_NONE;
+						}
+				}
+				else
+				{
+					// read the notification options
+					String notification = params.getString("notify");
+					if ("r".equals(notification))
+					{
+						noti = NotificationService.NOTI_REQUIRED;
+					}
+					else if ("o".equals(notification))
+					{
+						noti = NotificationService.NOTI_OPTIONAL;
+					}
+				}
+				newFile.setNotification(noti);
+				// allAlerts.addAll(newFile.checkRequiredProperties());
+				
+				pipe.setRevisedListItem(newFile);
+				
+				uploadCount++;
+				
 			}
 			c++;
 			
