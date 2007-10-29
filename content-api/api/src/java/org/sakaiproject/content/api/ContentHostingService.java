@@ -109,6 +109,8 @@ public interface ContentHostingService extends EntityProducer
 	/** Property for storing the selectedConditionKey for conditional release on this entity */	
 	static final String PROP_SELECTED_CONDITION_KEY = "SAKAI:selectedConditionKey";
 	
+	static final String PROP_CONDITIONAL_RELEASE_ARGUMENT = "SAKAI:conditionalReleaseArgument";
+	
 	/** This string starts the references to resources in this service. */
 	public static final String REFERENCE_ROOT = Entity.SEPARATOR + "content";
 

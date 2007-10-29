@@ -59,6 +59,8 @@ public class ContentHostingService
 	public static java.lang.String PROP_SUBMITTED_FUNCTION_NAME = org.sakaiproject.content.api.ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME;
 
 	public static java.lang.String PROP_SUBMITTED_RESOURCE_FILTER = org.sakaiproject.content.api.ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER;
+	
+	public static java.lang.String PROP_CONDITIONAL_RELEASE_ARGUMENT = org.sakaiproject.content.api.ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT;
 
 	public static java.lang.String PROP_SELECTED_CONDITION_KEY = org.sakaiproject.content.api.ContentHostingService.PROP_SELECTED_CONDITION_KEY;
 	

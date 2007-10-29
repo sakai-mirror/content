@@ -6670,6 +6670,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item.setSubmittedFunctionName(submittedFunctionName);
 			item.setSubmittedResourceFilter(submittedResourceFilter);
 			item.setSelectedConditionKey(selectedConditionValue);
+			item.setConditionArgument(params.get("assignment_grade"));
 		} else {
 			//only remove the condition if it previously existed
 			if (item.useConditionalRelease) {
@@ -6682,6 +6683,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	
 	private void loadConditionData(SessionState state) {
+		ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
+		
 		logger.debug("Loading condition data");
 		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
 		
@@ -6700,6 +6703,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
 		state.setAttribute("conditionSelections", conditionSelections);
+		state.setAttribute("conditionArgument", item.getConditionArgument());
 	}
 
 	private void removeExistingNotification(ListItem item, SessionState state) {

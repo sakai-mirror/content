@@ -394,6 +394,8 @@ public class ListItem
 
 	private int constructor;
 
+	private String conditionArgument;
+
 
 	
 	/**
@@ -455,6 +457,7 @@ public class ListItem
 		this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
 		this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
 		this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
+		this.conditionArgument = props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT);
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
@@ -2620,9 +2623,6 @@ public class ListItem
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		setConditionalReleaseOnEntity(props);
-		setSubmittedFunctionNameOnEntity(props);
-		setSubmittedResourceFilterOnEntity(props);		
-		setSelectedConditionKeyOnEntity(props);
 		//setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
@@ -2735,9 +2735,6 @@ public class ListItem
 		setDescriptionOnEntity(props);
 		setCopyrightOnEntity(props);
 		setConditionalReleaseOnEntity(props);
-		setSubmittedFunctionNameOnEntity(props);
-		setSubmittedResourceFilterOnEntity(props);
-		setSelectedConditionKeyOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
@@ -2770,19 +2767,10 @@ public class ListItem
 	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
 	{
 		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
-	}
-
-	protected void setSubmittedFunctionNameOnEntity(ResourcePropertiesEdit props) {
 		props.addProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME, this.submittedFunctionName);
-	}
-	
-	protected void setSubmittedResourceFilterOnEntity(ResourcePropertiesEdit props) {
 		props.addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, this.submittedResourceFilter);
-	}
-
-	protected void setSelectedConditionKeyOnEntity(ResourcePropertiesEdit props) 
-	{
 		props.addProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY, this.selectedConditionKey);
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT, this.conditionArgument);
 	}
 	
 	public String getCopyrightStatus() 
@@ -3365,6 +3353,14 @@ public class ListItem
 		}
 	    return typeSupportsOptionalProperties;
     }
+
+	public void setConditionArgument(String conditionArgument) {
+		this.conditionArgument = conditionArgument;
+	}
+
+	public String getConditionArgument() {
+		return conditionArgument;
+	}
 
 
 }
