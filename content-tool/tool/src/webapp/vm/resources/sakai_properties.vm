@@ -397,11 +397,15 @@
 					<td>
 					</td>
 					<td>
-					#if($item.useConditionalRelease())
-						<input name="cbCondition" id="cbCondition" value="true" type="checkbox" checked="checked">
+					#if($resourceSelections.size() == 0)
+						<input name="cbCondition" id="cbCondition" value="true" type="checkbox" disabled>
 					#else
-						<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
-					#end
+						#if($item.useConditionalRelease())
+							<input name="cbCondition" id="cbCondition" value="true" type="checkbox" checked="checked">
+						#else
+							<input name="cbCondition" id="cbCondition" value="true" type="checkbox">
+						#end
+					#end	
 					</td>
 					<td colspan="3">
 						<label for="use_start_date_0">
@@ -432,36 +436,40 @@
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					</td>
 					<td colspan="3">
-						Gradebook 
-						<select name="selectResource">
-						#foreach ($key in $resourceSelections.keySet())
-							#if($key.equals($item.getSubmittedResourceFilter()) && $item.useConditionalRelease())
-								<option value="${key}" selected="selected">${resourceSelections.get(${key})}</option>
-							#else
-								<option value="${key}">${resourceSelections.get(${key})}</option>
+						#if($resourceSelections.size() == 0)
+							$tlang.getString("no.gradebook.assignments")
+						#else						
+							Gradebook 
+							<select name="selectResource">
+							#foreach ($key in $resourceSelections.keySet())
+								#if($key.equals($item.getSubmittedResourceFilter()) && $item.useConditionalRelease())
+									<option value="${key}" selected="selected">${resourceSelections.get(${key})}</option>
+								#else
+									<option value="${key}">${resourceSelections.get(${key})}</option>
+								#end
+							
 							#end
-						
-						#end
-						</select>
-						<select name="selectCondition" onchange="changeCondition(this.options[this.selectedIndex].value);">
-						#foreach ($key in $conditionSelections.keySet())							
-							#if($key.equals($item.getSelectedConditionKey()) && $item.useConditionalRelease())
-								<option value="${key}" selected="selected">${conditionSelections.get(${key})}</option>
-								<script type="text/javascript">								
-									changeCondition("$key");
-								</script>							
-							#else
-								<option value="${key}">${conditionSelections.get(${key})}</option>							
+							</select>
+							<select name="selectCondition" onchange="changeCondition(this.options[this.selectedIndex].value);">
+							#foreach ($key in $conditionSelections.keySet())							
+								#if($key.equals($item.getSelectedConditionKey()) && $item.useConditionalRelease())
+									<option value="${key}" selected="selected">${conditionSelections.get(${key})}</option>
+									<script type="text/javascript">								
+										changeCondition("$key");
+									</script>							
+								#else
+									<option value="${key}">${conditionSelections.get(${key})}</option>							
+								#end
 							#end
+							</select>
+							#if($item.getSelectedConditionKey().startsWith("7") || $item.getSelectedConditionKey().startsWith("8"))
+							<span id="grade_argument_span" style="display:inline;">
+							#else
+							<span id="grade_argument_span" style="display:none;">
+							#end
+								<input type="text" size="3" name="assignment_grade" value="$item.getConditionArgument()" />
+							</span>
 						#end
-						</select>
-						#if($item.getSelectedConditionKey().startsWith("7") || $item.getSelectedConditionKey().startsWith("8"))
-						<span id="grade_argument_span" style="display:inline;">
-						#else
-						<span id="grade_argument_span" style="display:none;">
-						#end
-							<input type="text" size="3" name="assignment_grade" value="$item.getConditionArgument()" />
-						</span>
 					</td>
 				</tr>
 			</table>
