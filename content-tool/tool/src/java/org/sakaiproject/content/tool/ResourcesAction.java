@@ -60,6 +60,7 @@ import org.sakaiproject.cheftool.RunData;
 import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.conditions.impl.BooleanExpression;
@@ -6663,6 +6664,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
 			NotificationEdit notification = NotificationService.addTransientNotification();
 			notification.addFunction(submittedFunctionName);
+			notification.addFunction("conditions.addRule+" + submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
 			
@@ -6671,6 +6673,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item.setSubmittedResourceFilter(submittedResourceFilter);
 			item.setSelectedConditionKey(selectedConditionValue);
 			item.setConditionArgument(params.get("assignment_grade"));
+			EventTrackingService.post(EventTrackingService.newEvent("conditions.addRule+" + submittedFunctionName, submittedResourceFilter, true));
 		} else {
 			//only remove the condition if it previously existed
 			if (item.useConditionalRelease) {
