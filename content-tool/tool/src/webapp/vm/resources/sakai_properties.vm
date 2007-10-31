@@ -464,10 +464,11 @@
 							</select>
 							#if($item.getSelectedConditionKey().startsWith("7") || $item.getSelectedConditionKey().startsWith("8"))
 							<span id="grade_argument_span" style="display:inline;">
+								<input type="text" size="3" name="assignment_grade" value="$item.getConditionArgument()" />
 							#else
 							<span id="grade_argument_span" style="display:none;">
+								<input type="text" size="3" name="assignment_grade" />
 							#end
-								<input type="text" size="3" name="assignment_grade" value="$item.getConditionArgument()" />
 							</span>
 						#end
 					</td>

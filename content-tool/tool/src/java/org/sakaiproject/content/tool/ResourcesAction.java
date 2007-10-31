@@ -4121,6 +4121,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			context.put("GROUP_ACCESS", AccessMode.GROUPED.toString());
 			context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 			context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
+			
+			buildConditionContext(context, state);
 		}
 		return template;
 	}
@@ -4930,13 +4932,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put("GROUP_ACCESS", AccessMode.GROUPED.toString());
 		context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 		context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
+						
+		buildConditionContext(context, state);
 		
-		context.put("resourceSelections", state.getAttribute("resourceSelections"));
-		context.put("conditionSelections", state.getAttribute("conditionSelections"));
-				
 		return TEMPLATE_REVISE_METADATA;
 	}
 
+	private void buildConditionContext(Context context, SessionState state) {
+		context.put("resourceSelections", state.getAttribute("resourceSelections"));
+		context.put("conditionSelections", state.getAttribute("conditionSelections"));		
+	}
+	
 	/**
      * @param state
      * @return
@@ -5469,6 +5475,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				
 				resource.setResourceType(resourceType);
 				
+				saveCondition(item, params, state);
+				
 				item.updateContentResourceEdit(resource);
 				
 				byte[] content = pipe.getRevisedContent();
@@ -5536,7 +5544,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					// show folder if in hierarchy view
 					SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
 					expandedCollections.add(collectionId);
-	
+						
 					state.setAttribute(STATE_MODE, MODE_LIST);
 				}
 				else
@@ -5799,6 +5807,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 
 			startHelper(data.getRequest(), iAction.getHelperId());
+			loadConditionData(state);
 		}
 		else if(action instanceof ServiceLevelAction)
 		{
@@ -6706,7 +6715,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
 		state.setAttribute("conditionSelections", conditionSelections);
-		state.setAttribute("conditionArgument", item.getConditionArgument());
+		if (item != null) {
+			state.setAttribute("conditionArgument", item.getConditionArgument());			
+		}
 	}
 
 	private void removeExistingNotification(ListItem item, SessionState state) {
