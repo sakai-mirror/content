@@ -6671,11 +6671,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			predicates.add(resourcePredicate);
 			
 			Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
-			NotificationEdit notification = NotificationService.addTransientNotification();
+			NotificationEdit notification = NotificationService.addNotification();
 			notification.addFunction(submittedFunctionName);
 			notification.addFunction("conditions.addRule+" + submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
+			NotificationService.commitEdit(notification);
 			
 			item.setUseConditionalRelease(true);
 			item.setSubmittedFunctionName(submittedFunctionName);
