@@ -4938,7 +4938,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		return TEMPLATE_REVISE_METADATA;
 	}
 
-	private void buildConditionContext(Context context, SessionState state) {
+	public static void buildConditionContext(Context context, SessionState state) {
 		context.put("resourceSelections", state.getAttribute("resourceSelections"));
 		context.put("conditionSelections", state.getAttribute("conditionSelections"));		
 	}
@@ -6635,7 +6635,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	private void saveCondition(ListItem item, ParameterParser params, SessionState state) {
+	public static void saveCondition(ListItem item, ParameterParser params, SessionState state) {
 		boolean cbSelected = Boolean.valueOf(params.get("cbCondition"));
 		String selectedConditionValue = params.get("selectCondition");
 		logger.debug("Selected condition value: " + selectedConditionValue);
@@ -6721,7 +6721,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	private void removeExistingNotification(ListItem item, SessionState state) {
+	private static void removeExistingNotification(ListItem item, SessionState state) {
 		logger.debug("Removing condition");	
 		String previousSubmittedFunctionName = item.getSubmittedFunctionName();
 		String previousSubmittedResourceFilter = item.getSubmittedResourceFilter();

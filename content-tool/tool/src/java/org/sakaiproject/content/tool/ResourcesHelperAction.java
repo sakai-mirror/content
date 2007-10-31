@@ -23,15 +23,14 @@ package org.sakaiproject.content.tool;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,16 +45,16 @@ import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentEntity;
+import org.sakaiproject.content.api.ContentTypeImageService;
 import org.sakaiproject.content.api.MultiFileUploadPipe;
 import org.sakaiproject.content.api.ResourceToolAction;
 import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceTypeRegistry;
+import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.cover.ContentHostingService;
-import org.sakaiproject.content.api.ContentTypeImageService;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.event.api.SessionState;
@@ -353,7 +352,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		ResourcesAction.copyrightChoicesIntoContext(state, context);
 		ResourcesAction.publicDisplayChoicesIntoContext(state, context);
-		
+
+		ResourcesAction.buildConditionContext(context, state);		
+
 		return CREATE_URLS_TEMPLATE;
     }
 
@@ -406,6 +407,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		ResourcesAction.publicDisplayChoicesIntoContext(state, context);
 
+		ResourcesAction.buildConditionContext(context, state);		
+		
 		return CREATE_FOLDERS_TEMPLATE;
 	}
 
@@ -579,7 +582,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		context.put("defaultCopyrightStatus", defaultCopyrightStatus);
 	
-		
+		ResourcesAction.buildConditionContext(context, state);
 		
 
 		return CREATE_UPLOADS_TEMPLATE;
@@ -768,6 +771,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			newFolder.captureProperties(params, ListItem.DOT + i);
 
 			fp.setRevisedListItem(newFolder);
+
+			ResourcesAction.saveCondition(newFolder, params, state);
 			
 			c++;
 		}
@@ -1014,6 +1019,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			            
 			pipe.setRevisedListItem(newFile);
     			
+			ResourcesAction.saveCondition(newFile, params, state);
+			
 			actualCount++;
 			
 		}
@@ -1206,7 +1213,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
     			// allAlerts.addAll(newFile.checkRequiredProperties());
     			
     			pipe.setRevisedListItem(newFile);
-    			
+    			ResourcesAction.saveCondition(newFile, params, state);
     			uploadCount++;
     			
 			}
@@ -1268,6 +1275,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			
 			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
 		}
+		
 
 	}
 	
