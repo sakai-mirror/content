@@ -6673,7 +6673,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			Rule resourceConditionRule = new org.sakaiproject.conditions.impl.ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
 			NotificationEdit notification = NotificationService.addNotification();
 			notification.addFunction(submittedFunctionName);
-			notification.addFunction("conditions.addRule+" + submittedFunctionName);
+			notification.addFunction("cond.add+" + submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
 			NotificationService.commitEdit(notification);
@@ -6683,7 +6683,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			item.setSubmittedResourceFilter(submittedResourceFilter);
 			item.setSelectedConditionKey(selectedConditionValue);
 			item.setConditionArgument(params.get("assignment_grade"));
-			EventTrackingService.post(EventTrackingService.newEvent("conditions.addRule+" + submittedFunctionName, submittedResourceFilter, true));
+			EventTrackingService.post(EventTrackingService.newEvent("cond.add+" + submittedFunctionName, submittedResourceFilter, true));
 		} else {
 			//only remove the condition if it previously existed
 			if (item.useConditionalRelease) {
