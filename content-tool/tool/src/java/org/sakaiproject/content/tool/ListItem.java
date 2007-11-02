@@ -366,6 +366,8 @@ public class ListItem
 	private String submittedFunctionName;
 	private String submittedResourceFilter;
 	private String selectedConditionKey;
+	private String conditionArgument;
+	private String notificationId;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -393,8 +395,6 @@ public class ListItem
 	protected List<MetadataGroup> metadataGroups;
 
 	private int constructor;
-
-	private String conditionArgument;
 
 
 	
@@ -454,10 +454,11 @@ public class ListItem
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
 		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
-		this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
-		this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
-		this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
-		this.conditionArgument = props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT);
+		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
+		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
+		//this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
+		//this.conditionArgument = props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT);
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
@@ -2766,11 +2767,8 @@ public class ListItem
 	
 	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
 	{
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
-		props.addProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME, this.submittedFunctionName);
-		props.addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, this.submittedResourceFilter);
-		props.addProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY, this.selectedConditionKey);
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT, this.conditionArgument);
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));		
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
 	}
 	
 	public String getCopyrightStatus() 
@@ -3360,6 +3358,14 @@ public class ListItem
 
 	public String getConditionArgument() {
 		return conditionArgument;
+	}
+
+	public String getNotificationId() {
+		return notificationId;
+	}
+
+	public void setNotificationId(String notificationId) {
+		this.notificationId = notificationId;
 	}
 
 

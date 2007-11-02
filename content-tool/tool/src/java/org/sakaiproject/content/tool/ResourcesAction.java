@@ -6676,13 +6676,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			notification.addFunction("cond+" + submittedFunctionName);
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
+			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
+			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
+			notification.getProperties().addProperty(ResourceProperties.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
+			notification.getProperties().addProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade"));
 			NotificationService.commitEdit(notification);
 			
 			item.setUseConditionalRelease(true);
-			item.setSubmittedFunctionName(submittedFunctionName);
-			item.setSubmittedResourceFilter(submittedResourceFilter);
-			item.setSelectedConditionKey(selectedConditionValue);
-			item.setConditionArgument(params.get("assignment_grade"));
+			item.setNotificationId(notification.getId());
+			
 			EventTrackingService.post(EventTrackingService.newEvent("cond+" + submittedFunctionName, submittedResourceFilter, true));
 		} else {
 			//only remove the condition if it previously existed
@@ -6695,10 +6697,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	}
 
 	
-	private void loadConditionData(SessionState state) {
-		ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
-		
+	private void loadConditionData(SessionState state) {	
 		logger.debug("Loading condition data");
+		ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
+		if (item != null) {
+			try {
+				Notification notification = NotificationService.getNotification(item.getNotificationId());			
+				if (notification != null) {
+					item.setSubmittedFunctionName(notification.getProperties().getProperty(ResourceProperties.PROP_SUBMITTED_FUNCTION_NAME));
+					item.setSubmittedResourceFilter(notification.getProperties().getProperty(ResourceProperties.PROP_SUBMITTED_RESOURCE_FILTER));
+					item.setSelectedConditionKey(notification.getProperties().getProperty(ResourceProperties.PROP_SELECTED_CONDITION_KEY));
+					item.setConditionArgument(notification.getProperties().getProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT));					
+				}
+			} catch (NotificationNotDefinedException e) {
+				addAlert(state, rb.getString("notification.load.error"));								
+			}					
+		}
+		
+		
 		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
 		
 		//TODO look this data up
@@ -6723,14 +6739,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	private static void removeExistingNotification(ListItem item, SessionState state) {
 		logger.debug("Removing condition");	
-		String previousSubmittedFunctionName = item.getSubmittedFunctionName();
-		String previousSubmittedResourceFilter = item.getSubmittedResourceFilter();
-		logger.debug("Previous submittedFunctionName: " + previousSubmittedFunctionName);
-		logger.debug("Previous submittedResourceFilter: " + previousSubmittedResourceFilter);
-				
-		Notification notification = NotificationService.findNotification(previousSubmittedFunctionName, previousSubmittedResourceFilter);
 		try {
-			NotificationEdit notificationToRemove = NotificationService.editNotification(notification.getId());
+			NotificationEdit notificationToRemove = NotificationService.editNotification(item.getNotificationId());
 			NotificationService.removeNotification(notificationToRemove);
 		} catch (NotificationLockedException e) {
 			addAlert(state, rb.getString("disable.condition.error"));				
