@@ -6700,7 +6700,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	private void loadConditionData(SessionState state) {	
 		logger.debug("Loading condition data");
 		ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
-		if (item != null) {
+		if ((item != null) && (item.useConditionalRelease)) {
 			try {
 				Notification notification = NotificationService.getNotification(item.getNotificationId());			
 				if (notification != null) {
