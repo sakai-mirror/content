@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
@@ -97,6 +98,11 @@ public class LoadTestContentHostingService extends SpringTestCase {
       this.sessionManager = sessionManager;
    }
 
+   private AuthzGroupService authzGroupService;
+   @Autowired
+   public void setAuthzGroupService(AuthzGroupService authzGroupService) {
+      this.authzGroupService = authzGroupService;
+   }
 
    /**
     * Number of total thread simulation iterations to run
@@ -155,6 +161,9 @@ public class LoadTestContentHostingService extends SpringTestCase {
       if (currentSession != null) {
          currentSession.setAttribute(CURRENT_USER_MARKER, currentSession.getUserId());
          currentSession.setUserId(ADMIN_USER);
+         currentSession.setActive();
+         sessionManager.setCurrentSession(currentSession);
+         authzGroupService.refreshUser(ADMIN_USER);
       } else {
          throw new RuntimeException("no CurrentSession, cannot set to admin user");
       }
@@ -171,6 +180,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
          currentUserId = (String) currentSession.getAttribute(CURRENT_USER_MARKER);
       }
       currentSession.setUserId(currentUserId);
+      sessionManager.setCurrentSession(currentSession);
+      authzGroupService.refreshUser(currentUserId);
    }
 
 
@@ -200,13 +211,29 @@ public class LoadTestContentHostingService extends SpringTestCase {
       log.info("Completed count of all current content items ("+contentCount+") in "+total+" ms");
       assertTrue(contentCount > 1);
 
-      List<String> newContentIds = new ArrayList<String>();
       log.info("Current content size ("+contentCount+"), Now we will create simulated content...");
       // insert all the fake content in 3 collections
 
+      start = System.currentTimeMillis();
+      int createdItems = 0;
       for (int i = 0; i < COLLECTION_NAMES.length; i++) {
          makeAndFillCollection(COLLECTION_NAMES[i], COLLECTION_SIZES[i]);
+         createdItems += COLLECTION_SIZES[i];
       }
+      total = System.currentTimeMillis() - start;
+      log.info("Completed creation of ("+COLLECTION_NAMES.length+") collections with "+createdItems+" content items in "
+            +total+" ms ("+calcUSecsPerOp(createdItems, total)+" microsecs per operation)");
+
+      start = System.currentTimeMillis();
+      contentCount = 0;
+      try {
+         contentCount = contentHostingService.getCollectionSize("/");
+      } catch (Exception e) {
+         throw new RuntimeException("Failed to get the size of the root collection (/)", e);
+      }
+      total = System.currentTimeMillis() - start;
+      log.info("Completed count of all current content items ("+contentCount+") in "+total+" ms");
+      assertTrue(contentCount > 1);
    }
 
    public void testRemoveLargeContentSet() {
@@ -217,17 +244,33 @@ public class LoadTestContentHostingService extends SpringTestCase {
       start = System.currentTimeMillis();
       int removedItems = 0;
       for (int i = 0; i < COLLECTION_NAMES.length; i++) {
-         String collectionId = COLLECTION_ID_PREFIX + COLLECTION_NAMES[i];
+         String collectionId = makeCollectionId(COLLECTION_NAMES[i]);
+         removeCollection(collectionId);
          removedItems += COLLECTION_SIZES[i];
-         try {
-            contentHostingService.removeCollection(collectionId);
-         } catch (Exception e) {
-            throw new RuntimeException("Failure removing collection: " + collectionId, e);
-         }
       }
       total = System.currentTimeMillis() - start;
       log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
-            +total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per operation)");
+            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");
+   }
+
+   /**
+    * @param collectionId
+    */
+   private void removeCollection(String collectionId) {
+      long start = 0;
+      long total = 0;
+
+      start = System.currentTimeMillis();
+      int removedItems = 0;
+      try {
+         removedItems = contentHostingService.getCollectionSize(collectionId);
+         contentHostingService.removeCollection(collectionId);
+      } catch (Exception e) {
+         throw new RuntimeException("Failure removing collection: " + collectionId, e);
+      }
+      total = System.currentTimeMillis() - start;
+      log.info("Completed removal of collection ("+collectionId+") with "+removedItems+" content items in "
+            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per item)");
    }
 
    /**
@@ -350,7 +393,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       StringBuilder sb = new StringBuilder();
       sb.append(COLLECTION_ID_PREFIX);
       sb.append(": ");
-      for (int i = 0; i < rGen.nextInt(1000); i++) {
+      for (int i = 0; i < (20 + rGen.nextInt(10000)); i++) {
          sb.append(":>");
          sb.append(i);
          sb.append("<:");
@@ -363,7 +406,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
     * @return the id of the newly created collection or the existing one with this id
     */
    private String makeCollection(String cid) {
-      String testId = COLLECTION_ID_PREFIX+cid;
+      String testId = makeCollectionId(cid);
       String collectionId = null; // this is everything after "/content", Reference includes the "/content"
       try {
          ContentCollectionEdit collection = contentHostingService.addCollection(testId);
@@ -386,6 +429,14 @@ public class LoadTestContentHostingService extends SpringTestCase {
       }
       assertNotNull(collectionId);
       return collectionId;
+   }
+
+   /**
+    * @param cid
+    * @return
+    */
+   private String makeCollectionId(String cid) {
+      return COLLECTION_ID_PREFIX+cid+"/";
    }
 
    /**
@@ -449,7 +500,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
          }
       }
    }
-
 
 }
 

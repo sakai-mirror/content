@@ -80,6 +80,13 @@
          <scope>provided</scope>
       </dependency>
 
+      <dependency>
+         <groupId>org.sakaiproject</groupId>
+         <artifactId>sakai-util-api</artifactId>
+         <version>${sakai.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
       <!-- external -->
       <dependency>
          <groupId>commons-logging</groupId>
