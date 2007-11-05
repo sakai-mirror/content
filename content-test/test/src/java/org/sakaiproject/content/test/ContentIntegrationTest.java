@@ -1,4 +1,4 @@
-package org.sakaiproject.content.test;
+/*package org.sakaiproject.content.test;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -85,75 +85,76 @@ public class ContentIntegrationTest extends SakaiTestBase
 
 	}
 	
-	/*
+	
 	protected InputStream getInputStream(int contentLength)
 	{
 		
 	}
-	*/
+	
 
-	/**
+	*//**
      * @return the authzGroupService
-     */
+     *//*
     public AuthzGroupService getAuthzGroupService()
     {
     	return authzGroupService;
     }
 
-	/**
+	*//**
      * @param authzGroupService the authzGroupService to set
-     */
+     *//*
     public void setAuthzGroupService(AuthzGroupService authzGroupService)
     {
     	this.authzGroupService = authzGroupService;
     }
 
-	/**
+	*//**
      * @return the siteService
-     */
+     *//*
     public SiteService getSiteService()
     {
     	return siteService;
     }
 
-	/**
+	*//**
      * @param siteService the siteService to set
-     */
+     *//*
     public void setSiteService(SiteService siteService)
     {
     	this.siteService = siteService;
     }
 
-	/**
+	*//**
      * @return the contentService
-     */
+     *//*
     public ContentHostingService getContentService()
     {
     	return contentService;
     }
 
-	/**
+	*//**
      * @param contentService the contentService to set
-     */
+     *//*
     public void setContentService(ContentHostingService contentService)
     {
     	this.contentService = contentService;
     }
 
-	/**
+	*//**
      * @return the resourceTypeRegistry
-     */
+     *//*
     public ResourceTypeRegistry getResourceTypeRegistry()
     {
     	return resourceTypeRegistry;
     }
 
-	/**
+	*//**
      * @param resourceTypeRegistry the resourceTypeRegistry to set
-     */
+     *//*
     public void setResourceTypeRegistry(ResourceTypeRegistry resourceTypeRegistry)
     {
     	this.resourceTypeRegistry = resourceTypeRegistry;
     }
 
 }
+*/
