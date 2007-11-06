@@ -87,7 +87,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    private static Log log = LogFactory.getLog(LoadTestContentHostingService.class);
 
    private ContentHostingService contentHostingService;
-   @Autowired   
+   @Resource(name="org.sakaiproject.content.api.ContentHostingService")
    public void setContentHostingService(ContentHostingService contentHostingService) {
       this.contentHostingService = contentHostingService;
    }
