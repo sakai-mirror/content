@@ -24,17 +24,13 @@ package org.sakaiproject.content.test.mocks;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 
 /**
  * MockContentCollection
  *
  */
-public class MockContentCollection extends MockContentEntity implements ContentCollectionEdit
-{
-	private static final Log logger = LogFactory.getLog(MockContentCollection.class);
+public class MockContentCollection extends MockContentEntity implements ContentCollectionEdit {
 
 	/**
 	 * @param collectionId

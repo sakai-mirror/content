@@ -4,9 +4,9 @@
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
    <modelVersion>4.0.0</modelVersion>
-   <name>sakai-content-test-impl</name>
+   <name>sakai-content-test-tests</name>
    <groupId>org.sakaiproject</groupId>
-   <artifactId>sakai-content-test-impl</artifactId>
+   <artifactId>sakai-content-test-tests</artifactId>
    <organization>
       <name>University of Cambridge</name>
       <url>http://caret.cam.ac.uk/</url>
@@ -157,7 +157,7 @@
             <filtering>false</filtering>
          </resource>
          <resource>
-            <directory>${basedir}/resources</directory>
+            <directory>${basedir}/src/resources</directory>
             <includes>
                <include>**/*.xml</include>
             </includes>
@@ -178,20 +178,6 @@
             -->
          </plugin>
       </plugins>
-      <testResources>
-         <testResource>
-            <directory>${basedir}/../pack/src/webapp/WEB-INF</directory>
-            <includes>
-               <include>ehcache-beans.xml</include>
-            </includes>
-         </testResource>
-         <testResource>
-            <directory>${basedir}/../api/src/java</directory>
-            <includes>
-               <include>ehcache.xml</include>
-            </includes>
-         </testResource>
-      </testResources>
    </build>
 
 </project>

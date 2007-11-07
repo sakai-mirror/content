@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingHandler;
@@ -48,9 +46,7 @@ import org.w3c.dom.Element;
  * MockContentEntity
  *
  */
-public class MockContentEntity implements ContentEntity, GroupAwareEdit
-{
-	private static final Log logger = LogFactory.getLog(MockContentEntity.class);
+public class MockContentEntity implements ContentEntity, GroupAwareEdit {
 	
 	protected String entityId;
 	protected String containingCollectionId;

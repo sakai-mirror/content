@@ -22,7 +22,7 @@
    </parent>
 
    <modules>
-      <module>impl</module>
+      <module>test</module>
       <module>pack</module>
    </modules>
 

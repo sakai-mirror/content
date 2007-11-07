@@ -26,9 +26,10 @@
 
    <dependencies>
 
+      <!-- internal dependency -->
       <dependency>
          <groupId>org.sakaiproject</groupId>
-         <artifactId>sakai-content-test-impl</artifactId>
+         <artifactId>sakai-content-test-tests</artifactId>
          <version>${sakai.version}</version>
          <scope>runtime</scope>
       </dependency>
