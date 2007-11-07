@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="test/src/java"/>
 	<classpathentry excluding="**/.DS_Store" kind="src" path="impl/src/java"/>
 	<classpathentry kind="src" path="pack/src/webapp/WEB-INF"/>
+	<classpathentry kind="src" path="tool/src/main"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-mock/2.0.6/spring-mock-2.0.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/easymock/easymock/1.2_Java1.3/easymock-1.2_Java1.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.6/spring-2.0.6.jar" sourcepath="/SPRING_HOME"/>
+	<classpathentry kind="src" path="test/src/java"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/content-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/test-runner"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tool-api"/>

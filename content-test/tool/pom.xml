@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+   <name>Sakai content test webapp</name>
+   <groupId>org.sakaiproject</groupId>
+   <artifactId>sakai-content-test-webapp</artifactId>
+   <organization>
+      <name>University of Cambridge</name>
+      <url>http://caret.cam.ac.uk/</url>
+   </organization>
+   <inceptionYear>2007</inceptionYear>
+   <packaging>war</packaging>
+   <properties>
+      <deploy.target></deploy.target>
+   </properties>
+
+   <parent>
+      <artifactId>sakai-content-test</artifactId>
+      <groupId>org.sakaiproject</groupId>
+      <version>M2</version>
+      <relativePath>../pom.xml</relativePath>
+   </parent>
+
+   <dependencies />
+
+   <build />
+
+</project>

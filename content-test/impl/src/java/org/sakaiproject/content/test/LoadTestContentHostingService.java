@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
@@ -145,7 +146,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    protected final int[] COLLECTION_SIZES = {
          10,
          100,
-         10000
+         10 // TODO - set this back to 10000
       };
 
    private Map<String, Date> checkpointMap = new ConcurrentHashMap<String, Date>();
@@ -265,6 +266,16 @@ public class LoadTestContentHostingService extends SpringTestCase {
       try {
          removedItems = contentHostingService.getCollectionSize(collectionId);
          contentHostingService.removeCollection(collectionId);
+         try {
+            // since we are pretty sure the last removal actually failed silenty we have to try again
+            ContentCollectionEdit edit = contentHostingService.editCollection(collectionId);
+            if (edit != null) {
+               contentHostingService.removeCollection(edit);
+            }
+         } catch (Exception e) {
+            // sadly we are mostly expecting this failure... -AZ
+            log.warn("Failure completely removing collection: " + collectionId, e);
+         }
       } catch (Exception e) {
          throw new RuntimeException("Failure removing collection: " + collectionId, e);
       }
