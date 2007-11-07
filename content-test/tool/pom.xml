@@ -24,7 +24,24 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <dependencies />
+   <dependencies>
+
+      <dependency>
+         <groupId>org.sakaiproject</groupId>
+         <artifactId>sakai-content-test-impl</artifactId>
+         <version>${sakai.version}</version>
+         <scope>runtime</scope>
+      </dependency>
+
+      <!-- test runner -->
+      <dependency>
+         <groupId>org.sakaiproject</groupId>
+         <artifactId>sakai-testexecutor</artifactId>
+         <version>1.0</version>
+         <scope>runtime</scope>
+      </dependency>
+
+   </dependencies>
 
    <build />
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-<!-- WARNING: you should not add beans to this file, put this in the imported xml file instead -AZ -->
+<!-- WARNING: you should not add beans to this file, put this in the imported xml file instead,
+    /content-test/impl/resources/testBeans.xml -AZ -->
 <beans>
 
    <!-- Bring in the test beans -->

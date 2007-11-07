@@ -150,14 +150,14 @@
    <build>
       <resources>
          <resource>
-            <directory>${basedir}/src/bundle</directory>
+            <directory>${basedir}/src/java</directory>
             <includes>
-               <include>**/*.properties</include>
+               <include>**/*.xml</include>
             </includes>
             <filtering>false</filtering>
          </resource>
          <resource>
-            <directory>${basedir}/src/java</directory>
+            <directory>${basedir}/resources</directory>
             <includes>
                <include>**/*.xml</include>
             </includes>

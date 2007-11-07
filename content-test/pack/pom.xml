@@ -30,6 +30,7 @@
          <groupId>org.sakaiproject</groupId>
          <artifactId>sakai-content-test-impl</artifactId>
          <version>${sakai.version}</version>
+         <scope>runtime</scope>
       </dependency>
 
       <!-- test runner -->
