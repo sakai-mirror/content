@@ -19,7 +19,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.content.test;
+package org.sakaiproject.content.test.mocks;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
