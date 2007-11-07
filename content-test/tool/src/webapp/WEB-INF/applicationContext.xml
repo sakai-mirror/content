@@ -5,6 +5,6 @@
 <beans>
 
    <!-- Bring in the test beans -->
-   <import resource="testBeans.xml" />
+   <import resource="classpath:testBeans.xml" />
 
 </beans>
