@@ -2474,6 +2474,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
                                        AUTH_RESOURCE_REMOVE_ANY, edit.getReference());
 
+      /*
+       * Purge out the cached items for this collection before doing a complete removal so 
+       * we can be sure of what is being operated on,
+       * Clear the threadlocal "cached" members for this containing collection
+       * Clear the threadlocal "cached" resources for this containing collection
+       * added to fix SAK-12126 -AZ
+       */
+      ThreadLocalManager.set("members@" + edit.getId(), null);
+      ThreadLocalManager.set("getResources@" + edit.getId(), null);
+
 		// check for members
 		List members = edit.getMemberResources();
 		if (!members.isEmpty()) throw new InconsistentException(edit.getId());
@@ -2500,7 +2510,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 		catch (GroupNotDefinedException ignore)
 		{
-			M_log.warn("removeCollection: removing realm for : " + edit.getReference() + " : " + ignore);
+		   // changed from a warning to remove spurious warnings -AZ
+			M_log.debug("removeCollection: removing realm for : " + edit.getReference() + " : " + ignore);
 		}
 
 		// track it (no notification)
@@ -2543,6 +2554,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		// get an edit
 		ContentCollectionEdit edit = editCollection(id);
+
+      /*
+       * Purge out the cached items for this collection before doing a 
+       * recursive removal so we can be sure of what is being operated on,
+       * Clear the threadlocal "cached" members for this containing collection
+       * Clear the threadlocal "cached" resources for this containing collection
+       * added to fix SAK-12126 -AZ
+       */
+      ThreadLocalManager.set("members@" + edit.getId(), null);
+      ThreadLocalManager.set("getResources@" + edit.getId(), null);
 
 		// clear of all members (recursive)
 		// Note: may fail if something's in use or not permitted. May result in a partial clear.
