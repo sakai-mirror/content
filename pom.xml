@@ -23,20 +23,65 @@
       <url>https://source.sakaiproject.org/svn/content/trunk</url>
    </scm>
 
+
+   <!-- common set of modules which are always included -->
+   <modules>
+      <module>content-api/api</module>
+      <module>content-impl/impl</module>
+      <module>content-impl/hbm</module>
+      <module>content-util/util</module>
+   </modules>
+
    <profiles>
       <profile>
          <!-- default profile which builds and deploys jcr and providers -->
          <id>sakai</id>
          <activation>
             <activeByDefault>true</activeByDefault>
+            <property>
+                <name>sakai.distribution</name>
+                <value>sakai</value>
+            </property>
          </activation>
          <modules>
+            <module>content-impl/pack</module>
             <module>content-impl-providers/impl</module>
             <module>content-impl-providers/pack</module>
             <module>content-impl-jcr/impl</module>
-            <module>content-impl-jcr/pack</module>
             <module>contentmultiplex-impl/impl</module>
             <module>content-tool/tool</module>
+            <module>content-help</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- kernel (services only) -->
+         <id>kernel</id>
+         <modules>
+            <module>content-impl/pack</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- Cafe - minimal functionality (services + tool) -->
+         <id>cafe</id>
+         <modules>
+            <module>content-impl/pack</module>
+            <module>content-tool/tool</module>
+            <module>content-help</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- adds in the tool -->
+         <id>tool</id>
+         <modules>
+            <module>content-tool/tool</module>
+            <module>content-help</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- adds in tests -->
+         <id>tests</id>
+         <modules>
+            <module>content-test</module>
          </modules>
       </profile>
       <profile>
@@ -50,40 +95,12 @@
             <module>content-impl-jcr/pack</module>
             <!-- multiplexer allows swapping between legacy and JCR -->
             <module>contentmultiplex-impl/impl</module>
-         </modules>
-      </profile>
-      <profile>
-         <!-- adds in providers -->
-         <id>providers</id>
-         <modules>
             <module>content-impl-providers/impl</module>
             <module>content-impl-providers/pack</module>
-         </modules>
-      </profile>
-      <profile>
-         <!-- adds in the tool -->
-         <id>tool</id>
-         <modules>
             <module>content-tool/tool</module>
-         </modules>
-      </profile>
-      <profile>
-         <!-- adds in testrunner tests -->
-         <id>testrunner</id>
-         <modules>
-            <module>content-test</module>
+            <module>content-help</module>
          </modules>
       </profile>
    </profiles>
-
-   <!-- base set of modules which are always included -->
-   <modules>
-      <module>content-api/api</module>
-      <module>content-impl/hbm</module>
-      <module>content-impl/impl</module>
-      <module>content-impl/pack</module>
-      <module>content-util/util</module>
-      <module>content-help</module>
-   </modules>
 
 </project>
