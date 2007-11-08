@@ -25,17 +25,50 @@
 
    <profiles>
       <profile>
+         <!-- default profile which builds and deploys jcr and providers -->
+         <id>sakai</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
+         <modules>
+            <module>content-impl-providers/impl</module>
+            <module>content-impl-providers/pack</module>
+            <module>content-impl-jcr/impl</module>
+            <module>content-impl-jcr/pack</module>
+            <module>contentmultiplex-impl/impl</module>
+            <module>content-tool/tool</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- adds in JCR -->
          <id>JCR</id>
          <modules>
             <!-- This only builds a jar 
                Uncomment when the JCR API issues are sorted -->
             <module>content-impl-jcr/impl</module>
-            <module>contentmultiplex-impl/impl</module>
             <!-- To add the  JCR CHS as well as the DB CHS to sakai -->
             <module>content-impl-jcr/pack</module>
+            <!-- multiplexer allows swapping between legacy and JCR -->
+            <module>contentmultiplex-impl/impl</module>
          </modules>
       </profile>
       <profile>
+         <!-- adds in providers -->
+         <id>providers</id>
+         <modules>
+            <module>content-impl-providers/impl</module>
+            <module>content-impl-providers/pack</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- adds in the tool -->
+         <id>tool</id>
+         <modules>
+            <module>content-tool/tool</module>
+         </modules>
+      </profile>
+      <profile>
+         <!-- adds in testrunner tests -->
          <id>testrunner</id>
          <modules>
             <module>content-test</module>
@@ -43,17 +76,14 @@
       </profile>
    </profiles>
 
+   <!-- base set of modules which are always included -->
    <modules>
       <module>content-api/api</module>
-      <module>content-help</module>
       <module>content-impl/hbm</module>
       <module>content-impl/impl</module>
       <module>content-impl/pack</module>
-      <module>content-impl-providers/impl</module>
-      <module>content-impl-providers/pack</module>
-      <module>content-tool</module>
-      <module>content-tool/tool</module>
       <module>content-util/util</module>
+      <module>content-help</module>
    </modules>
 
 </project>
