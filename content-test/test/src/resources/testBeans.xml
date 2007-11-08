@@ -9,7 +9,7 @@
          value="org.sakaiproject.content.test.LoadTestContentHostingService" />
       <property name="testType" value="testrunner.load" />
       <property name="registerTest" value="true" />
-      <property name="testDelaySeconds" value="0" />
+      <property name="testDelaySeconds" value="35" />
    </bean>
 
 </beans>

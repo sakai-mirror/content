@@ -36,10 +36,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.exception.IdInvalidException;
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
@@ -86,46 +88,15 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
    private static Log log = LogFactory.getLog(LoadTestContentHostingService.class);
 
-   private ContentHostingService contentHostingService;
-   @Resource(name="org.sakaiproject.content.api.ContentHostingService")
-   public void setContentHostingService(ContentHostingService contentHostingService) {
-      this.contentHostingService = contentHostingService;
-   }
-
-   private SessionManager sessionManager;
-   @Resource(name="org.sakaiproject.tool.api.SessionManager")
-   public void setSessionManager(SessionManager sessionManager) {
-      this.sessionManager = sessionManager;
-   }
-
-   private AuthzGroupService authzGroupService;
-   @Autowired
-   public void setAuthzGroupService(AuthzGroupService authzGroupService) {
-      this.authzGroupService = authzGroupService;
-   }
-
+   private static final String ROOT = "/";
    /**
     * Number of total thread simulation iterations to run
     */
    protected final int iterations = 1000000;
-
-   protected DecimalFormat df = new DecimalFormat("#,##0.00");
-   protected Random rGen = new Random();
-
-   protected final String testPayload = 
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-      "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR" +
-      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
-      "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" +
-      "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" +
-      "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" +
-      "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
-      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
-      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
-      "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS" +
-      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
-      "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
+   /**
+    * maximum number of content item ids to load for the read testing
+    */
+   protected final int maxTestContentSize = 12000;
 
    protected final String INSERT = "insert";
    protected final String REMOVE = "remove";
@@ -149,6 +120,45 @@ public class LoadTestContentHostingService extends SpringTestCase {
       };
 
    private Map<String, Date> checkpointMap = new ConcurrentHashMap<String, Date>();
+
+
+   private ContentHostingService contentHostingService;
+   @Resource(name="org.sakaiproject.content.api.ContentHostingService")
+   public void setContentHostingService(ContentHostingService contentHostingService) {
+      this.contentHostingService = contentHostingService;
+   }
+
+   private SessionManager sessionManager;
+   @Resource(name="org.sakaiproject.tool.api.SessionManager")
+   public void setSessionManager(SessionManager sessionManager) {
+      this.sessionManager = sessionManager;
+   }
+
+   private AuthzGroupService authzGroupService;
+   @Autowired
+   public void setAuthzGroupService(AuthzGroupService authzGroupService) {
+      this.authzGroupService = authzGroupService;
+   }
+
+
+   protected DecimalFormat df = new DecimalFormat("#,##0.00");
+   protected Random rGen = new Random();
+
+   protected final String testPayload = 
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+      "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR" +
+      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
+      "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" +
+      "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" +
+      "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" +
+      "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
+      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
+      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
+      "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS" +
+      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
+      "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
+
 
 
    @Override
@@ -203,7 +213,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       start = System.currentTimeMillis();
       int contentCount;
       try {
-         contentCount = contentHostingService.getCollectionSize("/");
+         contentCount = contentHostingService.getCollectionSize(ROOT);
       } catch (Exception e) {
          throw new RuntimeException("Failed to get the size of the root collection (/)", e);
       }
@@ -227,15 +237,49 @@ public class LoadTestContentHostingService extends SpringTestCase {
       start = System.currentTimeMillis();
       contentCount = 0;
       try {
-         contentCount = contentHostingService.getCollectionSize("/");
+         contentCount = contentHostingService.getCollectionSize(ROOT);
       } catch (Exception e) {
-         throw new RuntimeException("Failed to get the size of the root collection (/)", e);
+         throw new RuntimeException("Failed to get the size of the root collection: "+ROOT, e);
       }
       total = System.currentTimeMillis() - start;
       log.info("Completed count of all current content items ("+contentCount+") in "+total+" ms");
       assertTrue(contentCount > 1);
    }
 
+   public void testReadLargeContentSet() {
+      long start = 0;
+      long total = 0;
+
+      log.info("Test reading generated content and existing content...");
+
+      // first we accumulate all the content
+      List<String> contentIds = new ArrayList<String>();
+      start = System.currentTimeMillis();
+      try {
+         ContentCollection collection = contentHostingService.getCollection(ROOT);
+         if (collection.getMemberCount() > 0) {
+            List<String> l = collection.getMembers();
+         }
+      } catch (IdUnusedException e) {
+         throw new RuntimeException("Failed to find the root collection: "+ROOT, e);
+      } catch (Exception e) {
+         throw new RuntimeException("Failed to get the contents of the root collection: "+ROOT, e);
+      }
+      total = System.currentTimeMillis() - start;
+      log.info("Completed load of "+maxTestContentSize+" content items in "+total+" ms");      
+
+//      start = System.currentTimeMillis();
+//      int removedItems = 0;
+//      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
+//         String collectionId = makeCollectionId(COLLECTION_NAMES[i]);
+//         removeCollection(collectionId);
+//         removedItems += COLLECTION_SIZES[i];
+//      }
+//      total = System.currentTimeMillis() - start;
+//      log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
+//            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");      
+   }
+   
    public void testRemoveLargeContentSet() {
       long start = 0;
       long total = 0;
@@ -436,7 +480,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
     * @return
     */
    private String makeCollectionId(String cid) {
-      return COLLECTION_ID_PREFIX+cid+"/";
+      return COLLECTION_ID_PREFIX+cid+ROOT;
    }
 
    /**
