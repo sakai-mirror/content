@@ -540,15 +540,17 @@ public class DbContentService extends BaseContentService
 	protected boolean filesizeColumnExists() 
 	{
 		boolean ok = false;
-		if(m_sqlService.getVendor().toLowerCase().contains("hsql"))
-		{
-			ok = m_autoDdl || addNewColumnsCompleted;
-		}
-		else
-		{
-			String sql = contentServiceSql.getFilesizeColumnExistsSql();
-			List list = m_sqlService.dbRead(sql);
-			ok = list != null && ! list.isEmpty();
+		if (m_sqlService != null) {
+			if(m_sqlService.getVendor().toLowerCase().contains("hsql"))
+			{
+				ok = m_autoDdl || addNewColumnsCompleted;
+			}
+			else
+			{
+				String sql = contentServiceSql.getFilesizeColumnExistsSql();
+				List list = m_sqlService.dbRead(sql);
+				ok = list != null && ! list.isEmpty();
+			}
 		}
 		return ok;
 	}
