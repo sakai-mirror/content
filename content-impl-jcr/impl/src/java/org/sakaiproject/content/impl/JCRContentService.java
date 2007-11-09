@@ -21,10 +21,13 @@
 
 package org.sakaiproject.content.impl;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
+import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.exception.IdInvalidException;
@@ -306,9 +309,38 @@ public class JCRContentService extends DbContentService
 	public int getCollectionSize(String id) throws IdUnusedException, TypeException,
 			PermissionException
 	{
-		Exception e = new Exception("Traceback:");
-		log.info("Get Collection Size called ", e);
-		return 0; // TODO : something sensible
+		//Exception e = new Exception("Traceback:");
+		//log.info("Get Collection Size called ", e);
+		
+		//return 0; // TODO : something sensible
+		return countCollectionMembers(id, 0);
+	}
+	
+	/*
+	 * This may not be an efficient way to get this.  Need to look into an JCR SQL or
+	 * XPath query to do this maybe.  However! It will make a great generalized unit
+	 * test for ContentHosting after I can remove it from here.
+	 * 
+	 * Recursively counts members.  See the getCollectionSize javadoc on ContentHostingService
+	 * API.
+	 * 
+	 * @param id The Collection ID.  ex. /group/mysite/
+	 * @param currentCount This method is recursive, call it starting with zero here
+	 * @return The number of members (folders and files) recursively
+	 */
+	private int countCollectionMembers(String id, int currentCount) {
+		ContentCollection cc = storage.getCollection(id);
+		int newCount = currentCount;
+		List<ContentEntity> members = cc.getMemberResources();
+		for (ContentEntity ce : members ) {
+			if (ce instanceof ContentCollection) {
+				newCount += countCollectionMembers(ce.getId(), newCount);
+			}
+			else {
+				newCount ++;
+			}
+		}
+		return newCount;
 	}
 
 	/**

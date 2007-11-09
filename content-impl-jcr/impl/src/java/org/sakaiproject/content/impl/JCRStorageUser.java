@@ -880,7 +880,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 * @param n
 	 * @throws RepositoryException
 	 */
-	private void copy(Edit edit, Object o) throws RepositoryException
+	public void copy(Edit edit, Object o) throws RepositoryException
 	{
 		if ((o instanceof Node)
 				&& ((edit instanceof BaseCollectionEdit) || (edit instanceof BaseResourceEdit)))
@@ -922,7 +922,7 @@ public class JCRStorageUser implements LiteStorageUser
 	 * @param e
 	 * @throws RepositoryException
 	 */
-	private void copy(Node n, Entity e) throws RepositoryException
+	public void copy(Node n, Entity e) throws RepositoryException
 	{
 
 		// copy from the node to the entity,
