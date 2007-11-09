@@ -38,18 +38,23 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
+import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.testrunner.utils.SpringTestCase;
 import org.sakaiproject.testrunner.utils.annotations.Autowired;
 import org.sakaiproject.testrunner.utils.annotations.Resource;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
+
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 
 
 /**
@@ -116,8 +121,10 @@ public class LoadTestContentHostingService extends SpringTestCase {
    protected final int[] COLLECTION_SIZES = {
          10,
          100,
-         1000 // TODO - set this back to 10000
+         1000
       };
+   protected long totalCreatedSize = 0;
+   protected long totalCreatedItems = 0;
 
    private Map<String, Date> checkpointMap = new ConcurrentHashMap<String, Date>();
 
@@ -144,20 +151,20 @@ public class LoadTestContentHostingService extends SpringTestCase {
    protected DecimalFormat df = new DecimalFormat("#,##0.00");
    protected Random rGen = new Random();
 
-   protected final String testPayload = 
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-      "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR" +
-      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
-      "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" +
-      "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" +
-      "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" +
-      "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
-      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
-      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
-      "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS" +
-      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
-      "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
+   protected final String testPayload = // 1040 characters
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+      "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR" +
+      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
+      "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" +
+      "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" +
+      "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" +
+      "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
+      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
+      "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" +
+      "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS" +
+      "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" +
+      "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
 
 
 
@@ -209,6 +216,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
    public void testCreateLargeContentSet() {
       long start = 0;
       long total = 0;
+      totalCreatedItems = 0;
+      totalCreatedSize = 0;
 
       start = System.currentTimeMillis();
       int contentCount;
@@ -232,7 +241,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
       }
       total = System.currentTimeMillis() - start;
       log.info("Completed creation of ("+COLLECTION_NAMES.length+") collections with "+createdItems+" content items in "
-            +total+" ms ("+calcUSecsPerOp(createdItems, total)+" microsecs per operation)");
+            +total+" ms ("+calcUSecsPerOp(createdItems, total)+" microsecs per operation)," +
+            "average size of created items: " + (totalCreatedSize/totalCreatedItems) + " bytes");
 
       start = System.currentTimeMillis();
       contentCount = 0;
@@ -257,27 +267,50 @@ public class LoadTestContentHostingService extends SpringTestCase {
       start = System.currentTimeMillis();
       try {
          ContentCollection collection = contentHostingService.getCollection(ROOT);
-         if (collection.getMemberCount() > 0) {
-            List<String> l = collection.getMembers();
-         }
+         accumulateContentIds(contentIds, collection, maxTestContentSize);
       } catch (IdUnusedException e) {
          throw new RuntimeException("Failed to find the root collection: "+ROOT, e);
       } catch (Exception e) {
          throw new RuntimeException("Failed to get the contents of the root collection: "+ROOT, e);
       }
       total = System.currentTimeMillis() - start;
-      log.info("Completed load of "+maxTestContentSize+" content items in "+total+" ms");      
+      log.info("Completed load of "+contentIds.size()+" content items in "+total+" ms");
 
-//      start = System.currentTimeMillis();
-//      int removedItems = 0;
-//      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
-//         String collectionId = makeCollectionId(COLLECTION_NAMES[i]);
-//         removeCollection(collectionId);
-//         removedItems += COLLECTION_SIZES[i];
-//      }
-//      total = System.currentTimeMillis() - start;
-//      log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
-//            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");      
+      start = System.currentTimeMillis();
+      int removedItems = 0;
+      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
+         String collectionId = makeCollectionId(COLLECTION_NAMES[i]);
+         removeCollection(collectionId);
+         removedItems += COLLECTION_SIZES[i];
+      }
+      total = System.currentTimeMillis() - start;
+      log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
+            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");      
+   }
+
+   /**
+    * Loops through and gets all the content ids recursively (does not get collection ids)
+    * @param contentIds
+    * @param collection
+    * @param maxToGet
+    */
+   @SuppressWarnings("unchecked")
+   private void accumulateContentIds(List<String> contentIds, ContentCollection collection, long maxToGet) {
+      if (collection.getMemberCount() > 0) {
+         List<ContentEntity> contents = collection.getMemberResources();
+         for (ContentEntity content : contents) {
+            if (contentIds.size() >= maxToGet) {
+               break;
+            }
+            if (content instanceof ContentCollection) {
+               accumulateContentIds(contentIds, (ContentCollection) content, maxToGet);
+            } else if (content instanceof ContentResource) {
+               contentIds.add(content.getId());
+            } else {
+               log.warn("What the heck is this content (id="+content.getId()+")?: " + content.getClass());
+            }
+         }
+      }
    }
    
    public void testRemoveLargeContentSet() {
@@ -350,46 +383,49 @@ public class LoadTestContentHostingService extends SpringTestCase {
    }*/
 
 
-/*   private void runTestThread(int threadnum, int threads, Cache testCache, final int iterations,
-         long maxCacheSize) {
+   private void runTestThread(int threadnum, int threads, List<String> contentIds, final int iterations, int maxInserts) {
       long missCount = 0;
       long hitCount = 0;
       long readCount = 0;
       int insertCount = 0;
       int deleteCount = 0;
       Random rGen = new Random();
-      String keyPrefix = "key-" + threadnum + "-";
+      String keyPrefix = "threadResource-" + threadnum + "-";
       checkpointMap.put(Thread.currentThread().getName(), new Date());
       long start = System.currentTimeMillis();
       for (int i = 0; i < iterations; i++) {
          int random = rGen.nextInt(100);
-         if ( (i < 100 || random >= 95) && ((insertCount*threads) < maxCacheSize) ) {
+         if ( (i < 100 || random >= 95) && ((insertCount*threads) < maxInserts) ) {
             int num = insertCount++;
-            testCache.put(keyPrefix + num, "Number=" + num + ": " + testPayload);
+            String rid = keyPrefix + num;
+            String collectionId = COLLECTION_NAMES[rGen.nextInt(COLLECTION_NAMES.length)];
+            try {
+               ContentResource resource = contentHostingService.addResource(rid, collectionId, 3, "text/plain", makeTestContent(), null, 0);
+               assertNotNull(resource);
+            } catch (Exception e) {
+               throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
+            }
          }
          if (i > 2) {
-            // do 10 reads from this threads cache
+            // do 10 reads from content hosting
             for (int j = 0; j < 10; j++) {
                readCount++;
-               if (testCache.get(keyPrefix + rGen.nextInt(insertCount)) == null) {
-                  missCount++;
-               } else {
-                  hitCount++;
-               }
-            }
-            // do 5 more from a random threads cache
-            String otherKeyPrefix = "key-" + (rGen.nextInt(threads)+1) + "-";
-            for (int j = 0; j < 5; j++) {
-               readCount++;
-               if (testCache.get(otherKeyPrefix + rGen.nextInt(insertCount)) == null) {
-                  missCount++;
-               } else {
-                  hitCount++;
+               String rid = contentIds.get(rGen.nextInt(contentIds.size()));
+               try {
+                  ContentResource resource = contentHostingService.getResource(rid);
+                  assertNull(resource);
+               } catch (Exception e) {
+                  throw new RuntimeException("Died while attempting to get a resource ("+rid+")", e);
                }
             }
          }
-         if ( random < 1 && ((deleteCount*threads) < (maxCacheSize/8)) ) {
-            testCache.remove(keyPrefix + rGen.nextInt(insertCount));
+         if ( random < 1 && ((deleteCount*threads) < (maxInserts/8)) ) {
+            String rid = contentIds.get(rGen.nextInt(contentIds.size()));
+            try {
+               contentHostingService.removeResource(rid);
+            } catch (Exception e) {
+               throw new RuntimeException("Died while attempting to remove a resource ("+rid+")", e);
+            }
             deleteCount++;
          }
          if (i > 0 && i % (iterations/5) == 0) {
@@ -404,7 +440,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       		"and "+deleteCount+" removes and "+readCount+" reads " +
       		"(hits: " + hitCount + ", misses: " + missCount + ", hit%: "+hitPercentage+") " +
       		"in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)");
-   }*/
+   }
 
 
    /**
@@ -443,6 +479,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
          sb.append("<:");
          sb.append(testPayload);
       }
+      totalCreatedSize += sb.length();
+      totalCreatedItems++;
       return sb.toString().getBytes();
    }
 
