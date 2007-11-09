@@ -36,7 +36,7 @@ public class AllTests
 		TestSuite suite = new TestSuite(
 				"Test for org.sakaiproject.content.impl.serialize.impl.test");
 		//$JUnit-BEGIN$
-		suite.addTestSuite(ProfileSerializerTest.class);
+		suite.addTestSuite(ProfileTestSerializer.class);
 		suite.addTestSuite(ByteStorageConversionCheck.class);
 		suite.addTestSuite(Type1BaseContentResourceSerializerTest.class);
 		suite.addTestSuite(Type1BaseContentCollectionSerializerTest.class);
