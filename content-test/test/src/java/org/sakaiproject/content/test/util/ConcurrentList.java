@@ -4,7 +4,7 @@
 package org.sakaiproject.content.test.util;
 
 import java.util.AbstractList;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,13 +42,36 @@ public class ConcurrentList<V> extends AbstractList<V> {
       boolean result = false;
       for (Map.Entry<Integer, V> entry : hashMap.entrySet()) {
          if (entry.getValue().equals(o)) {
-            Integer endKey = hashMap.size()-1;
-            hashMap.put(entry.getKey(), hashMap.get(endKey));
-            hashMap.remove(endKey);
+            removeItem(entry.getKey());
             result = true;
             break;
          }
       }
       return result;
    }
+
+   /**
+    * @param entry
+    */
+   private V removeItem(int index) {
+      V current = null;
+      if ( index == (hashMap.size() - 1) ) {
+         current = hashMap.remove(index);
+      } else {
+         Integer endKey = hashMap.size()-1;
+         current = hashMap.put(index, hashMap.get(endKey));
+         hashMap.remove(endKey);
+      }
+      return current;
+   }
+
+   @Override
+   public V remove(int index) {
+      if (!hashMap.containsKey(index)) {
+         throw new IndexOutOfBoundsException("List does not contain an item at index: " + index);
+      } else {
+         return removeItem(index);
+      }
+   }
+
 }

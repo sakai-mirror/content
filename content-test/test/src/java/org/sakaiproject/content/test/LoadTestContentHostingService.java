@@ -44,17 +44,13 @@ import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
-import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.testrunner.utils.SpringTestCase;
 import org.sakaiproject.testrunner.utils.annotations.Autowired;
 import org.sakaiproject.testrunner.utils.annotations.Resource;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
-
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 
 
 /**
@@ -398,8 +394,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
 
    private void runTestThread(int threadnum, int threads, List<String> contentIds, final int iterations, int maxInserts) {
-      long missCount = 0;
-      long hitCount = 0;
       long readCount = 0;
       int insertCount = 0;
       int deleteCount = 0;
@@ -452,10 +446,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
       }
       long total = System.currentTimeMillis() - start;
       checkpointMap.remove(Thread.currentThread().getName());
-      final String hitPercentage = ((hitCount+missCount) > 0) ? ((100l * hitCount) / (hitCount + missCount)) + "%" : "N/A";
       log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
       		"and "+deleteCount+" removes and "+readCount+" reads " +
-      		"(hits: " + hitCount + ", misses: " + missCount + ", hit%: "+hitPercentage+") " +
       		"in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)");
    }
 
