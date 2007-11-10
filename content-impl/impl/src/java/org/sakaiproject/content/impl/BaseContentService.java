@@ -2413,35 +2413,30 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	* @param id The id of the collection.
 	* @return true if the user is allowed to removeCollection(id), false if not.
 	*/
-	protected boolean allowRemove(String id)
-	{
-		String ref = getReference(id);
-		String currentUser = SessionManager.getCurrentSessionUserId();
-      String owner = "";
-      
-      try
-      {
- 			ResourceProperties props = getProperties(id);
-			owner = props.getProperty(ResourceProperties.PROP_CREATOR);
-      }
-      catch ( Exception e ) 
-      {
-         // PermissionException can be thrown if not RESOURCE_AUTH_READ
-         return false;
-      }
-      
-		// check security to delete any collection
-		if ( unlockCheck(AUTH_RESOURCE_REMOVE_ANY, id) )
-         return true;
-
-		// check security to delete own collection
-		else if ( currentUser.equals(owner) && unlockCheck(AUTH_RESOURCE_REMOVE_OWN, id) )
-         return true;
-            
-      // otherwise not authorized
-      else
-         return false;
-
+	protected boolean allowRemove(String id) {
+	   boolean allowed = false;
+	   // Adjusted this method to fix SAK-12168 -AZ
+	   if ( unlockCheck(AUTH_RESOURCE_REMOVE_ANY, id) ) {
+	      // check security to delete any collection
+	      allowed = true;
+	   } else {
+	      // check security to delete own collection
+         try {
+            String currentUser = SessionManager.getCurrentSessionUserId(); // TODO remove static call
+    			ResourceProperties props = getProperties(id);
+    			String owner = props.getProperty(ResourceProperties.PROP_CREATOR);
+    			if ( currentUser.equals(owner) && unlockCheck(AUTH_RESOURCE_REMOVE_OWN, id) ) {
+    			   allowed = true;
+    			}
+         } catch ( PermissionException e ) {
+            // PermissionException can be thrown if not RESOURCE_AUTH_READ
+            M_log.error("Permission failure getting property for content with id: " + id, e);            
+         } catch ( Exception e ) {
+            // Assuming it is ok to return false here and there is not a reason to throw an exception -AZ
+            M_log.warn("Could not get owner property from contententity with id: " + id, e);
+         }
+	   }
+	   return allowed;
 	} // allowRemove
 
 	/**
