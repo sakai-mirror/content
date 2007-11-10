@@ -106,6 +106,7 @@
          <id>JCR</id>
          <modules>
             <module>content-api/api</module>
+            <module>content-jcr-migration-api</module>
             <module>content-impl/impl</module>
             <module>content-impl/hbm</module>
             <module>content-util/util</module>

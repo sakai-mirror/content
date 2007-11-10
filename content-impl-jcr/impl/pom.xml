@@ -27,6 +27,11 @@
     </dependency>
     <dependency>
       <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-content-jcr-migration-api</artifactId>
+      <version>${sakai.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-content-util</artifactId>
       <version>${sakai.version}</version>
     </dependency>

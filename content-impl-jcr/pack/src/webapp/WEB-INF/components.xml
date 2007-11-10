@@ -3,20 +3,20 @@
 
 <beans>
 
+ 
+  <import resource="components-jcr.xml" />
 
 
-
-
-   <import resource="components-jcr.xml" />
-
-
+<!-- 
 	<bean id="org.sakaiproject.content.api.ContentHostingService"
-			class="org.sakaiproject.content.multiplexContentHostingMultiplexService"
+			class="org.sakaiproject.content.multiplex.ContentHostingMultiplexService"
             init-method="init" destroy-method="destroy" singleton="true">
              <property name="defaultContentHostingService">              
              	<ref bean="org.sakaiproject.content.api.ContentHostingService.dbservice" />
              </property>
-    </property>
+    </bean>
+    -->
+
 
     <!-- database beans -->
     
@@ -27,7 +27,8 @@
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlMySql"     class="org.sakaiproject.content.impl.ContentServiceSqlMySql"   singleton="true"/>
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlOracle"    class="org.sakaiproject.content.impl.ContentServiceSqlOracle"  singleton="true"/>
     
-	<bean id="org.sakaiproject.content.api.ContentHostingService.dbservice"
+    <!-- <bean id="org.sakaiproject.content.api.ContentHostingService" -->
+    <bean id="org.sakaiproject.content.api.ContentHostingService.dbservice"
 			class="org.sakaiproject.content.impl.DbContentService"
             init-method="init" destroy-method="destroy" singleton="true">
 
