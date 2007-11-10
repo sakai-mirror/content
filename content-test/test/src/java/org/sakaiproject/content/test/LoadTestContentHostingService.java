@@ -287,17 +287,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
       }
       total = System.currentTimeMillis() - start;
       log.info("Completed load of "+contentIds.size()+" content items in "+total+" ms");
-
-      start = System.currentTimeMillis();
-      int removedItems = 0;
-      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
-         String collectionId = makeCollectionId(COLLECTION_NAMES[i]);
-         removeCollection(collectionId);
-         removedItems += COLLECTION_SIZES[i];
-      }
-      total = System.currentTimeMillis() - start;
-      log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
-            +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");      
    }
 
    /**
@@ -372,8 +361,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
       try {
          removedItems = contentHostingService.getCollectionSize(collectionId);
          contentHostingService.removeCollection(collectionId);
-      } catch (PermissionException e) {
-         log.error("Why does this keep happening? This is an admin! Perm Failure removing collection: " + collectionId, e);
       } catch (Exception e) {
          throw new RuntimeException("Failure removing collection: " + collectionId, e);
       }
