@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
@@ -93,7 +94,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    /**
     * Number of total thread simulation iterations to run
     */
-   protected final int iterations = 1000000;
+   protected final int iterations = 100000;
    /**
     * maximum number of content item ids to load for the read testing
     */
@@ -101,7 +102,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    /**
     * Maximum number of inserts to do while simulating
     */
-   protected final int maxInserts = 1000;
+   protected final int maxInserts = 5000;
 
    protected final String INSERT = "insert";
    protected final String REMOVE = "remove";
@@ -115,8 +116,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
    // make sure the collection names and sizes array are the same length
    protected final String[] COLLECTION_NAMES = {
          "collection_small",
-         "collection_big",
-         "collection_huge",
+//         "collection_big",
+//         "collection_huge",
          "collection_large",
          "collection_average",
          "collection_verysmall",
@@ -124,8 +125,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
       };
    protected final int[] COLLECTION_SIZES = {
          10,
-         100,
-         1000,
+//         100,
+//         1000,
          25,
          15,
          5,
@@ -182,16 +183,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
       // create test content in case there is not enough to test with
       // switch to the admin to run this
-      Session currentSession = sessionManager.getCurrentSession();
-      if (currentSession != null) {
-         currentSession.setAttribute(CURRENT_USER_MARKER, currentSession.getUserId());
-         currentSession.setUserId(ADMIN_USER);
-         currentSession.setActive();
-         sessionManager.setCurrentSession(currentSession);
-         authzGroupService.refreshUser(ADMIN_USER);
-      } else {
-         throw new RuntimeException("no CurrentSession, cannot set to admin user");
-      }
+      setAdminUser();
    }
 
    @Override
@@ -226,6 +218,15 @@ public class LoadTestContentHostingService extends SpringTestCase {
       long total = 0;
       totalCreatedItems = 0;
       totalCreatedSize = 0;
+
+      // wipe the test data if there is any
+      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
+         try {
+            removeCollection(makeCollectionId(COLLECTION_NAMES[i]));
+         } catch (Exception e) {
+            log.debug("Failed to cleanup existing test collection", e);
+         }
+      }
 
       start = System.currentTimeMillis();
       int contentCount;
@@ -270,7 +271,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
       log.info("Test reading generated content and existing content...");
 
-      // first we accumulate all the content
       List<String> contentIds = new ArrayList<String>();
       start = System.currentTimeMillis();
       try {
@@ -288,7 +288,10 @@ public class LoadTestContentHostingService extends SpringTestCase {
    /**
     * Simulating load against the content service (single threaded)
     */
-/*   public void testSimulatedUsageOneThread() {
+   public void testSimulatedUsageOneThread() {
+      log.info("Test simulating usage (one thread)...");
+
+      // first we accumulate all the content
       List<String> contentIds = new ArrayList<String>();
       try {
          ContentCollection collection = contentHostingService.getCollection(ROOT);
@@ -300,15 +303,29 @@ public class LoadTestContentHostingService extends SpringTestCase {
       }
 
       runTestThread(1, 1, contentIds, iterations, maxInserts);
+      log.info("complete");
    }
-*/
+
    
    /**
     * Simulating load against the content service (multi threaded)
+    * TODO - currently disabled because CHS cannot handle concurrent threads
     */
-/*   public void testSimulatedUsageMultiThread() {
-      final int threads = 30;
+   public void testSimulatedUsageMultiThread() {
+      final int threads = 10;
       final int threadIterations = iterations / threads;
+      final int threadMaxInserts = maxInserts / threads;
+
+      // first we accumulate all the content
+      final List<String> contentIds = new Vector<String>();
+      try {
+         ContentCollection collection = contentHostingService.getCollection(ROOT);
+         accumulateContentIds(contentIds, collection, maxTestContentSize);
+      } catch (IdUnusedException e) {
+         throw new RuntimeException("Failed to find the root collection: "+ROOT, e);
+      } catch (Exception e) {
+         throw new RuntimeException("Failed to get the contents of the root collection: "+ROOT, e);
+      }
 
       log.info("Starting concurrent caching load test with "+threads+" threads...");
       long start = System.currentTimeMillis();
@@ -316,7 +333,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
          final int threadnum = t+1;
          Thread thread = new Thread( new Runnable() {
             public void run() {
-               //runCacheTestThread(threadnum, threads, testCache, threadIterations, maxCacheSize);
+               setAdminUser();   
+               runTestThread(threadnum, threads, contentIds, threadIterations, threadMaxInserts);
             }
          }, threadnum+"");
          thread.start();
@@ -325,7 +343,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       long total = System.currentTimeMillis() - start;
       log.info(threads + " threads completed "+iterations+" iterations in "
             +total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)");
-   }*/
+   }
 
   
    public void testRemoveLargeContentSet() {
@@ -343,6 +361,86 @@ public class LoadTestContentHostingService extends SpringTestCase {
       total = System.currentTimeMillis() - start;
       log.info("Completed removal of ("+COLLECTION_NAMES.length+") created collections with "+removedItems+" content items in "
             +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per operation)");
+   }
+
+
+
+   /**
+    * Run a simulated usage test
+    * @param threadnum
+    * @param threads
+    * @param contentIds
+    * @param iterations
+    * @param maxInserts
+    */
+   private void runTestThread(int threadnum, int threads, List<String> contentIds, final int iterations, int maxInserts) {
+      long readCount = 0;
+      long readMissCount = 0;
+      int insertCount = 0;
+      int deleteCount = 0;
+      Random rGen = new Random();
+      String keyPrefix = "threadResource-" + threadnum + "-";
+      checkpointMap.put(Thread.currentThread().getName(), new Date());
+      long start = System.currentTimeMillis();
+      try {
+         for (int i = 0; i < iterations; i++) {
+            int random = rGen.nextInt(100);
+            if ( (i < 100 || random >= 92) && (insertCount < maxInserts) ) {
+               int num = insertCount++;
+               String rid = keyPrefix + num;
+               String collectionId = makeCollectionId(COLLECTION_NAMES[rGen.nextInt(COLLECTION_NAMES.length)]);
+               try {
+                  ContentResource resource = contentHostingService.addResource(rid, collectionId, 3, "text/plain", makeTestContent(), null, 0);
+                  assertNotNull(resource.getId());
+                  contentIds.add(resource.getId());
+               } catch (Exception e) {
+                  throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
+               }
+            }
+            if (i > 2) {
+               // do 10 reads from content hosting
+               for (int j = 0; j < 10; j++) {
+                  readCount++;
+                  String rid = contentIds.get(rGen.nextInt(contentIds.size()));
+                  try {
+                     ContentResource resource = contentHostingService.getResource(rid);
+                     assertNotNull(resource);
+                  } catch (IdUnusedException e) {
+                     readMissCount++;
+                  } catch (Exception e) {
+                     throw new RuntimeException("Died while attempting to get a resource ("+rid+")", e);
+                  }
+               }
+            }
+            if ( random < 3 && (deleteCount < (maxInserts/4)) ) {
+               int rIndex = rGen.nextInt(contentIds.size());
+               String rid = contentIds.get(rIndex);
+               try {
+                  contentIds.remove(rIndex);
+                  deleteCount++;
+                  contentHostingService.removeResource(rid);
+               } catch (IdUnusedException e) {
+                  readMissCount++;
+               } catch (Exception e) {
+                  throw new RuntimeException("Died while attempting to remove a resource ("+rid+")", e);
+               }
+            }
+            if (i > 0 && i % (iterations/50) == 0) {
+               checkpointMap.put(Thread.currentThread().getName(), new Date());
+               //log.info("thread: " + threadnum + " " + (i*100/iterations) + "% complete");
+            }
+         }
+      } catch (Exception e) {
+         log.error("Thread "+threadnum+": failed to complete because of exception", e);
+      } finally {
+         long total = System.currentTimeMillis() - start;
+         checkpointMap.remove(Thread.currentThread().getName());
+         if (threadnum == 1) {
+            log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
+                  "and "+deleteCount+" removes and "+readCount+" reads ("+readMissCount+" misses)" +
+                  "in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)");
+         }
+      }
    }
 
    /**
@@ -364,7 +462,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
       log.info("Completed removal of collection ("+collectionId+") with "+removedItems+" content items in "
             +total+" ms ("+calcUSecsPerOp(removedItems, total)+" microsecs per item)");
    }
-
 
    /**
     * Loops through and gets all the content ids recursively (does not get collection ids)
@@ -390,67 +487,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
          }
       }
    }
-
-
-
-   private void runTestThread(int threadnum, int threads, List<String> contentIds, final int iterations, int maxInserts) {
-      long readCount = 0;
-      int insertCount = 0;
-      int deleteCount = 0;
-      Random rGen = new Random();
-      String keyPrefix = "threadResource-" + threadnum + "-";
-      checkpointMap.put(Thread.currentThread().getName(), new Date());
-      long start = System.currentTimeMillis();
-      for (int i = 0; i < iterations; i++) {
-         int random = rGen.nextInt(100);
-         if ( (i < 100 || random >= 95) && ((insertCount*threads) < maxInserts) ) {
-            int num = insertCount++;
-            String rid = keyPrefix + num;
-            String collectionId = makeCollectionId(COLLECTION_NAMES[rGen.nextInt(COLLECTION_NAMES.length)]);
-            try {
-               ContentResource resource = contentHostingService.addResource(rid, collectionId, 3, "text/plain", makeTestContent(), null, 0);
-               contentIds.add(resource.getId());
-               assertNotNull(resource);
-            } catch (Exception e) {
-               throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
-            }
-         }
-         if (i > 2) {
-            // do 10 reads from content hosting
-            for (int j = 0; j < 10; j++) {
-               readCount++;
-               String rid = contentIds.get(rGen.nextInt(contentIds.size()));
-               try {
-                  ContentResource resource = contentHostingService.getResource(rid);
-                  assertNull(resource);
-               } catch (Exception e) {
-                  throw new RuntimeException("Died while attempting to get a resource ("+rid+")", e);
-               }
-            }
-         }
-         if ( random < 1 && ((deleteCount*threads) < (maxInserts/8)) ) {
-            int rIndex = rGen.nextInt(contentIds.size());
-            String rid = contentIds.get(rIndex);
-            try {
-               contentHostingService.removeResource(rid);
-               contentIds.remove(rIndex);
-            } catch (Exception e) {
-               throw new RuntimeException("Died while attempting to remove a resource ("+rid+")", e);
-            }
-            deleteCount++;
-         }
-         if (i > 0 && i % (iterations/5) == 0) {
-            checkpointMap.put(Thread.currentThread().getName(), new Date());
-            //log.info("thread: " + threadnum + " " + (i*100/iterations) + "% complete");
-         }
-      }
-      long total = System.currentTimeMillis() - start;
-      checkpointMap.remove(Thread.currentThread().getName());
-      log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
-      		"and "+deleteCount+" removes and "+readCount+" reads " +
-      		"in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)");
-   }
-
 
    /**
     * Make a content collection and fill it to the size specified with fake data
@@ -532,6 +568,23 @@ public class LoadTestContentHostingService extends SpringTestCase {
       return COLLECTION_ID_PREFIX+cid+ROOT;
    }
 
+
+   /**
+    * Change the current user for a thread to the admin user
+    */
+   private void setAdminUser() {
+      Session currentSession = sessionManager.getCurrentSession();
+      if (currentSession != null) {
+         currentSession.setAttribute(CURRENT_USER_MARKER, currentSession.getUserId());
+         currentSession.setUserId(ADMIN_USER);
+         currentSession.setActive();
+         sessionManager.setCurrentSession(currentSession);
+         authzGroupService.refreshUser(ADMIN_USER);
+      } else {
+         throw new RuntimeException("no CurrentSession, cannot set to admin user");
+      }
+   }
+
    /**
     * @param loopCount total number of operations
     * @param totalMilliSecs total number of milliseconds
@@ -547,7 +600,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    private void startThreadMonitor() {
       // monitor the other running threads
       Map<String, Date> m = new HashMap<String, Date>();
-      log.info("Starting up monitoring of test threads...");
+      log.debug("Starting up monitoring of test threads...");
       try {
          Thread.sleep(3 * 1000);
       } catch (InterruptedException e) {
@@ -556,7 +609,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
       while (true) {
          if (checkpointMap.size() == 0) {
-            log.info("All test threads complete... monitoring exiting");
+            log.debug("All test threads complete... monitoring exiting");
             break;
          }
          int deadlocks = 0;
@@ -572,22 +625,20 @@ public class LoadTestContentHostingService extends SpringTestCase {
             m.put(key, checkpointMap.get(key));
          }
 
-         StringBuilder sb = new StringBuilder();
-         sb.append("Deadlocked/slow threads (of "+checkpointMap.size()+"): ");
-         if (stalledThreads.isEmpty()) {
-            sb.append("NONE");
-         } else {
+         if (! stalledThreads.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Deadlocked/slow threads (of "+checkpointMap.size()+"): ");
             sb.append("total="+stalledThreads.size()+":: ");
             Collections.sort(stalledThreads);
             for (int j = stalledThreads.size()-1; j >= 0; j--) {
                String string = stalledThreads.get(j);
                sb.append(string.substring(string.indexOf(':')+1) + "(" + string.substring(0, string.indexOf(':')) + "s):");
             }
+            log.info(sb.toString());
          }
-         log.info(sb.toString());
 
          try {
-            Thread.sleep(2 * 1000);
+            Thread.sleep(5 * 1000);
          } catch (InterruptedException e) {
             e.printStackTrace();
          }
