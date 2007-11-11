@@ -1,10 +1,10 @@
 /**
  * ConcurrentList.java - content-test - 2007 Nov 9, 2007 3:33:26 PM - azeckoski
  */
+
 package org.sakaiproject.content.test.util;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,6 +72,11 @@ public class ConcurrentList<V> extends AbstractList<V> {
       } else {
          return removeItem(index);
       }
+   }
+
+   @Override
+   public void clear() {
+      hashMap.clear();
    }
 
 }
