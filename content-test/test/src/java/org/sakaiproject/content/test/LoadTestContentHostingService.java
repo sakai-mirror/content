@@ -116,8 +116,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
    // make sure the collection names and sizes array are the same length
    protected final String[] COLLECTION_NAMES = {
          "collection_small",
-//         "collection_big",
-//         "collection_huge",
+         "collection_big",
+         "collection_huge",
          "collection_large",
          "collection_average",
          "collection_verysmall",
@@ -125,8 +125,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
       };
    protected final int[] COLLECTION_SIZES = {
          10,
-//         100,
-//         1000,
+         100,
+         1000,
          25,
          15,
          5,
