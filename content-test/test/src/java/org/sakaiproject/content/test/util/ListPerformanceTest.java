@@ -66,6 +66,12 @@ public class ListPerformanceTest extends TestCase {
       runTestThread(1, 1, list, totalIterations);
    }*/
 
+   public void testArrayListMulti() {
+      List<String> list = new ArrayList<String>();
+      prefillList(list, prefillSize);
+      runMultiThreadTest(threads, list, totalIterations);
+   }
+
    public void testVectorMulti() {
       List<String> list = new Vector<String>();
       prefillList(list, prefillSize);
@@ -82,8 +88,8 @@ public class ListPerformanceTest extends TestCase {
       List<String> list = new CopyOnWriteArrayList<String>();
       prefillList(list, prefillSize);
       runMultiThreadTest(threads, list, totalIterations);
-   }
-*/
+   }*/
+
    private void runMultiThreadTest(final int threads, final List<String> list, int iterations) {
       final int threadIterations = iterations / threads;
 
@@ -112,34 +118,39 @@ public class ListPerformanceTest extends TestCase {
       String keyPrefix = "threadResource-" + threadnum + "-";
       checkpointMap.put(Thread.currentThread().getName(), new Date());
       long start = System.currentTimeMillis();
-      for (int i = 0; i < iterations; i++) {
-         if ( i % 10 == 0 ) {
-            int num = insertCount++;
-            list.add(keyPrefix + num);
+      try {
+         for (int i = 0; i < iterations; i++) {
+            if ( i % 10 == 0 ) {
+               int num = insertCount++;
+               list.add(keyPrefix + num);
+            }
+            // do 10 reads
+            int startIndex = rGen.nextInt(list.size()-10);
+            for (int j = 0; j < 10; j++) {
+               readCount++;
+               list.get(startIndex + j);
+            }
+            if ( i % 100 == 0 ) {
+               int rIndex = rGen.nextInt(list.size());
+               list.remove(rIndex);
+               deleteCount++;
+            }
+            if (i > 0 && i % (iterations/5) == 0) {
+               checkpointMap.put(Thread.currentThread().getName(), new Date());
+               //log.info("thread: " + threadnum + " " + (i*100/iterations) + "% complete");
+            }
          }
-         // do 10 reads
-         int startIndex = rGen.nextInt(list.size()-10);
-         for (int j = 0; j < 10; j++) {
-            readCount++;
-            list.get(startIndex + j);
+      } catch (Exception e) {
+         log.warn("Thread "+threadnum+": failed: " + e);
+      } finally {
+         long total = System.currentTimeMillis() - start;
+         checkpointMap.remove(Thread.currentThread().getName());
+         if (threadnum == 1) {
+            log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
+                  "and "+deleteCount+" removes and "+readCount+" reads " +
+                  "in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)," +
+                     " final size of list: " + list.size());
          }
-         if ( i % 100 == 0 ) {
-            int rIndex = rGen.nextInt(list.size());
-            list.remove(rIndex);
-            deleteCount++;
-         }
-         if (i > 0 && i % (iterations/5) == 0) {
-            checkpointMap.put(Thread.currentThread().getName(), new Date());
-            //log.info("thread: " + threadnum + " " + (i*100/iterations) + "% complete");
-         }
-      }
-      long total = System.currentTimeMillis() - start;
-      checkpointMap.remove(Thread.currentThread().getName());
-      if (threadnum == 1) {
-         log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
-               "and "+deleteCount+" removes and "+readCount+" reads " +
-               "in "+total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per iteration)," +
-                  " final size of list: " + list.size());
       }
    }
 
