@@ -34,7 +34,7 @@ public class ListPerformanceTest extends TestCase {
    /**
     * Number of total thread simulation iterations to run
     */
-   protected final int totalIterations = 1000000;
+   protected final int totalIterations = 10000000;
    protected final int threads = 50;
    protected final int prefillSize = 100;
 
@@ -120,7 +120,7 @@ public class ListPerformanceTest extends TestCase {
       long start = System.currentTimeMillis();
       try {
          for (int i = 0; i < iterations; i++) {
-            if ( i % 10 == 0 ) {
+            if ( i % 100 == 0 ) {
                int num = insertCount++;
                list.add(keyPrefix + num);
             }
@@ -130,7 +130,7 @@ public class ListPerformanceTest extends TestCase {
                readCount++;
                list.get(startIndex + j);
             }
-            if ( i % 100 == 0 ) {
+            if ( i % 1000 == 0 ) {
                int rIndex = rGen.nextInt(list.size());
                list.remove(rIndex);
                deleteCount++;
