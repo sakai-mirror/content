@@ -1098,6 +1098,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch (IdUnusedException e) 
 				{
 					// ignore because we would have caught this earlier.
+					M_log.debug("BaseContentService.unlockCheck(" + lock + "," + id + ") IdUnusedException " + e);
 				}
 			}	
 		}
