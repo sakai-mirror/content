@@ -2044,7 +2044,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 
 		// track it (no notification)
-		EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_REMOVE, edit.getReference(), true,
+		EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_REMOVE, edit.getReference(null), true,
 				NotificationService.NOTI_NONE));
 
 	} // removeCollection
@@ -2165,7 +2165,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		//ThreadLocalManager.set("getResources@" + containerId, null);
 
 		// track it (no notification)
-		EventTrackingService.post(EventTrackingService.newEvent(((BaseCollectionEdit) edit).getEvent(), edit.getReference(), true,
+		EventTrackingService.post(EventTrackingService.newEvent(((BaseCollectionEdit) edit).getEvent(), edit.getReference(null), true,
 				NotificationService.NOTI_NONE));
 
 	} // commitCollection
@@ -3726,7 +3726,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 
 		// track it (no notification)
-		EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_REMOVE, edit.getReference(), true,
+		EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_REMOVE, edit.getReference(null), true,
 				NotificationService.NOTI_NONE));
 
 	} // removeResource
@@ -4872,7 +4872,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ThreadLocalManager.set("getResources@" + containerId, null);
 
 		// track it
-		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(), true,
+		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(null), true,
 				priority));
 
 	} // commitResourceEdit
@@ -5650,7 +5650,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 
 			// track event
-			EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_READ, resource.getReference(), false));
+			EventTrackingService.post(EventTrackingService.newEvent(EVENT_RESOURCE_READ, resource.getReference(null), false));
 		}
 		catch (Throwable t)
 		{
@@ -7207,7 +7207,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		addSizeCache(edit);
 
 		// track it
-		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(), true,
+		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(null), true,
 				NotificationService.NOTI_NONE));
 
 		// close the edit object
