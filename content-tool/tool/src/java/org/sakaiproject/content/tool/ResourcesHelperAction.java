@@ -814,7 +814,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		if(fileitem == null)
 		{
-			String max_file_size_mb = (String) state.getAttribute(ResourcesAction.STATE_FILE_UPLOAD_MAX_SIZE);
+			String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
 			int max_bytes = 1024 * 1024;
 			try
 			{
@@ -1111,7 +1111,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			
 			if(fileitem == null)
 			{
-				String max_file_size_mb = (String) state.getAttribute(ResourcesAction.STATE_FILE_UPLOAD_MAX_SIZE);
+				String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
 				int max_bytes = 1024 * 1024;
 				try
 				{
@@ -1240,7 +1240,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			}
 			else if(status.equals("size_limit_exceeded"))
 			{
-				String max_file_size_mb = (String) state.getAttribute(ResourcesAction.STATE_FILE_UPLOAD_MAX_SIZE);
+				String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
 				int max_bytes = 1024 * 1024;
 				try
 				{
@@ -1351,7 +1351,50 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		if (state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE) == null)
 		{
-			state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, ServerConfigurationService.getString("content.upload.max", "1"));
+			String uploadMax = ServerConfigurationService.getString("content.upload.max");
+			String uploadCeiling = ServerConfigurationService.getString("content.upload.ceiling");
+			
+			if(uploadMax == null && uploadCeiling == null)
+			{
+				state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, "1");
+			}
+			else if(uploadCeiling == null)
+			{
+				state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, uploadMax);
+			}
+			else if(uploadMax == null)
+			{
+				state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, uploadMax);
+			}
+			else
+			{
+				int maxNum = Integer.MAX_VALUE;
+				int ceilingNum = Integer.MAX_VALUE;
+				try
+				{
+					maxNum = Integer.parseInt(uploadMax);
+				}
+				catch(Exception e)
+				{
+				}
+				try
+				{
+					ceilingNum = Integer.parseInt(uploadCeiling);
+				}
+				catch(Exception e)
+				{
+				}
+
+				if(ceilingNum < maxNum)
+				{
+					state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, uploadCeiling);
+				}
+				else
+				{
+					state.setAttribute(STATE_FILE_UPLOAD_MAX_SIZE, uploadMax);
+				}
+			}
+			
 		}
 		
 		state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, Boolean.FALSE);
