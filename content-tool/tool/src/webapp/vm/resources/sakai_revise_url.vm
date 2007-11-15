@@ -18,8 +18,8 @@
 		</p>
 		#if(! $item.isDropbox())
 			#if ($hasNotificationDialog)
-				<p class="shorttext">
-					<label for="notify">
+				<p class="longtext" >
+					<label for="notify" class="block">
 						$tlang.getString("gen.email1")
 					</label>	
 					<select name="notify" id="notify">
