@@ -419,11 +419,19 @@ public class ListItem
 		}
 	    String refstr = entity.getReference();
 		this.isSiteCollection = this.siteCollection(refstr);
-
+		
 		boolean isUserSite = isInWorkspace(parent, refstr);
 		setUserSite(isUserSite);
 		
-		Reference ref = EntityManager.newReference(refstr);
+		if(m_reference == null)
+		{
+			m_reference = EntityManager.newReference(refstr);
+		}
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
+
 		if(entity.getContainingCollection() == null)
 		{
 			this.containingCollectionId = null;
@@ -510,7 +518,7 @@ public class ListItem
 			// setup for quota - ADMIN only, site-root collection only
 			if (SecurityService.isSuperUser())
 			{
-				String siteCollectionId = contentService.getSiteCollection(ref.getContext());
+				String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
 				if(siteCollectionId.equals(entity.getId()))
 				{
 					setCanSetQuota(true);
