@@ -9,10 +9,11 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.jcr.api.JCRService;
+import org.sakaiproject.content.migration.api.CHStoJCRMigrator;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
 
-public class CHStoJCRmigrator {
-    private static final Log log = LogFactory.getLog(CHStoJCRmigrator.class);
+public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
+    private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
    
     // Injected Services
     private SqlService sqlService;
