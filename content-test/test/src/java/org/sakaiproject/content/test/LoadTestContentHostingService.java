@@ -42,6 +42,7 @@ import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
@@ -540,6 +541,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       try {
          ContentCollectionEdit collection = contentHostingService.addCollection(testId);
          collection.getPropertiesEdit().addProperty(COLLECTION_ID_PREFIX+"LOCATOR", testId);
+         collection.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, "LOADTEST-" + cid);
          contentHostingService.commitCollection(collection);
          collectionId = collection.getId();
       } catch (PermissionException e) {
