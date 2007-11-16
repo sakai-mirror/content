@@ -1375,9 +1375,38 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 //					resourceProperties.addProperty(ResourceProperties.PROP_CONTENT_ENCODING, UTF_8_ENCODING);
 //				}
 				
-				ContentHostingService.commitResource(resource, notification);
-				item_added = true;
-				new_resources.add(resource);
+				try
+				{
+					ContentHostingService.commitResource(resource, notification);
+					item_added = true;
+					new_resources.add(resource);
+				}
+				catch(OverQuotaException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+					logger.warn("OverQuotaException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
+				catch(ServerOverloadException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+					logger.warn("ServerOverloadException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
 			}
 			catch (PermissionException e)
 			{
@@ -1413,8 +1442,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (ServerOverloadException e)
 			{
-				// TODO Auto-generated catch block
-				logger.warn("ServerOverloadException ", e);
+				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				logger.warn("ServerOverloadException " + e);
 			}
 		}
 		
@@ -1705,9 +1734,37 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				ContentResourceEdit copy = ContentHostingService.editResource(newItemId);
 				ResourcePropertiesEdit pedit = copy.getPropertiesEdit();
 				pedit.addProperty(ResourceProperties.PROP_DISPLAY_NAME, displayName);
-				ContentHostingService.commitResource(copy, NotificationService.NOTI_NONE);
-				newId = copy.getId();
-
+				try
+				{
+					ContentHostingService.commitResource(copy, NotificationService.NOTI_NONE);
+					newId = copy.getId();
+				}
+				catch(OverQuotaException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
+					logger.warn("OverQuotaException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
+				catch(ServerOverloadException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
+					logger.warn("ServerOverloadException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
 			}	// if-else
 		}
 		catch (PermissionException e)
@@ -3692,7 +3749,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		catch (ServerOverloadException e)
 		{
-			// TODO Auto-generated catch block
+			addAlert(rb.getString("failed"));
 			logger.warn("ServerOverloadException ", e);
 		}
 	}
@@ -5513,16 +5570,44 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				
 				if(alerts.isEmpty())
 				{
-				
-					ContentHostingService.commitResource(resource, noti);
-					
-					toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
-	
-					// show folder if in hierarchy view
-					SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
-					expandedCollections.add(collectionId);
-	
-					state.setAttribute(STATE_MODE, MODE_LIST);
+					try
+					{
+						ContentHostingService.commitResource(resource, noti);
+						
+						toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
+		
+						// show folder if in hierarchy view
+						SortedSet expandedCollections = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
+						expandedCollections.add(collectionId);
+		
+						state.setAttribute(STATE_MODE, MODE_LIST);
+					}
+					catch(OverQuotaException e)
+					{
+						addAlert(trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
+						logger.warn("OverQuotaException " + e);
+						try
+						{
+							ContentHostingService.removeResource(resource.getId());
+						}
+						catch(Exception e1)
+						{
+							logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+						}
+					}
+					catch(ServerOverloadException e)
+					{
+						addAlert(trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
+						logger.warn("ServerOverloadException " + e);
+						try
+						{
+							ContentHostingService.removeResource(resource.getId());
+						}
+						catch(Exception e1)
+						{
+							logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+						}
+					}
 				}
 				else
 				{
@@ -5546,7 +5631,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			} 
 			catch (ServerOverloadException e) 
 			{
-				logger.warn("ServerOverloadException", e);
+				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				logger.warn("ServerOverloadException" + e);
 			}
 			catch (OverQuotaException e)
 			{
@@ -7191,6 +7277,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		catch (ServerOverloadException e)
 		{
 			pipe.setErrorEncountered(true);
+			pipe.setErrorMessage(trb.getString("alert.unable"));
 			logger.warn("ServerOverloadException ", e);
 		}
 	}
@@ -8153,9 +8240,38 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					String pvalue = (String) values.get(pname); 	 
 					resourceProperties.addProperty(pname, pvalue);
 				}
-				ContentHostingService.commitResource(resource, notification);
-				item_added = true;
-				new_resources.add(resource);
+				try
+				{
+					ContentHostingService.commitResource(resource, notification);
+					item_added = true;
+					new_resources.add(resource);
+				}
+				catch(OverQuotaException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+					logger.warn("OverQuotaException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
+				catch(ServerOverloadException e)
+				{
+					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+					logger.warn("ServerOverloadException " + e);
+					try
+					{
+						ContentHostingService.removeResource(resource.getId());
+					}
+					catch(Exception e1)
+					{
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
+					}
+				}
 			}
 			catch (PermissionException e)
 			{
@@ -8164,17 +8280,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (IdUnusedException e)
 			{
-				// TODO Auto-generated catch block
 				logger.warn("IdUsedException ", e);
 			}
 			catch (IdInvalidException e)
 			{
-				// TODO Auto-generated catch block
 				logger.warn("IdInvalidException ", e);
 			}
 			catch (IdUniquenessException e)
 			{
-				// TODO Auto-generated catch block
 				logger.warn("IdUniquenessException ", e);
 			}
 			catch (IdLengthException e)
@@ -8190,7 +8303,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (ServerOverloadException e)
 			{
-				// TODO Auto-generated catch block
+				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
 				logger.warn("ServerOverloadException ", e);
 			}
 		}
