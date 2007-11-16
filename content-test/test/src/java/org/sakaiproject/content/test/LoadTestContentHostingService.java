@@ -127,7 +127,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
    protected final int[] COLLECTION_SIZES = {
          10,
          100,
-         1000,
+         400,
          25,
          15,
          5,
