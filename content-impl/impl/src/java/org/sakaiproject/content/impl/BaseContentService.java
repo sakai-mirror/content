@@ -1228,7 +1228,6 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch (IdUnusedException e) 
 				{
 					// ignore because we would have caught this earlier.
-					M_log.debug("BaseContentService.unlockCheck(" + lock + "," + id + ") IdUnusedException " + e);
 				}
 			}	
 		}
@@ -2214,8 +2213,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollectionEdit edit = editCollection(id);
 
 		// clear thread-local cache SAK-12126
-		ThreadLocalManager.set("members@" + edit.getId(), null);
-		ThreadLocalManager.set("getResources@" + edit.getId(), null);
+		ThreadLocalManager.set("members@" + id, null);
+		ThreadLocalManager.set("getResources@" + id, null);
 		
 		// clear of all members (recursive)
 		// Note: may fail if something's in use or not permitted. May result in a partial clear.
