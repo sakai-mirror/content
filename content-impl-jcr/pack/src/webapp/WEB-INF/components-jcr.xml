@@ -3,6 +3,7 @@
 
 <beans>
 
+  
    
   <bean id="org.sakaiproject.content.api.ContentHostingService"
 			class="org.sakaiproject.content.impl.JCRContentService"
@@ -108,7 +109,14 @@
         
 	</bean>
 
-
+<!-- Utility service for copying files and folders from Legacy Content Hosting to the JCR 
+       Implementation -->
+  <bean id="org.sakaiproject.content.migration.api.ContentToJCRCopier"
+    class="org.sakaiproject.content.impl.jcr.migration.ContentToJCRCopierImpl">
+    <property name="jcrService" ref="org.sakaiproject.jcr.api.JCRService"></property>
+    <property name="jcrStorageUser" ref="org.sakaiproject.content.api.ContentHostingService.storageUser"></property>
+    <property name="oldCHSService" ref="org.sakaiproject.content.api.ContentHostingService.dbservice"></property>
+  </bean>
 	
 
 </beans>
