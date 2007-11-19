@@ -1,5 +1,7 @@
 package org.sakaiproject.content.impl.jcr.migration;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -11,15 +13,16 @@ import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.jcr.api.JCRService;
 import org.sakaiproject.content.migration.api.CHStoJCRMigrator;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
+import org.sakaiproject.content.migration.api.MigrationStatusReporter;
 
 public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
     private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
    
     // Injected Services
     private SqlService sqlService;
-    private ContentHostingService legacyContentHostingService;
     private JCRService jcrService;
-    private ContentToJCRCopier contentToJCRMigrator;
+    private ContentToJCRCopier contentToJCRCopier;
+    private MigrationStatusReporter migrationStatusReporter;
     // End Injected Services
     
     protected final String CURRENT_USER_MARKER = "originalTestUser";
@@ -34,138 +37,39 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
     Timer timer = new Timer(false);
     
     public void init() {
-        
+        log.info("init()");
     }
     
     public void destroy() {
-        
+        log.info("init()");
     }
 
     public static final String jcr_content_prefix = "/sakai/content";
-
-    public static final String select_unfinished_collections = "SELECT COLLECTION_ID"
-        + " FROM MIGRATE_JCR_CONTENT_COLLECTION M" 
-        + " WHERE STATUS = 0"
-        + " LIMIT 0, ?";
-
-    public static final String update_finished_collection = "UPDATE MIGRATE_JCR_CONTENT_COLLECTION"
-        + " SET STATUS = 1"
-        + " WHERE COLLECTION_ID = ?";
-
-    public static final String select_unfinished_resources = "SELECT RESOURCE_ID" 
-        + " FROM MIGRATE_JCR_CONTENT_RESOURCE M" 
-        + " WHERE STATUS = 0"
-        + " LIMIT 0, ?";
-
-    public static final String update_finished_resource = "UPDATE MIGRATE_JCR_CONTENT_RESOURCE"
-        + " SET STATUS = 1"
-        + " WHERE RESOURCE_ID = ?";
-
-    public static final String count_finished_collections = "SELECT COUNT(*) FROM"
-        + " MIGRATE_JCR_CONTENT_COLLECTION" 
-        + " WHERE STATUS = 1";
-
-    public static final String count_total_number_collections = "SELECT COUNT(*) FROM"
-        + " MIGRATE_JCR_CONTENT_COLLECTION";
-
-    public static final String count_finished_resources = "SELECT COUNT(*) FROM" 
-        + " MIGRATE_JCR_CONTENT_RESOURCE M"
-        + " WHERE STATUS = 1";
-
-    public static final String count_total_number_resources = "SELECT COUNT(*) FROM"
-        + " MIGRATE_JCR_CONTENT_RESOURCE M";
-
-    /* Returns a tuple containing the number of migrated collections and the 
-     * total number of collections. ex (43, 101)
-     */
-    public int[] collectionStatus() {
-        int numberFinishedCollections = Integer.parseInt((String)sqlService.dbRead(
-                      count_finished_collections).get(0));
-        
-        int numberTotalCollections = Integer.parseInt((String)sqlService.dbRead(
-                      count_total_number_collections).get(0));
-        return new int[] {numberFinishedCollections, numberTotalCollections};
-    }
-        
-    /* Returns a tuple containing the number of migrated resources and the 
-     * total number of resources. ex (43, 101)
-     */
-    public int[] resourceStatus() {
-       
-       int numberFinshedResources = Integer.parseInt((String)sqlService.dbRead(
-                       count_finished_resources).get(0));
-       int numberTotalResources = Integer.parseInt((String)sqlService.dbRead(
-                       count_total_number_resources).get(0));
-      return new int[] {numberFinshedResources,numberTotalResources}; 
-
-    }
     
-    /* Migrate some folders from content hosting to the jackrabbit service.  
-     * The default number to migrate is 20, but can be changed with the number
-     * parameter
-     */
-    public void migrateFolders(int number) {
-        
-        List<String> sqlResults = sqlService.dbRead(select_unfinished_collections, new Object[] {number}, null);
-        for (String collection : sqlResults) { 
-         // try {
-            contentToJCRMigrator.copyCollectionFromCHStoJCR(collection);
-            log.debug("Copied folder to JCR: " + collection);
-         // }
-         // catch (ItemExistsException e) {
-         //   log.info("Folder already exists: " + collection, e); 
-         // }
-          markCollectionFinished(collection);
-        }
-    }
-       
-    /* Migrate some files from content hosting to the jackrabbit service.
-     * The default number to migrate is 20, but can be changed with the number
-     * parameter. 
-     */
-    public void migrateFiles(int number) {
-       
-       List<String> sqlResults = sqlService.dbRead(select_unfinished_resources, 
-               new Object[] {number}, null);
-        for (String resource : sqlResults) {
-          //try {
-            contentToJCRMigrator.copyResourceFromCHStoJCR(resource);
-            log.debug("Copied file to JCR: " + resource);
-          //}
-          //catch (ItemExistsException e) {
-          //  log.info("File already exists: " + resource, e);
-         // }
-          markResourceFinished(resource);
-        }
-    }
-    
-    public void markCollectionFinished(String collectionId) {
-        sqlService.dbWrite(update_finished_collection, collectionId);
-    }
-
-    public void markResourceFinished(String resourceId) {
-       sqlService.dbWrite(update_finished_resource, resourceId);
-    }
-
-    public void setSqlService(SqlService sqlService) {
-        this.sqlService = sqlService;
-    }
-
-    public void setLegacyContentHostingService(
-            ContentHostingService legacyContentHostingService) {
-        this.legacyContentHostingService = legacyContentHostingService;
-    }
-
-    public void setJcrService(JCRService jcrService) {
-        this.jcrService = jcrService;
+    private void markContentItemFinished(String collectionId) {
+        sqlService.dbWrite(MigrationSqlQueries.finish_content_item, collectionId);
     }
 
     public boolean isCurrentlyMigrating() {
         return isCurrentlyMigrating;
     }
+    
+    private void addOriginalItemsToQueue() {
+        try {
+            Connection conn = sqlService.borrowConnection();
+            sqlService.dbInsert(conn, MigrationSqlQueries.add_original_collections_to_migrate , null, "id");
+            sqlService.dbInsert(conn, MigrationSqlQueries.add_original_resources_to_migrate, null, "id");
+            sqlService.returnConnection(conn);
+        } catch (SQLException e) {
+            log.error("Problems adding the original content migration items to the queue.", e);
+        }
+    }
 
     public void startMigrating() {
         this.isCurrentlyMigrating = true;
+        if (!migrationStatusReporter.hasMigrationStarted()) {
+            addOriginalItemsToQueue();
+        }
         scheduleBatch();
     }
     
@@ -173,17 +77,22 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
         this.isCurrentlyMigrating = false;
     }
     
-    private void scheduleBatch() {     
+    private void migrateSomeItems(int numberToMigrate) {
+        List<ThingToMigrate> thingsToMigrate = sqlService.dbRead(
+                MigrationSqlQueries.select_unfinished_items, 
+                new Object[] {numberToMigrate}, new MigrationTableSqlReader());
+        
+        for (ThingToMigrate thing: thingsToMigrate) {
+            log.info("Going to migrate: " + thing.contentId);
+        }
+    }
+    
+    private void scheduleBatch() {   
         TimerTask batchTask = new TimerTask() {
             public void run() {
-                // If there folders left migrate them
-                int[] colStatus = collectionStatus();
-                int[] resStatus = resourceStatus();
-                if (colStatus[0] < colStatus[1]) {
-                    migrateFolders(batchSize);
-                }  
-                else if (resStatus[0] < resStatus[1]) {
-                    migrateFiles(batchSize);
+                // If there is stuff left, migrate it.
+                if (!migrationStatusReporter.hasMigrationFinished()) {
+                    migrateSomeItems(batchSize);
                 }
                 else {
                     isCurrentlyMigrating = false;
@@ -196,10 +105,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
             }
         };
         timer.schedule(batchTask, delayBetweenBatchesMilliSeconds);
-    }
-    
-    public void setContentToJCRMigrator(ContentToJCRCopier contentToJCRMigrator) {
-        this.contentToJCRMigrator = contentToJCRMigrator;
     }
 
     public int getBatchSize() {
@@ -217,6 +122,27 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
     public void setDelayBetweenBatchesMilliSeconds(
             int delayBetweenBatchesMilliSeconds) {
         this.delayBetweenBatchesMilliSeconds = delayBetweenBatchesMilliSeconds;
+    }
+
+    /* 
+     * 
+     * Various Injections Below
+     * 
+     */
+    public void setSqlService(SqlService sqlService) {
+        this.sqlService = sqlService;
+    }
+
+    public void setJcrService(JCRService jcrService) {
+        this.jcrService = jcrService;
+    }
+
+    public void setMigrationStatusReporter( MigrationStatusReporter migrationStatusReporter) {
+        this.migrationStatusReporter = migrationStatusReporter;
+    }
+
+    public void setContentToJCRCopier(ContentToJCRCopier contentToJCRCopier) {
+        this.contentToJCRCopier = contentToJCRCopier;
     }
 
 }

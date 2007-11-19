@@ -21,7 +21,7 @@ import org.sakaiproject.event.api.EventTrackingService;
  * 
  * Different Kinds of Content Events Include:
  * EVENT_RESOURCE_ADD, content.new
- * EVENT_RESOURCE_READ, content.read
+ * EVENT_RESOURCE_READ, content.read  <-- We don't really need to listen for this.
  * EVENT_RESOURCE_WRITE, content.revise
  * EVENT_RESOURCE_REMOVE, content.delete
  */
@@ -49,7 +49,6 @@ public class MigrationInProgressObserver implements Observer {
         if (eventObj instanceof Event) {
             Event e = (Event) eventObj;
             if (e.getEvent().equals(ContentHostingService.EVENT_RESOURCE_ADD) ||
-                e.getEvent().equals(ContentHostingService.EVENT_RESOURCE_READ) ||
                 e.getEvent().equals(ContentHostingService.EVENT_RESOURCE_WRITE) ||
                 e.getEvent().equals(ContentHostingService.EVENT_RESOURCE_REMOVE)) {
                 try {
