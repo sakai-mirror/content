@@ -18,22 +18,23 @@ public class MigrationTableSqlReader implements SqlReader {
      * @see org.sakaiproject.db.api.SqlReader#readSqlResultRecord(java.sql.ResultSet)
      */
     public Object readSqlResultRecord(ResultSet result) {
-        List<ThingToMigrate> things = new ArrayList<ThingToMigrate>();
+        //List<ThingToMigrate> things = new ArrayList<ThingToMigrate>();
         
         try {
-            while(result.next()) {
+            //while(result.next()) {
                 ThingToMigrate thing = new ThingToMigrate();
                 thing.contentId = result.getString("CONTENT_ID");
                 thing.status = result.getInt("STATUS");
                 //TODO TODO TODO The time added
                 thing.eventType = result.getString("EVENT_TYPE");
-                things.add(thing);
-            }
+                return thing;
+          //      things.add(thing);
+           // }
         } catch (SQLException e) {
             log.error("Error getting the next set of things to migrate from CHS to JCR", e);
         }
-        
-        return things;
+        return null;
+       // return things;
     }
 
 }
