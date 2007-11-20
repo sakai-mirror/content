@@ -3,7 +3,9 @@ package org.sakaiproject.content.impl.jcr.migration;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import javax.jcr.LoginException;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.logging.Log;
@@ -23,9 +25,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
     private JCRService jcrService;
     private JCRStorageUser jcrStorageUser;
     private ContentHostingService oldCHSService;
-
-
-    public static final String jcr_content_prefix = "/sakai/content";
 
     public String rstripSlash(String theString) {
         if (theString.endsWith("/")) {
@@ -61,7 +60,7 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
             collectionIDwithNoSlash = rstripSlash(collectionIDwithNoSlash);
 
             int lastSlashIndex = collectionIDwithNoSlash.lastIndexOf("/");
-            String parentFolderPath = jcr_content_prefix + collection.getId().substring(0,lastSlashIndex);
+            String parentFolderPath = MigrationConstants.jcr_content_prefix + collection.getId().substring(0,lastSlashIndex);
 
             String collectionName = collectionIDwithNoSlash.substring(lastSlashIndex+1,collectionIDwithNoSlash.length());
 
@@ -107,9 +106,9 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
             lastModCalendar.setTimeInMillis(resourceLastMod);
 
             ContentCollection  parent = resource.getContainingCollection();
-            String  resourceNodePath = jcr_content_prefix + resource.getId();
+            String  resourceNodePath = MigrationConstants.jcr_content_prefix + resource.getId();
 
-            String  parentNodePath = jcr_content_prefix + parent.getId();
+            String  parentNodePath = MigrationConstants.jcr_content_prefix + parent.getId();
             Node  parentNode = (Node) jcrSession.getItem(rstripSlash(parentNodePath));
 
             int lastSlashIndex = resource.getId().lastIndexOf("/");
@@ -144,6 +143,22 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
 
     public void setOldCHSService(ContentHostingService oldCHSService) {
         this.oldCHSService = oldCHSService;
+    }
+
+    public boolean deleteItem(String abspath) {
+        String actualPath = MigrationConstants.jcr_content_prefix + abspath;
+        if (abspath.endsWith("/")) {
+            actualPath = actualPath.substring(0,actualPath.length()-1);
+        }
+        try {
+            Session session = jcrService.getSession();
+            Node node = (Node) session.getItem(actualPath);
+            node.remove();
+            session.save();
+        } catch (Exception e) {
+            log.error("Problem Deleting item during CHS to JCR Migration", e);
+        }
+        return false;
     }
 
 }

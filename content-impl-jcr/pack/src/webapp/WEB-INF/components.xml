@@ -4,8 +4,9 @@
 <beans>
 
  
-  <import resource="components-jcr.xml" />
+  <!-- <import resource="components-jcr.xml" /> -->
 
+	
 
 <!-- 
 	<bean id="org.sakaiproject.content.api.ContentHostingService"
@@ -27,8 +28,8 @@
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlMySql"     class="org.sakaiproject.content.impl.ContentServiceSqlMySql"   singleton="true"/>
     <bean id="org.sakaiproject.content.impl.ContentServiceSqlOracle"    class="org.sakaiproject.content.impl.ContentServiceSqlOracle"  singleton="true"/>
     
-    <!-- <bean id="org.sakaiproject.content.api.ContentHostingService" -->
-    <bean id="org.sakaiproject.content.api.ContentHostingService.dbservice"
+    <!-- <bean id="org.sakaiproject.content.api.ContentHostingService.dbservice" -->
+    <bean id="org.sakaiproject.content.api.ContentHostingService"
 			class="org.sakaiproject.content.impl.DbContentService"
             init-method="init" destroy-method="destroy" singleton="true">
 
@@ -127,6 +128,23 @@
         <property name="sqlService"> <ref bean="org.sakaiproject.db.api.SqlService"/> </property>
         <property name="autoDdl">    <value>${auto.ddl}</value>                       </property>
 	</bean>
+	
+	<!-- 
+	<bean id="ContentHostingTargetSource" init-method="init" destroy-method="destroy"
+	   class="org.sakaiproject.content.multiplex.ContentHostingTargetSource">
+	   <property name="targetBeanName" value="org.sakaiproject.content.api.ContentHostingService.dbservice" />
+	   <property name="targetClass" value="org.sakaiproject.content.impl.BaseContentService" />
+	</bean>
+
+	<bean id="org.sakaiproject.content.api.ContentHostingService"
+	  class="org.springframework.aop.framework.ProxyFactoryBean" >
+	  <property name="proxyInterfaces">
+	    <value>org.sakaiproject.content.api.ContentHostingService</value>
+	  </property>
+      <property name="targetName" value="ContentHostingTargetSource" />
+      <property name="proxyTargetClass" value="true" />
+	</bean>
+	-->
 	
 	<bean id="org.sakaiproject.content.impl.DropboxContextObserver"
 			class="org.sakaiproject.content.impl.DropboxContextObserver"

@@ -28,6 +28,8 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
     protected final String CURRENT_USER_MARKER = "originalTestUser";
     protected final String ADMIN_USER = "admin";
     
+    private static final String ORIGINAL_MIGRATION_EVENT = "ORIGINAL_MIGRATION";
+    
     /*
      * Property to allow you to stop and start the system from migrating things in the background.
      */
@@ -43,8 +45,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
     public void destroy() {
         log.info("init()");
     }
-
-    public static final String jcr_content_prefix = "/sakai/content";
     
     private void markContentItemFinished(String collectionId) {
         sqlService.dbWrite(MigrationSqlQueries.finish_content_item, collectionId);
@@ -77,13 +77,47 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator {
         this.isCurrentlyMigrating = false;
     }
     
+    private void migrateOneItem(ThingToMigrate item) {
+        // ContentResources in the Original CHS always end with '/'
+        if (item.contentId.endsWith("/")) {
+            // This is a ContentCollection
+            if (item.eventType.equals(ORIGINAL_MIGRATION_EVENT)) {
+                contentToJCRCopier.copyCollectionFromCHStoJCR(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_ADD)) {
+                contentToJCRCopier.copyCollectionFromCHStoJCR(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_REMOVE)) {
+                contentToJCRCopier.deleteItem(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_WRITE)) {
+                contentToJCRCopier.copyCollectionFromCHStoJCR(item.contentId);
+            }
+        }
+        else {
+            // This is a ContentResource
+            if (item.eventType.equals(ORIGINAL_MIGRATION_EVENT)) {
+                contentToJCRCopier.copyResourceFromCHStoJCR(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_ADD)) {
+                contentToJCRCopier.copyResourceFromCHStoJCR(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_REMOVE)) {
+                contentToJCRCopier.deleteItem(item.contentId);
+            }
+            else if (item.eventType.equals(ContentHostingService.EVENT_RESOURCE_WRITE)) {
+                contentToJCRCopier.copyResourceFromCHStoJCR(item.contentId);
+            }
+        }
+    }
+    
     private void migrateSomeItems(int numberToMigrate) {
         List<ThingToMigrate> thingsToMigrate = sqlService.dbRead(
                 MigrationSqlQueries.select_unfinished_items, 
                 new Object[] {numberToMigrate}, new MigrationTableSqlReader());
         
         for (ThingToMigrate thing: thingsToMigrate) {
-            log.info("Going to migrate: " + thing.contentId);
+            migrateOneItem(thing);
         }
     }
     

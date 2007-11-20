@@ -19,13 +19,22 @@ public interface ContentToJCRCopier {
      * Copies the ContentCollection folder to JCR for the content collection at 
      * absolute path 'abspath'. This does not copy the contents of the folder, just
      * creates the empty nt:folder and copies all the Sakai metadata.
+     * 
+     * Needs to handle updating a collection if it already exists.
      */
     public boolean copyCollectionFromCHStoJCR(String abspath);
         
     /*
      * This will copy the resource from the Legacy ContentHosting implementation 
-     *to the JCR Repository
+     * to the JCR Repository
+     * 
+     * Needs to handle replacing a resource (say from a content.write event)
      */
     public boolean copyResourceFromCHStoJCR(String abspath);
             
+    /*
+     * Attempts to delete an item. If it ends with a slash it is assumed to be
+     * a ContentCollections (generated from a content.remove event)
+     */
+    public boolean deleteItem(String abspath);
 }
