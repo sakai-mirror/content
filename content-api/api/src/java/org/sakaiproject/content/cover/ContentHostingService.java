@@ -21,7 +21,11 @@
 
 package org.sakaiproject.content.cover;
 
+import java.util.Collection;
+
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.exception.TypeException;
 
 /**
@@ -816,7 +820,7 @@ public class ContentHostingService
 
 		return service.findResources(type, primaryMimeType, subMimeType);
 	}
-
+  
 	public static java.util.Map getCollectionMap()
 	{
 		org.sakaiproject.content.api.ContentHostingService service = getInstance();
@@ -1038,4 +1042,55 @@ public class ContentHostingService
 
       return service.getQuota(collection);
 	}
+
+    /**
+     * Access flag indicating whether ContentHostingHandlers are enabled in this content hosting service.
+     * @return true if ContentHostingHandlers are enabled, false otherwise.
+     */
+    public static boolean isContentHostingHandlersEnabled()
+    {
+    	org.sakaiproject.content.api.ContentHostingService service = getInstance();
+		if (service == null) return false;
+
+		return service.isContentHostingHandlersEnabled();
+    }
+
+    /**
+     * Access the name of the individual dropbox that contains a particular entity, or null if the entity is not inside an individual dropbox.
+     * @param entityId The id for an entity
+     * @return
+     */
+	public static String getIndividualDropboxId(String entityId) 
+	{
+    	org.sakaiproject.content.api.ContentHostingService service = getInstance();
+		if (service == null) return null;
+
+		return service.getIndividualDropboxId(entityId);
+	}
+	
+	/**
+	 * Retrieve a collection of ContentResource objects pf a particular resource-type.  The collection will 
+	 * contain no more than the number of items specified as the pageSize, where pageSize is a non-negative 
+	 * number less than or equal to 1028. The resources will be selected in ascending order by resource-id.
+	 * If the resources of the specified resource-type in the ContentHostingService in ascending order by 
+	 * resource-id are indexed from 0 to M and this method is called with parameters of N for pageSize and 
+	 * I for page, the resources returned will be those with indexes (I*N) through ((I+1)*N - 1).  For example,
+	 * if pageSize is 1028 and page is 0, the resources would be those with indexes of 0 to 1027.  
+	 * This method finds the resources the current user has access to from a "page" of all resources
+	 * of the specified type. If that page contains no resources the current user has access to, the 
+	 * method returns an empty collection.  If the page does not exist (i.e. there are fewer than 
+	 * ((page+1)*page_size) resources of the specified type), the method returns null.    
+	 * @param resourceType
+	 * @param pageSize
+	 * @param page
+	 * @return
+	 */
+	public static Collection<ContentResource> getResourcesOfType(String resourceType, int pageSize, int page)
+	{
+    	org.sakaiproject.content.api.ContentHostingService service = getInstance();
+		if (service == null) return null;
+		
+		return service.getResourcesOfType(resourceType, pageSize, page);
+	}
+
 }

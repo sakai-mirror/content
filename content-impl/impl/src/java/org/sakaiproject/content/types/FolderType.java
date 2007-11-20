@@ -757,11 +757,10 @@ public class FolderType extends BaseResourceType implements ExpandableResourceTy
     				}
     			}
     		}
-// remove member count as condition for deletion - SAK-11790        	
-//        	if(ok && entity instanceof ContentCollection)
-//        	{
-//        		ok = (((ContentCollection) entity).getMemberCount() == 0);
-//        	}
+        	if(ok && entity instanceof ContentCollection)
+        	{
+        		ok = (((ContentCollection) entity).getMemberCount() == 0);
+        	}
 	        return ok;
         }
         
