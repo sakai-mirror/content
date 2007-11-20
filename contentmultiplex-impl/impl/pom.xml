@@ -4,7 +4,7 @@
   <parent>
     <artifactId>content-base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>M2</version>
+    <version>SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <name>sakai-contentmulti-impl</name>
@@ -20,26 +20,22 @@
     <deploy.target/>
   </properties>
   <dependencies>
-  
-    <dependency>
+    <dependency>      
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-content-api</artifactId>
       <version>${sakai.version}</version>
       <scope>provided</scope>
     </dependency>
-    
-    <dependency>    
+    <dependency>
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-entity-api</artifactId>
       <version>${sakai.version}</version>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>  
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-util-api</artifactId>
       <version>${sakai.version}</version>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -47,6 +43,11 @@
       <artifactId>${sakai.spring.artifactId}</artifactId>
       <version>${sakai.spring.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>      
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
     </dependency>
 
   </dependencies>

@@ -1554,18 +1554,19 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			
 			isAllowed = ref != null && SecurityService.unlock(lock, ref);
-		}
-		
-		if(isAllowed && lock != null && (lock.startsWith("content.") || lock.startsWith("dropbox.")) && m_availabilityChecksEnabled)
-		{
-			try 
+			
+			if(isAllowed && lock != null && (lock.startsWith("content.") || lock.startsWith("dropbox.")) && m_availabilityChecksEnabled)
 			{
-				isAllowed = availabilityCheck(id);
-			} 
-			catch (IdUnusedException e) 
-			{
-				// ignore because we would have caught this earlier.
-			}
+				try 
+				{
+					isAllowed = availabilityCheck(id);
+				} 
+				catch (IdUnusedException e) 
+				{
+					// ignore because we would have caught this earlier.
+					M_log.debug("BaseContentService.unlockCheck(" + lock + "," + id + ") IdUnusedException " + e);
+				}
+			}	
 		}
 		
 		return isAllowed;
@@ -2465,7 +2466,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 
 		// check security 
-      if ( ! allowRemoveCollection(edit.getId()) )
+		if ( ! allowRemoveCollection(edit.getId()) )
 		   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
                                        AUTH_RESOURCE_REMOVE_ANY, edit.getReference());
 
@@ -2479,7 +2480,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
       ThreadLocalManager.set("members@" + edit.getId(), null);
       ThreadLocalManager.set("getResources@" + edit.getId(), null);
 
-		// check for members
+      // check for members
 		List members = edit.getMemberResources();
 		if (!members.isEmpty()) throw new InconsistentException(edit.getId());
 
@@ -2501,7 +2502,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 		catch (AuthzPermissionException e)
 		{
-			M_log.warn("removeCollection: removing realm for : " + edit.getReference() + " : " + e);
+			M_log.debug("removeCollection: removing realm for : " + edit.getReference() + " : " + e);
 		}
 		catch (GroupNotDefinedException ignore)
 		{
@@ -2560,7 +2561,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
       ThreadLocalManager.set("members@" + edit.getId(), null);
       ThreadLocalManager.set("getResources@" + edit.getId(), null);
 
-		// clear of all members (recursive)
+      // clear of all members (recursive)
 		// Note: may fail if something's in use or not permitted. May result in a partial clear.
 		try
 		{
@@ -6125,6 +6126,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 						res.setContentType(contentType);
 						res.addHeader("Content-Disposition", disposition);
+						res.addHeader("Accept-Ranges", "none");
 						res.setContentLength(len);
 						
 						// set the buffer of the response to match what we are reading from the request
