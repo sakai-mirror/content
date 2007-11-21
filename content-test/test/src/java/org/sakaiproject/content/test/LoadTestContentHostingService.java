@@ -26,12 +26,9 @@ package org.sakaiproject.content.test;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,7 +41,6 @@ import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
-import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.testrunner.utils.SakaiTestCase;
@@ -242,7 +238,7 @@ public class LoadTestContentHostingService extends SakaiTestCase {
       long total = 0;
 
       log.info("Test reading generated content and existing content...");
-
+      startEmulatedRequest(SUPER_USER);
       List<String> contentIds = new ArrayList<String>();
       start = System.currentTimeMillis();
       try {
@@ -255,6 +251,7 @@ public class LoadTestContentHostingService extends SakaiTestCase {
       }
       total = System.currentTimeMillis() - start;
       log.info("Completed load of "+contentIds.size()+" content items in "+total+" ms");
+      endEmulatedRequest();
    }
 
    /**
