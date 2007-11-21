@@ -26,9 +26,7 @@ package org.sakaiproject.content.test;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -37,7 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -47,13 +44,11 @@ import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
 import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.testrunner.utils.SpringTestCase;
-import org.sakaiproject.testrunner.utils.annotations.Autowired;
+import org.sakaiproject.testrunner.utils.SakaiTestCase;
 import org.sakaiproject.testrunner.utils.annotations.Resource;
-import org.sakaiproject.tool.api.Session;
-import org.sakaiproject.tool.api.SessionManager;
 
 
 /**
@@ -88,7 +83,7 @@ import org.sakaiproject.tool.api.SessionManager;
  * 
  * @author Aaron Zeckoski (aaron@caret.cam.ac.uk)
  */
-public class LoadTestContentHostingService extends SpringTestCase {
+public class LoadTestContentHostingService extends SakaiTestCase {
 
    private static Log log = LogFactory.getLog(LoadTestContentHostingService.class);
 
@@ -141,25 +136,11 @@ public class LoadTestContentHostingService extends SpringTestCase {
    protected long totalCreatedSize = 0;
    protected long totalCreatedItems = 0;
 
-   private Map<String, Date> checkpointMap = new ConcurrentHashMap<String, Date>();
-
 
    private ContentHostingService contentHostingService;
    @Resource(name="org.sakaiproject.content.api.ContentHostingService")
    public void setContentHostingService(ContentHostingService contentHostingService) {
       this.contentHostingService = contentHostingService;
-   }
-
-   private SessionManager sessionManager;
-   @Resource(name="org.sakaiproject.tool.api.SessionManager")
-   public void setSessionManager(SessionManager sessionManager) {
-      this.sessionManager = sessionManager;
-   }
-
-   private AuthzGroupService authzGroupService;
-   @Autowired
-   public void setAuthzGroupService(AuthzGroupService authzGroupService) {
-      this.authzGroupService = authzGroupService;
    }
 
 
@@ -186,31 +167,13 @@ public class LoadTestContentHostingService extends SpringTestCase {
    @Override
    protected void setUp() throws Exception {
       super.setUp();
-
-      // create test content in case there is not enough to test with
-      // switch to the admin to run this
-      setAdminUser();
-   }
-
-   @Override
-   protected void tearDown() throws Exception {
-      super.tearDown();
-
-      // switch user back (if set)
-      Session currentSession = sessionManager.getCurrentSession();
-      String currentUserId = null;
-      if (currentSession != null) {
-         currentUserId = (String) currentSession.getAttribute(CURRENT_USER_MARKER);
-      }
-      currentSession.setUserId(currentUserId);
-      sessionManager.setCurrentSession(currentSession);
-      authzGroupService.refreshUser(currentUserId);
+      // switch to the admin to run the tests
+      setSuperUser();
    }
 
 
    public void testCanGetSakaiBeans() {
       assertNotNull(contentHostingService);
-      assertNotNull(sessionManager);
 
       // also check the test arrays are ok
       assertEquals(COLLECTION_NAMES.length, COLLECTION_SIZES.length);
@@ -318,7 +281,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
    
    /**
     * Simulating load against the content service (multi threaded)
-    * TODO - currently disabled because CHS cannot handle concurrent threads
     */
    public void testSimulatedUsageMultiThread() {
       final int threads = 10;
@@ -342,7 +304,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
          final int threadnum = t+1;
          Thread thread = new Thread( new Runnable() {
             public void run() {
-               setAdminUser();   
+               setSuperUser();   
                runTestThread(threadnum, threads, contentIds, threadIterations, threadMaxInserts);
             }
          }, threadnum+"");
@@ -388,10 +350,12 @@ public class LoadTestContentHostingService extends SpringTestCase {
       int deleteCount = 0;
       Random rGen = new Random();
       String keyPrefix = "threadResource-" + threadnum + "-";
-      checkpointMap.put(Thread.currentThread().getName(), new Date());
+      monitoringThread();
       long start = System.currentTimeMillis();
       try {
          for (int i = 0; i < iterations; i++) {
+            startEmulatedRequest(SUPER_USER);
+
             int random = rGen.nextInt(100);
             if ( (i < 100 || random >= 92) && (insertCount < maxInserts) ) {
                int num = insertCount++;
@@ -406,8 +370,8 @@ public class LoadTestContentHostingService extends SpringTestCase {
                }
             }
             if (i > 2) {
-               // do 10 reads from content hosting
-               for (int j = 0; j < 10; j++) {
+               // do 20 reads from content hosting
+               for (int j = 0; j < 20; j++) {
                   readCount++;
                   String rid = contentIds.get(rGen.nextInt(contentIds.size()));
                   try {
@@ -420,15 +384,13 @@ public class LoadTestContentHostingService extends SpringTestCase {
                   }
                }
             }
-            if ( random < 3 && (deleteCount < (maxInserts/4)) ) {
+            if ( random < 5 && (deleteCount < (maxInserts/4)) ) {
                // try to remove an item 5 times
                for (int j = 0; j < 5; j++) {
                   int rIndex = rGen.nextInt(contentIds.size());
                   String rid = contentIds.get(rIndex);
                   try {
                      String collectionId = contentHostingService.getContainingCollectionId(rid);
-//                     ContentResource resource = contentHostingService.getResource(rid);
-//                     String collectionId = resource.getContainingCollection().getId();
                      if (collectionNames.contains(collectionId)) {
                         contentIds.remove(rIndex);
                         deleteCount++;
@@ -442,16 +404,18 @@ public class LoadTestContentHostingService extends SpringTestCase {
                   }                  
                }
             }
-            if (i > 0 && i % (iterations/50) == 0) {
-               checkpointMap.put(Thread.currentThread().getName(), new Date());
+            if (i > 0 && i % (iterations/100) == 0) {
+               monitoringThread();
                //log.info("thread: " + threadnum + " " + (i*100/iterations) + "% complete");
             }
+
+            endEmulatedRequest();
          }
       } catch (Exception e) {
          log.error("Thread "+threadnum+": failed to complete because of exception", e);
       } finally {
          long total = System.currentTimeMillis() - start;
-         checkpointMap.remove(Thread.currentThread().getName());
+         endMonitoringThread();
          if (threadnum == 1) {
             log.info("Thread "+threadnum+": completed "+iterations+" iterations with "+insertCount+" inserts " +
                   "and "+deleteCount+" removes and "+readCount+" reads ("+readMissCount+" misses)" +
@@ -471,6 +435,7 @@ public class LoadTestContentHostingService extends SpringTestCase {
       int removedItems = 0;
       try {
          removedItems = contentHostingService.getCollectionSize(collectionId);
+         Thread.sleep(100); // this seems to be needed to keep an InUseException from happening
          contentHostingService.removeCollection(collectionId);
       } catch (Exception e) {
          throw new RuntimeException("Failure removing collection: " + collectionId, e);
@@ -595,82 +560,6 @@ public class LoadTestContentHostingService extends SpringTestCase {
 
    private String makeTestRootCollectionId() {
       return ROOT + "LoadTestFolder" + "/";
-   }
-
-   /**
-    * Change the current user for a thread to the admin user
-    */
-   private void setAdminUser() {
-      Session currentSession = sessionManager.getCurrentSession();
-      if (currentSession != null) {
-         currentSession.setAttribute(CURRENT_USER_MARKER, currentSession.getUserId());
-         currentSession.setUserId(ADMIN_USER);
-         currentSession.setActive();
-         sessionManager.setCurrentSession(currentSession);
-         authzGroupService.refreshUser(ADMIN_USER);
-      } else {
-         throw new RuntimeException("no CurrentSession, cannot set to admin user");
-      }
-   }
-
-   /**
-    * @param loopCount total number of operations
-    * @param totalMilliSecs total number of milliseconds
-    * @return the number of microsecs per operation
-    */
-   private String calcUSecsPerOp(long loopCount, long totalMilliSecs) {
-      return df.format(((double)(totalMilliSecs * 1000))/((double)loopCount));
-   }
-
-   /**
-    * Monitor the other test threads and block this test from completing until all test threads complete
-    */
-   private void startThreadMonitor() {
-      // monitor the other running threads
-      Map<String, Date> m = new HashMap<String, Date>();
-      log.debug("Starting up monitoring of test threads...");
-      try {
-         Thread.sleep(3 * 1000);
-      } catch (InterruptedException e) {
-         e.printStackTrace();
-      }
-
-      while (true) {
-         if (checkpointMap.size() == 0) {
-            log.debug("All test threads complete... monitoring exiting");
-            break;
-         }
-         int deadlocks = 0;
-         List<String> stalledThreads = new ArrayList<String>();
-         for (String key : checkpointMap.keySet()) {
-            if (m.containsKey(key)) {
-               if (m.get(key).equals(checkpointMap.get(key))) {
-                  double stallTime = (new Date().getTime() - checkpointMap.get(key).getTime()) / 1000.0d;
-                  stalledThreads.add(df.format(stallTime) + ":" + key);
-                  deadlocks++;
-               }
-            }
-            m.put(key, checkpointMap.get(key));
-         }
-
-         if (! stalledThreads.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Deadlocked/slow threads (of "+checkpointMap.size()+"): ");
-            sb.append("total="+stalledThreads.size()+":: ");
-            Collections.sort(stalledThreads);
-            for (int j = stalledThreads.size()-1; j >= 0; j--) {
-               String string = stalledThreads.get(j);
-               sb.append(string.substring(string.indexOf(':')+1) + "(" + string.substring(0, string.indexOf(':')) + "s):");
-            }
-            log.info(sb.toString());
-         }
-
-         try {
-            Thread.sleep(5 * 1000);
-         } catch (InterruptedException e) {
-            e.printStackTrace();
-         }
-      }
    }
 
 }
