@@ -153,15 +153,14 @@ public class JCRStorage implements Storage
 					log.error("Didnt Find with class.getResourceAsStream "+nodeTypeResource);
 					in = this.getClass().getClassLoader().getResourceAsStream(nodeTypeResource);
 				} else {
-					log.error("GOT IT!");
+					log.debug("Loaded resource: " + nodeTypeResource);
 				}
 				
 				jcrRegistrationService.registerNodetypes(in);
 				in.close();
 			}
-			catch (Exception e)
-			{
-				log.error("Failed to read node type definitions from "+nodeTypeResource);
+			catch (Exception e) {
+				log.error("Failed to read node type definitions from "+nodeTypeResource, e);
 			}
 		}
 

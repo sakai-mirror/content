@@ -65,15 +65,8 @@ public class JCRContentService extends DbContentService
 
 	private UserDirectoryService userDirectoryService;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.sakaiproject.content.impl.DbContentService#init()
-	 */
 	@Override
-	public void init()
-	{
-
+	public void init() {
 		m_autoDdl = false;
 		m_convertToFile = false;
 		m_sqlService = null;

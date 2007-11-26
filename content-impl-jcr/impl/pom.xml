@@ -123,12 +123,6 @@
 
   </dependencies>
   <build>
-    
-    
-    
-    
-    
-    
     <resources>
       <resource>
         <directory>${basedir}/src/sql</directory>
