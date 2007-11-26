@@ -105,9 +105,6 @@ public class BaseJCRStorage
 
 	private static final String JCR_SAKAI_UUID = null;
 
-	/** Our logger. */
-	private static Log M_log = LogFactory.getLog(BaseJCRStorage.class);
-
 	/** The xml tag name for the element holding each actual resource entry. */
 	protected String m_resourceEntryTagName = null;
 
@@ -162,21 +159,20 @@ public class BaseJCRStorage
 			boolean reset = false;
 			try
 			{
-				log.info("--------------------------- Start Repository Populate");
+			   if (log.isDebugEnabled()) log.debug("--------------------------- Start Repository Populate");
 				currentSession = jcrService.setSession(null);
-				log.info("Got Current Session as   " + currentSession);
+				if (log.isDebugEnabled()) log.debug("Got Current Session as   " + currentSession);
 
 				reset = true;
 
 				Session s = jcrService.login();
-				log.info("Prepopulating Nodes in repo");
+				if (log.isDebugEnabled()) log.debug("Prepopulating Nodes in repo");
 				Node n = createNode("/", JCRConstants.NT_FOLDER);
 				n.save();
 				for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 				{
-
 					String[] ndef = i.next().split(";");
-					log.info("       Creating " + ndef[0] + " as a " + ndef[1]);
+					if (log.isDebugEnabled()) log.debug("Creating " + ndef[0] + " as a " + ndef[1]);
 					n = createNode(ndef[0], ndef[1]);
 					if (JCRConstants.NT_FOLDER.equals(ndef[1]))
 					{
@@ -196,24 +192,24 @@ public class BaseJCRStorage
 					// n.setProperty(DAVConstants.DAV_CREATIONDATE, davDate);
 					n.save();
 				}
-				log.info("Session is " + s);
+				if (log.isDebugEnabled()) log.debug("JCR Session is " + s);
 				// TODO: clean up s.exportDocumentView("/sakai", System.out,
 				// true,
 				// false);
 				s.save();
 				s.logout();
-				log.info("Creating Root Node: SUCCESS");
+				if (log.isDebugEnabled()) log.debug("Creating Root Node: SUCCESS");
 
 			}
 			catch (RepositoryException e)
 			{
-				M_log.error("Unable to create root node cause:" + e.getMessage());
+				log.error("Unable to create root node cause:" + e.getMessage());
 				throw new RuntimeException("Unable to create root node cause:"
 						+ e.getMessage(), e);
 			}
 			catch (TypeException e)
 			{
-				M_log.error("Unable to create root node cause:" + e.getMessage());
+				log.error("Unable to create root node cause:" + e.getMessage());
 				throw new RuntimeException("Unable to create root node cause:"
 						+ e.getMessage(), e);
 			}
@@ -228,7 +224,7 @@ public class BaseJCRStorage
 						for (Iterator<String> i = m_user.startupNodes(); i.hasNext();)
 						{
 							String[] ndef = i.next().split(";");
-							log.info("       Checking " + ndef[0] + " as a " + ndef[1]);
+							if (log.isDebugEnabled()) log.debug("Checking " + ndef[0] + " as a " + ndef[1]);
 							Node n = getNodeById(ndef[0]);
 							if (n == null)
 							{
@@ -237,12 +233,11 @@ public class BaseJCRStorage
 							}
 							else
 							{
-								log.info("     Got " + n);
+							   if (log.isDebugEnabled()) log.debug("Got " + n);
 							}
 						}
-						log.info("Repo Is Empty " + isEmpty());
-						log
-								.info("--------------------------- Repository Populate Complete OK");
+						if (log.isDebugEnabled()) log.debug("JCR Repo Empty: " + isEmpty());
+						if (log.isDebugEnabled()) log.debug("--------------------------- Repository Populate Complete OK");
 					}
 					catch (Exception ex)
 					{
@@ -282,9 +277,8 @@ public class BaseJCRStorage
 			Entity e = m_user.newResource(n);
 			return e;
 		}
-		catch (Exception e)
-		{
-			M_log.warn("readResource(): ", e);
+		catch (Exception e) {
+			log.warn("readResource(): ", e);
 			return null;
 		}
 	}
@@ -309,9 +303,8 @@ public class BaseJCRStorage
 					return true;
 				}
 			}
-			catch (RepositoryException e)
-			{
-				M_log.error("Failed ", e);
+			catch (RepositoryException e)	{
+				log.error("Failed ", e);
 			}
 		}
 		return false;
@@ -332,8 +325,7 @@ public class BaseJCRStorage
 			{
 				return (Node) i;
 			}
-			else
-			{
+			else {
 				log.info("Item is not a node " + i);
 			}
 		}
@@ -342,9 +334,7 @@ public class BaseJCRStorage
 		}
 		catch (RepositoryException re)
 		{
-			M_log.debug("Node Not Found " + id, re);
-			M_log.warn("Node Not Found " + id + " cause:" + re.getMessage());
-
+			log.warn("Node Not Found " + id + " cause:" + re.getMessage());
 		}
 		return null;
 	}
@@ -373,7 +363,7 @@ public class BaseJCRStorage
 		try
 		{
 			boolean hasnodes = n.hasNodes();
-			log.info("Root has nodes " + hasnodes);
+			if (log.isDebugEnabled()) log.debug("Root has nodes: " + hasnodes);
 			return !hasnodes;
 		}
 		catch (RepositoryException e)
@@ -385,7 +375,6 @@ public class BaseJCRStorage
 
 	public List getAllResources()
 	{
-
 		throw new UnsupportedOperationException("Not Available");
 	}
 
@@ -526,12 +515,12 @@ public class BaseJCRStorage
 			QueryResult qr = q.execute();
 
 			NodeIterator ni = qr.getNodes();
-			log.info(" Executing Query [" + qs + "] gave [" + ni.getSize() + "] results");
+			if (log.isDebugEnabled()) log.debug(" Executing Query [" + qs + "] gave [" + ni.getSize() + "] results");
 			return ni;
 		}
 		catch (RepositoryException e)
 		{
-			M_log.error("Failed to get List using query [" + qs + "]", e);
+			log.error("Failed to get List using query [" + qs + "]", e);
 			return null;
 		}
 
@@ -585,7 +574,7 @@ public class BaseJCRStorage
 		}
 		catch (TypeException e)
 		{
-			M_log.error("Incorrect Node Type", e);
+			log.error("Incorrect Node Type", e);
 		}
 		return null;
 	}
@@ -602,8 +591,7 @@ public class BaseJCRStorage
 	/** update XML attribute on properties and remove locks */
 	public void commitDeleteResource(Edit edit, String uuid)
 	{
-		log
-				.warn("commitDeleteResource is not currently Implemented: No Possible since the deleted UUID cannot be shared ");
+	   throw new UnsupportedOperationException("commitDeleteResource is not currently Implemented: No Possible since the deleted UUID cannot be shared ");
 	}
 
 	/**
@@ -631,11 +619,11 @@ public class BaseJCRStorage
 		}
 		catch (UnsupportedRepositoryOperationException e)
 		{
-			M_log.warn("Operation Not Supported ", e);
+			log.warn("Operation Not Supported ", e);
 		}
 		catch (RepositoryException e)
 		{
-			M_log.warn("Lock Failed ", e);
+			log.warn("Lock Failed ", e);
 			return null;
 		}
 		return m_user.newResourceEdit(n);
@@ -652,7 +640,7 @@ public class BaseJCRStorage
 		Node n = getNodeById(edit.getId());
 		if (n == null)
 		{
-			M_log.error("Cant Commit since node cant be found for id " + edit.getId());
+			log.error("Cant Commit since node cant be found for id " + edit.getId());
 		}
 		else
 		{
@@ -667,7 +655,7 @@ public class BaseJCRStorage
 			}
 			catch (RepositoryException e)
 			{
-				M_log.error("Failed to save resource ", e);
+				log.error("Failed to save resource ", e);
 			}
 		}
 	}
@@ -689,7 +677,7 @@ public class BaseJCRStorage
 			}
 			catch (RepositoryException e)
 			{
-				M_log.warn("Failed to cancel Edit ", e);
+				log.warn("Failed to cancel Edit ", e);
 			}
 			try
 			{
@@ -700,7 +688,7 @@ public class BaseJCRStorage
 			}
 			catch (RepositoryException e)
 			{
-				M_log.warn("Failed to un Lock ", e);
+				log.warn("Failed to un Lock ", e);
 			}
 		}
 	}
@@ -720,7 +708,7 @@ public class BaseJCRStorage
 		}
 		catch (RepositoryException e)
 		{
-			M_log.debug("Failed to cancel Edit ", e);
+			log.debug("Failed to cancel Edit ", e);
 		}
 		try
 		{
@@ -728,7 +716,7 @@ public class BaseJCRStorage
 		}
 		catch (RepositoryException e)
 		{
-			M_log.debug("Failed to un Lock. on Some JCR Impls this is Ok ", e);
+			log.debug("Failed to un Lock. on Some JCR Impls this is Ok ", e);
 		}
 	}
 
@@ -786,7 +774,7 @@ public class BaseJCRStorage
 					+ " elements ");
 			for (String pathel : pathElements)
 			{
-				log.debug("       Path Element is [" + pathel + "]");
+				log.debug("Path Element is [" + pathel + "]");
 			}
 
 			Node currentNode = n;
@@ -794,7 +782,7 @@ public class BaseJCRStorage
 			{
 				try
 				{
-					log.debug("Getting " + pathElements[i] + " under " + currentNode);
+				   if (log.isDebugEnabled()) log.debug("Getting " + pathElements[i] + " under " + currentNode);
 					currentNode = currentNode.getNode(pathElements[i]);
 					if (!currentNode.isNodeType(JCRConstants.NT_FOLDER)
 							&& !currentNode.isNodeType(JCRConstants.NT_BASE))
@@ -855,8 +843,7 @@ public class BaseJCRStorage
 		}
 		catch (RepositoryException rex)
 		{
-			M_log.warn("Unspecified Repository Failiure ", rex);
-			M_log.error("Unspecified Repository Failiure " + rex.getMessage());
+			log.error("Unspecified Repository Failiure " + rex.getMessage());
 		}
 		return node;
 
@@ -872,7 +859,7 @@ public class BaseJCRStorage
 		if (pre > 0)
 		{
 			String parentPath = absPath.substring(0, pre);
-			log.info("Parent path is [" + parentPath + "]");
+			if (log.isDebugEnabled()) log.debug("Parent path is [" + parentPath + "]");
 			return parentPath;
 		}
 		return "/";
@@ -941,7 +928,7 @@ public class BaseJCRStorage
 	{
 		// JCR Types
 		// TODO: perhpase
-		M_log.debug("Doing populate Folder");
+		log.debug("Doing populate Folder");
 		if (jcrService.needsMixin(node, JCRConstants.MIX_LOCKABLE))
 		{
 			node.addMixin(JCRConstants.MIX_LOCKABLE);
@@ -1047,7 +1034,7 @@ public class BaseJCRStorage
 						c++;
 					}
 				}
-				log.info(" Collection " + collectionId + " has " + c + " members ");
+				if (log.isDebugEnabled()) log.debug(" Collection " + collectionId + " has " + c + " members ");
 				return c;
 			}
 		}
