@@ -328,6 +328,7 @@ public class JCRContentService extends DbContentService
 		for (ContentEntity ce : members ) {
 			if (ce instanceof ContentCollection) {
 				newCount += countCollectionMembers(ce.getId(), newCount);
+				newCount ++;
 			}
 			else {
 				newCount ++;
