@@ -118,7 +118,7 @@
             <!-- multiplexer allows swapping between legacy and JCR -->
             <module>contentmultiplex-impl/impl</module>
             <module>content-impl-providers/impl</module>
-            <module>content-impl-providers/pack</module>
+            <!-- <module>content-impl-providers/pack</module>  -->
             <module>content-tool/tool</module>
             <module>content-help</module>
          </modules>
