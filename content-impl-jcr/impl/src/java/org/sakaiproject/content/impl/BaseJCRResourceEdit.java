@@ -81,11 +81,6 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 		 m_active = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit#getContent()
-	 */
 	@Override
 	public byte[] getContent() throws ServerOverloadException
 	{
@@ -94,12 +89,8 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 			Node c = node.getNode(JCRConstants.JCR_CONTENT);
 			Property p = c.getProperty(JCRConstants.JCR_DATA);
 			long length = p.getLength();
-			if (length > 4096)
-			{
-				log
-						.error(
-								"Full content is being requested into memory this is bad! ... but we will do it anyway, memory used =  "
-										+ length, new Exception("Traceback"));
+			if (length > 4096) {
+				log.warn("Full content is being requested into memory this is bad! ... but we will do it anyway, memory used =  " + length, new Exception("Traceback"));
 			}
 			byte[] buffer = new byte[(int) length];
 			InputStream in = p.getStream();
@@ -107,15 +98,15 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 			in.close();
 			return buffer;
 		}
-		catch (RepositoryException e)
-		{
+		catch (RepositoryException e) {
 			log.error("Failed to get content stream ", e);
+         // this should probably throw a different exception -AZ
 			throw new ServerOverloadException("Failed to get content Stream from JCR: "
 					+ e.getMessage());
 		}
-		catch (IOException e)
-		{
+		catch (IOException e) {
 			log.error("Failed to get content stream ", e);
+         // this should probably throw a different exception -AZ
 			throw new ServerOverloadException("Failed to get content Stream from JCR "
 					+ e.getMessage());
 		}

@@ -795,29 +795,29 @@ public class BaseJCRStorage
 				}
 				catch (PathNotFoundException pnfe)
 				{
-					log.info("Not Found " + pnfe.getMessage() + " ");
+				   if (log.isDebugEnabled()) log.debug("Not Found " + pnfe.getMessage() + " ");
 					if (i < pathElements.length - 1
 							|| JCRConstants.NT_FOLDER.equals(type))
 					{
-						log.info("Adding Node " + pathElements[i] + " as " + type
+					   if (log.isDebugEnabled()) log.debug("Adding Node " + pathElements[i] + " as " + type
 								+ " to " + currentNode.getPath());
 						Node newNode = currentNode.addNode(pathElements[i],
 								JCRConstants.NT_FOLDER);
 						populateFolder(newNode);
 						currentNode.save();
 						currentNode = newNode;
-						log.info("Adding Node Complete");
+						if (log.isDebugEnabled()) log.debug("Adding Node Complete");
 					}
 					else
 					{
-						log.info("Adding Node " + pathElements[i] + " as " + type
+					   if (log.isDebugEnabled()) log.debug("Adding Node " + pathElements[i] + " as " + type
 								+ " to " + currentNode.getPath());
 						Node newNode = currentNode.addNode(pathElements[i],
 								JCRConstants.NT_FILE);
 						populateFile(newNode);
 						currentNode.save();
 						currentNode = newNode;
-						log.info("Adding Node Complete");
+						if (log.isDebugEnabled()) log.debug("Adding Node Complete");
 
 					}
 				}
@@ -883,7 +883,7 @@ public class BaseJCRStorage
 		}
 		catch (PathNotFoundException e)
 		{
-			log.warn("getNodeFromSession: Node Does Not Exist :" + id);
+		   if (log.isDebugEnabled()) log.debug("getNodeFromSession: Node Does Not Exist :" + id);
 			return null;
 		}
 		Node n = null;
