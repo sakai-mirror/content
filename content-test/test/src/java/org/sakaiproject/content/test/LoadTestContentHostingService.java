@@ -23,6 +23,8 @@
 
 package org.sakaiproject.content.test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,12 +39,16 @@ import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.InconsistentException;
+import org.sakaiproject.exception.OverQuotaException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.testrunner.utils.SakaiTestCase;
 import org.sakaiproject.testrunner.utils.annotations.Resource;
 
@@ -119,7 +125,7 @@ public class LoadTestContentHostingService extends SakaiTestCase {
          "collection_tiny",
       };
    // list version to make it easy to work with the names
-   protected final List<String> collectionNames = Arrays.asList(COLLECTION_NAMES);
+   protected List<String> collectionNames = null;
    protected final int[] COLLECTION_SIZES = {
          10,
          100,
@@ -163,6 +169,12 @@ public class LoadTestContentHostingService extends SakaiTestCase {
    @Override
    protected void setUp() throws Exception {
       super.setUp();
+
+      collectionNames = new ArrayList<String>();
+      for (int i = 0; i < COLLECTION_NAMES.length; i++) {
+         collectionNames.add(makeCollectionId(COLLECTION_NAMES[i]));
+      }
+
       // switch to the admin to run the tests
       setSuperUser();
    }
@@ -358,13 +370,9 @@ public class LoadTestContentHostingService extends SakaiTestCase {
                int num = insertCount++;
                String rid = keyPrefix + num;
                String collectionId = makeCollectionId(COLLECTION_NAMES[rGen.nextInt(COLLECTION_NAMES.length)]);
-               try {
-                  ContentResource resource = contentHostingService.addResource(rid, collectionId, 3, "text/plain", makeTestContent(), null, 0);
-                  assertNotNull(resource.getId());
-                  contentIds.add(resource.getId());
-               } catch (Exception e) {
-                  throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
-               }
+               ContentResource resource = createResource(collectionId, rid);
+               assertNotNull(resource.getId());
+               contentIds.add(resource.getId());
             }
             if (i > 2) {
                // do 20 reads from content hosting
@@ -479,24 +487,46 @@ public class LoadTestContentHostingService extends SakaiTestCase {
       String collectionId = makeCollection(name);
       for (int i = 0; i < collectionSize; i++) {
          String rid = name + i;
-         try {
-            ContentResource resource = contentHostingService.addResource(rid, collectionId, 3, "text/plain", makeTestContent(), null, 0);
-            assertNotNull(resource);
-         } catch (Exception e) {
-            // TODO - figure out why this dies on Steve's machine, switching to logging for now -AZ
-            //throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
-            log.error("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
-         }
+         ContentResource resource = createResource(collectionId, rid);
+         assertNotNull(resource);
       }
       long total = System.currentTimeMillis() - start;
       log.info("Completed creation of collection ("+collectionId+") with "+collectionSize+" content items in "
             +total+" ms ("+calcUSecsPerOp(iterations, total)+" microsecs per operation)");
    }
 
+
+   /**
+    * @param collectionId
+    * @param rid
+    */
+   private ContentResource createResource(String collectionId, String rid) {
+      ContentResourceEdit resource = null;
+      try {
+         resource = contentHostingService.addResource(collectionId, rid, ".txt", 100);
+      } catch (Exception e) {
+         throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
+      }
+      resource.setContentType("text/plain");
+      // resource.setResourceType(string); // Not sure what this is
+      resource.setContent(makeTestContent());
+      ResourcePropertiesEdit resourceProperties = resource.getPropertiesEdit();
+      resourceProperties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, "LoadTest:" + rid);
+      resourceProperties.addProperty("loadTesting", "true");
+      try {
+         contentHostingService.commitResource(resource, 0);
+      } catch (OverQuotaException e) {
+         log.warn("User is over their quota, cannot add load testing resource ("+rid+") to collection: " + collectionId);
+      } catch (ServerOverloadException e) {
+         throw new RuntimeException("Died while attempting to add a resource ("+rid+") to collection: " + collectionId, e);
+      }
+      return resource;
+   }
+
    /**
     * @return some generated content to drop into a resource
     */
-   private byte[] makeTestContent() {
+   private InputStream makeTestContent() {
       StringBuilder sb = new StringBuilder();
       sb.append(COLLECTION_ID_PREFIX);
       sb.append(": ");
@@ -508,7 +538,7 @@ public class LoadTestContentHostingService extends SakaiTestCase {
       }
       totalCreatedSize += sb.length();
       totalCreatedItems++;
-      return sb.toString().getBytes();
+      return new ByteArrayInputStream(sb.toString().getBytes());
    }
 
    /**
