@@ -54,8 +54,6 @@ import org.sakaiproject.content.impl.jcr.SakaiConstants;
 import org.sakaiproject.content.impl.util.GMTDateformatter;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
-import org.sakaiproject.entity.api.EntityPropertyNotDefinedException;
-import org.sakaiproject.entity.api.EntityPropertyTypeException;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.jcr.api.DAVConstants;
 import org.sakaiproject.jcr.api.JCRConstants;
@@ -67,9 +65,9 @@ import org.w3c.dom.Element;
 /**
  * @author ieb
  */
-public class JCRStorageUser implements LiteStorageUser
-{
-	/**
+public class JCRStorageUser implements LiteStorageUser {
+   
+   /**
 	 * Performs custom converion on a specific area of the metadata
 	 * 
 	 * @author ieb
@@ -751,8 +749,6 @@ public class JCRStorageUser implements LiteStorageUser
 
 	private static final String IGNORE_PROPERTY = "ignore";
 
-	private static final String REPOSITORY_PREFIX = "/content";
-
 	private BaseContentService baseContentService;
 
 	private Map<String, String> jcrTypes = new HashMap<String, String>();
@@ -762,8 +758,6 @@ public class JCRStorageUser implements LiteStorageUser
 	private Map<String, String> entityToJcr = new HashMap<String, String>();
 
 	private String repoPrefix;
-
-	private String jcrWorkspace = "/sakai";
 
 	private List<String> createNodes = new ArrayList<String>();
 
@@ -787,7 +781,7 @@ public class JCRStorageUser implements LiteStorageUser
 
 	public void init()
 	{
-		repoPrefix = jcrWorkspace + REPOSITORY_PREFIX;
+		repoPrefix = SakaiConstants.SAKAI_REPO_PREFIX;
 
 		CustomConverter glconverter = new GroupListConverter();
 		CustomConverter amconverter = new AccessModeConverter();
@@ -1892,22 +1886,6 @@ public class JCRStorageUser implements LiteStorageUser
 		this.jcrTypes = jcrTypes;
 	}
 
-	/**
-	 * @return the jcrWorkspace
-	 */
-	public String getJcrWorkspace()
-	{
-		return jcrWorkspace;
-	}
-
-	/**
-	 * @param jcrWorkspace
-	 *        the jcrWorkspace to set
-	 */
-	public void setJcrWorkspace(String jcrWorkspace)
-	{
-		this.jcrWorkspace = jcrWorkspace;
-	}
 
 	/*
 	 * (non-Javadoc)

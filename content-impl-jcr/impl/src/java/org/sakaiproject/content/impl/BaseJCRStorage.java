@@ -52,6 +52,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.impl.jcr.SakaiConstants;
+import org.sakaiproject.content.impl.jcr.migration.MigrationConstants;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.IdUnusedException;
@@ -88,8 +89,7 @@ import org.sakaiproject.jcr.api.JCRService;
  * better in fields.
  * </p>
  */
-public class BaseJCRStorage
-{
+public class BaseJCRStorage {
 
 	private static final String COUNT_COLLECTION_MEMBERS = "count-members";
 
@@ -228,7 +228,7 @@ public class BaseJCRStorage
 							Node n = getNodeById(ndef[0]);
 							if (n == null)
 							{
-								log.fatal("Didnt find " + ndef[0] + " after populate ");
+								log.fatal("Didnt find " + ndef[0] + " after populate, terminating JVM");
 								System.exit(1);
 							}
 							else
@@ -316,6 +316,9 @@ public class BaseJCRStorage
 	 */
 	private Node getNodeById(String id)
 	{
+	   if (id == null) {
+	      throw new NullPointerException("getNodeById(String id): id cannot be null");
+	   }
 		try
 		{
 			Session session = jcrService.getSession();
@@ -329,11 +332,9 @@ public class BaseJCRStorage
 				log.info("Item is not a node " + i);
 			}
 		}
-		catch (PathNotFoundException ex)
-		{
-		}
-		catch (RepositoryException re)
-		{
+		catch (PathNotFoundException ex) {
+		   if (log.isDebugEnabled()) log.debug("Path no found for node: " + id);
+		} catch (RepositoryException re)	{
 			log.warn("Node Not Found " + id + " cause:" + re.getMessage());
 		}
 		return null;

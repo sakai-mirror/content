@@ -21,16 +21,27 @@
 
 package org.sakaiproject.content.impl.jcr;
 
-import org.sakaiproject.content.impl.BaseContentService;
-import org.sakaiproject.entity.api.ResourceProperties;
 
 /**
  * @author ieb
- *
+ * @author azeckoski
  */
-public class SakaiConstants
-{
-	public static final String SAKAI_DATE_FORMAT = "yyyyMMddHHmmssSSS";
+public class SakaiConstants {
+
+   /**
+    * This is the main JCR workspace used by Sakai
+    */
+   public static String SAKAI_WORKSPACE = "/sakai";
+   /**
+    * This is the prefix for the content repository
+    */
+   public static String REPOSITORY_PREFIX = "/content";
+   /**
+    * This is the combined prefix for content
+    */
+   public static String SAKAI_REPO_PREFIX = SAKAI_WORKSPACE + REPOSITORY_PREFIX;
+
+   public static final String SAKAI_DATE_FORMAT = "yyyyMMddHHmmssSSS";
 
 	public static final String SAKAI_FILE_PATH = "sakai:filePath";
 
