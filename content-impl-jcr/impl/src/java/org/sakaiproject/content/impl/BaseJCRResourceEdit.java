@@ -81,6 +81,10 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 		 m_active = true;
 	}
 
+	/**
+	 * @see org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit#getContent()
+	 * @deprecated Use {@link #streamContent()} instead
+	 */
 	@Override
 	public byte[] getContent() throws ServerOverloadException
 	{
@@ -90,7 +94,7 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 			Property p = c.getProperty(JCRConstants.JCR_DATA);
 			long length = p.getLength();
 			if (length > 4096) {
-				log.warn("Full content is being requested into memory this is bad! ... but we will do it anyway, memory used =  " + length, new Exception("Traceback"));
+            log.warn("getContent: Content is being stored in memory, this is wasteful, use InputStream streamContent() instead, memory used =  " + length);
 			}
 			byte[] buffer = new byte[(int) length];
 			InputStream in = p.getStream();
@@ -127,10 +131,9 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/**
 	 * @see org.sakaiproject.content.impl.BaseContentService.BaseResourceEdit#setContent(byte[])
+	 * @deprecated this is wasteful, use setContent(InputStream stream) instead
 	 */
 	@Override
 	public void setContent(byte[] content)
@@ -139,11 +142,7 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 		{
 			if (content.length > 4096)
 			{
-				log
-						.error(
-								"Content is being stored in memory, this is bad! ... but we will do it anyway, memory used =  "
-										+ content.length);
-				log.debug("Traceback ", new Exception("Traceback"));
+				log.warn("setContent: Content is being stored in memory, this is wasteful, use setContent(InputStream stream) instead, memory used =  " + content.length);
 			}
 			Node c = node.getNode(JCRConstants.JCR_CONTENT);
 			Property p = c.getProperty(JCRConstants.JCR_DATA);
@@ -151,7 +150,7 @@ public class BaseJCRResourceEdit extends BaseResourceEdit
 		}
 		catch (RepositoryException e)
 		{
-			log.error("Failed to get content stream ", e);
+			log.error("Failed to set content", e);
 		}
 	}
 

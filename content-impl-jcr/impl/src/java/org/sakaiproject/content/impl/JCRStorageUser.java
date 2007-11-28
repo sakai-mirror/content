@@ -1061,7 +1061,7 @@ public class JCRStorageUser implements LiteStorageUser
 					catch (RepositoryException e)
 					{
 						log.error("Failed to set " + jname + " to " + list + " cause:"
-								+ e.getMessage());
+								+ e.getMessage(), e);
 					}
 					break;
 				}
