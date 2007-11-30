@@ -9980,30 +9980,30 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			else
 			{
-			// get the member objects
-			List members = getMemberResources();
+				// get the member objects
+				List members = getMemberResources();
 	
-			// for each member
-			for (Iterator it = members.iterator(); it.hasNext();)
-			{
-				Object obj = it.next();
-				if (obj == null) continue;
-	
-				// do not count the size of virtual objects
-				if (obj instanceof BaseCollectionEdit && ((BaseCollectionEdit)obj).getVirtualContentEntity() != null) continue;
-				
-				// if a resource, add the body size
-				if (obj instanceof ContentResource)
+				// for each member
+				for (Iterator it = members.iterator(); it.hasNext();)
 				{
-					size += bytes2k(((ContentResource) obj).getContentLength());
-				}
+					Object obj = it.next();
+					if (obj == null) continue;
 	
-				// if a collection, count it's size
-				else
-				{
-					size += ((BaseCollectionEdit) obj).getBodySizeK();
+					// do not count the size of virtual objects
+					if (obj instanceof BaseCollectionEdit && ((BaseCollectionEdit)obj).getVirtualContentEntity() != null) continue;
+					
+					// if a resource, add the body size
+					if (obj instanceof ContentResource)
+					{
+						size += bytes2k(((ContentResource) obj).getContentLength());
+					}
+	
+					// if a collection, count it's size
+					else
+					{
+						size += ((BaseCollectionEdit) obj).getBodySizeK();
+					}
 				}
-			}
 			}
 			// if (M_log.isDebugEnabled())
 			// M_log.debug("getBodySizeK(): collection: " + getId() + " size: " + size);
@@ -10493,7 +10493,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		 * @see org.sakaiproject.content.impl.serialize.api.SerializableCollectionAccess#getSerializableGroup()
 		 */
 		public Collection<String> getSerializableGroup()
-	{
+		{
 			return m_groups;
 		}
 

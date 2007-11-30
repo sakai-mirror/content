@@ -2319,21 +2319,21 @@ public class DbContentService extends BaseContentService
 		}
 
 		public Collection<ContentResource> getResourcesOfType(String resourceType, int pageSize, int page) 
-	{
+		{
 			List resources = this.m_resourceStore.getAllResourcesWhere("RESOURCE_TYPE_ID", resourceType, "RESOURCE_ID", page * pageSize, pageSize);
 			
 			return resources;
-	}
+		}
 
 		public class EntityReader implements SqlReader
 		{
 
 			public Object readSqlResultRecord(ResultSet result) 
-	{
+			{
 				BaseResourceEdit edit = null;
 				Object clob = null;
-		try
-		{
+				try
+				{
 					clob = result.getObject(1);
 					if(clob != null && clob instanceof byte[])
 					{
@@ -2346,7 +2346,7 @@ public class DbContentService extends BaseContentService
 					// ignore?
 				}
 				catch(EntityParseException e)
-			{
+				{
 					M_log.warn("EntityParseException unable to parse entity");
 				}
 				if(edit == null)
