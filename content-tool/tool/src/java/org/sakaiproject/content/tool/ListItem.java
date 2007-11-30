@@ -54,7 +54,6 @@ import org.sakaiproject.content.api.ResourceToolAction;
 import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceTypeRegistry;
-import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
@@ -106,13 +105,8 @@ public class ListItem
 
     protected static final Comparator PRIORITY_SORT_COMPARATOR = ContentHostingService.newContentHostingComparator(ResourceProperties.PROP_CONTENT_PRIORITY, true);
 
-	public static final String DOT = "_";
-
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
-	public static final long ONE_DAY = 24L * 60L * 60L * 1000L;
-	
-	/** A long representing the number of milliseconds in one week.  Used for date calculations */
-	public static final long ONE_WEEK = 7L * ONE_DAY;
+	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
 
 	public static final String DOT = "_";
 	
@@ -327,7 +321,6 @@ public class ListItem
 	protected boolean expandable = false;
 	protected boolean isEmpty = true;
 	protected boolean isExpanded = false;
-	protected boolean isHot = false;
 	protected boolean isSortable = false;
 	protected boolean isTooBig = false;
 	protected String size = "";
@@ -337,8 +330,6 @@ public class ListItem
 	protected String modifiedBy;
 	protected String modifiedTime;
 	protected int depth;
-
-	protected String chhmountpoint; // Content Hosting Handler bean name
 
 	protected Map<String, ResourceToolAction> multipleItemActions = new HashMap<String, ResourceToolAction>();
 
@@ -403,9 +394,6 @@ public class ListItem
 
 	private int constructor;
 
-	protected long dropboxHighlight;
-
-	protected Time lastChange = null;
 
 	
 	private org.sakaiproject.content.api.ContentHostingService contentService;
@@ -487,24 +475,6 @@ public class ListItem
 
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
-		if(this.isDropbox)
-		{
-			try
-			{
-				lastChange  = props.getTimeProperty(org.sakaiproject.content.api.ContentHostingService.PROP_DROPBOX_CHANGE_TIMESTAMP);
-//				long oneDayAgo = TimeService.newTime().getTime() - dropboxHighlight * ONE_DAY;
-//				
-//				if(lastChange != null && lastChange.getTime() > oneDayAgo)
-//				{
-//					setHot(true);
-//				}
-			}
-			catch(Exception e)
-			{
-				// ignore
-			}
-		}
-		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
 		
@@ -528,38 +498,18 @@ public class ListItem
 		if(this.collection)
 		{
 			ContentCollection collection = (ContentCollection) entity;
-			String shortSizeStr = typeDef.getSizeLabel(entity);
         	int collection_size = collection.getMemberCount();
-			if(shortSizeStr == null)
-			{
-	        	if(collection_size == 1)
-	        	{
-	        		shortSizeStr = rb.getString("size.item");
-	        	}
-	        	else
-	        	{
+        	if(collection_size == 1)
+        	{
+        		setSize(rb.getString("size.item"));
+        	}
+        	else
+        	{
 	        	String[] args = { Integer.toString(collection_size) };
-		        	shortSizeStr = rb.getFormattedMessage("size.items", args);
-	        	}
-			}
-			else if(shortSizeStr.length() > ResourceType.MAX_LENGTH_SHORT_SIZE_LABEL)
-			{
-				shortSizeStr = shortSizeStr.substring(0, ResourceType.MAX_LENGTH_SHORT_SIZE_LABEL);
-			}
+	        	setSize(rb.getFormattedMessage("size.items", args));
+	        	setSizzle(rb.getFormattedMessage("size.items", args));
+        	}
 			setIsEmpty(collection_size < 1);
-			setSize(shortSizeStr);
-			String longSizeStr = typeDef.getLongSizeLabel(entity);
-			if(longSizeStr == null)
-			{
-				longSizeStr = shortSizeStr;
-			}
-			else if(longSizeStr.length() > ResourceType.MAX_LENGTH_LONG_SIZE_LABEL)
-			{
-				
-				longSizeStr = longSizeStr.substring(0, ResourceType.MAX_LENGTH_LONG_SIZE_LABEL);
-			}
-			setSizzle(longSizeStr);
-			
 			setSortable(contentService.isSortByPriorityEnabled() && collection_size > 1 && collection_size < ResourceType.EXPANDABLE_FOLDER_SIZE_LIMIT);
 			if(collection_size > ResourceType.EXPANDABLE_FOLDER_SIZE_LIMIT)
 			{
@@ -601,9 +551,9 @@ public class ListItem
 			{
 				this.iconLocation = ContentTypeImageService.getContentTypeImage(this.mimetype);
 			}
-			String size = typeDef.getSizeLabel(entity);
-			String sizzle = typeDef.getLongSizeLabel(entity);
-			if((size == null || sizzle == null) && props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
+			String size = "";
+			String sizzle = "";
+			if(props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
 			{
 				long size_long = 0;
                 try
@@ -623,63 +573,31 @@ public class ListItem
 				formatter.setMaximumFractionDigits(1);
 				if(size_long > 700000000L)
 				{
-					if(size == null)
-					{
 					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
 					size = rb.getFormattedMessage("size.gb", args);
-					}
-					if(sizzle == null)
-					{
 					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
 					sizzle = rb.getFormattedMessage("size.gbytes", argyles);
 				}
-				}
 				else if(size_long > 700000L)
 				{
-					if(size == null)
-					{
 					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
 					size = rb.getFormattedMessage("size.mb", args);
-					}
-					if(sizzle == null)
-					{
 					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
 					sizzle = rb.getFormattedMessage("size.mbytes", argyles);
 				}
-				}
 				else if(size_long > 700L)
 				{
-					if(size == null)
-					{
 					String[] args = { formatter.format(1.0 * size_long / 1024L) };
 					size = rb.getFormattedMessage("size.kb", args);
-					}
-					if(sizzle == null)
-					{
 					String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
 					sizzle = rb.getFormattedMessage("size.kbytes", argyles);
-				}
 				}
 				else 
 				{
 					String[] args = { formatter.format(size_long) };
-					if(size == null)
-					{
 					size = rb.getFormattedMessage("size.bytes", args);
-					}
-					if(sizzle == null)
-					{
 					sizzle = rb.getFormattedMessage("size.bytes", args);
 				}
-			}
-			}
-			if(size == null)
-			{
-				size = "";
-			}
-			if(sizzle == null)
-			{
-				sizzle = "";
 			}
 			setSize(size);
 			setSizzle(sizzle);
@@ -1414,16 +1332,8 @@ public class ListItem
 		this.setDescription(description);
 	}
 
-	protected void captureCHHMountpoint(ParameterParser params, String index) 
-	{
-		// content hosting handler bean name
-		String chhmountpoint = params.getString(ContentHostingHandlerResolver.CHH_BEAN_NAME);
-		this.setCHHMountpoint(chhmountpoint);
-	}
-
 	public void captureProperties(ParameterParser params, String index) 
 	{
-		captureCHHMountpoint(params, index);
 		captureDisplayName(params, index);
 		captureDescription(params, index);
 		captureCopyright(params, index);
@@ -2428,16 +2338,6 @@ public class ListItem
 	{
 		this.description = description;
 	}
-
-	/**
-     * @param chhmountpoint the chhmountpoint (bean name) to set
-     */
-    public void setCHHMountpoint(String chhmountpoint)
-    {
-    	this.chhmountpoint = chhmountpoint;
-    }
-
-	/**
     
     /**
      * Sets expanded status of the list item.  Also updates the iconLocation 
@@ -2909,18 +2809,9 @@ public class ListItem
 		}
 	}
 
-	protected void setCHHMountpoint(ResourcePropertiesEdit props) 
-	{
-		if(this.chhmountpoint != null)
-		{
-			props.addProperty(ContentHostingHandlerResolver.CHH_BEAN_NAME, this.chhmountpoint);
-		}
-	}
-
 	public void updateContentResourceEdit(ContentResourceEdit edit) 
 	{
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
-		setCHHMountpoint(props);
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		setCopyrightOnEntity(props);
@@ -3537,112 +3428,6 @@ public class ListItem
 	    return typeSupportsOptionalProperties;
     }
 
-	/**
-	 * @return the isHot
-	 */
-	public boolean isHot(String dropboxHighlight) 
-	{
-		boolean hot = false;
-		try
-		{
-			if(dropboxHighlight != null && ! dropboxHighlight.trim().equals("") && this.lastChange != null)
-			{
-				long days = Long.parseLong(dropboxHighlight);
-				long minTime = TimeService.newTime().getTime() - days * ONE_DAY;
-				hot = this.lastChange.getTime() > minTime;
-			}
-		}
-		catch(Exception e)
-		{
-			hot = false;;
-		}
-		
-		return hot;
-	}
 
-	/**
-	 * @param isHot the isHot to set
-	 */
-	public void setHot(boolean isHot) {
-		this.isHot = isHot;
-	}
-
-	private String getIndividualDropboxId(String id) 
-	{
-		String rv = null;
-		if(id != null)
-		{
-			String parts[] = id.split("/");
-			if(parts.length >= 4)
-			{
-				rv = "/" + parts[1] + "/" + parts[2] + "/" + parts[3] + "/";
-			}
-		}
-		return rv;
-	}
-
-	/**
-	 * Determine whether the user is a Dropbox maintainer for the root-level dropbox (provided the current item is
-	 * an individual dropbox or an item inside an individual dropbox). 
-	 * @return true if the user is a site-level maintainer for the dropbox (provided the current item is
-	 * an individual dropbox or an item inside an individual dropbox), and false otherwise.
-	 */
-	public boolean userIsMaintainer()
-	{
-		boolean userIsMaintainer = false;
-		if(this.isDropbox)
-		{
-			String dropboxId = null;
-			if(id != null && !id.trim().equals(""))
-			{
-				dropboxId = getIndividualDropboxId(id);
-			}
-			else if(containingCollectionId != null && ! containingCollectionId.trim().equals(""))
-			{
-				dropboxId = getIndividualDropboxId(containingCollectionId);
-			}
-			else if(parent != null)
-			{
-				dropboxId = getIndividualDropboxId(parent.getId());
-			}
-			if(dropboxId != null)
-			{
-				User currentUser = UserDirectoryService.getCurrentUser();
-				String userEid = currentUser.getEid();
-				String userId = currentUser.getId();
-				userIsMaintainer = ! ((userEid == null || dropboxId.contains(userEid)) || (userId == null || dropboxId.contains(userId)));
-			}
-		}
-		return userIsMaintainer;
-	}
-
-	/**
-	 * @return the dropboxHighlight
-	 */
-	public long getDropboxHighlight() {
-		return dropboxHighlight;
-	}
-
-	/**
-	 * @param dropboxHighlight the dropboxHighlight to set
-	 */
-	public void setDropboxHighlight(long dropboxHighlight) {
-		this.dropboxHighlight = dropboxHighlight;
-	}
-
-	/**
-	 * @return the lastChange
-	 */
-	public Time getLastChange() {
-		return lastChange;
-	}
-
-	/**
-	 * @param lastChange the lastChange to set
-	 */
-	public void setLastChange(Time lastChange) {
-		this.lastChange = lastChange;
-	}
-	
 }
 

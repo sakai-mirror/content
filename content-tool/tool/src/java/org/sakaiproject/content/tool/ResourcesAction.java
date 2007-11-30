@@ -60,7 +60,6 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
-import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.ExpandableResourceType;
@@ -75,8 +74,6 @@ import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.SiteSpecificResourceType;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.api.ResourceToolAction.ActionType;
-import org.sakaiproject.content.api.providers.SiteContentAdvisor;
-import org.sakaiproject.content.api.providers.SiteContentAdvisorProvider;
 import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.content.cover.ContentTypeImageService;
 import org.sakaiproject.coursemanagement.api.AcademicSession;
@@ -633,8 +630,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	protected static final String STATE_DELETE_SET = PREFIX + "delete_set";
 	
-	protected static final String STATE_DROPBOX_HIGHLIGHT = PREFIX + "dropbox_highlight";
-
 	/** The name of the state attribute indicating whether the hierarchical list is expanded */
 	private static final String STATE_EXPAND_ALL_FLAG = PREFIX + "expand_all_flag";
 
@@ -1641,7 +1636,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch(IdLengthException e)
 			{
-				addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
+				addAlert(state, rb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
 			}
 			catch(IdUniquenessException e)
 			{
@@ -1786,7 +1781,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		catch(IdLengthException e)
 		{
-			addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
+			addAlert(state, rb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
 		}
 		catch(IdUniquenessException e)
 		{
@@ -4305,9 +4300,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			state.setAttribute(STATE_LIST_SELECTIONS, selectedItems);
 		}
 		context.put("selectedItems", selectedItems);
-		
-		Integer dropboxHighlightObj = (Integer) state.getAttribute(STATE_DROPBOX_HIGHLIGHT);
-		context.put("dropboxHighlight", dropboxHighlightObj);
 
 		// find the ContentHosting service
 		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
@@ -4405,8 +4397,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		boolean showCopyAction = false;
 
 		Set highlightedItems = new TreeSet();
-		
-		boolean showHotDropboxWidget = false;
 
 		try
 		{
@@ -4513,8 +4503,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				Site site = SiteService.getSite(ref.getContext());
 				String[] args = {site.getTitle()};
 				item.setName(trb.getFormattedMessage("title.dropbox", args));
-				
-				showHotDropboxWidget = true;
 			}
 			else if(contentService.COLLECTION_SITE.equals(containingCollectionId))
 			{
@@ -4559,23 +4547,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				for(ListItem siteCollection : siteCollections)
 				{
 					otherSites.addAll(siteCollection.convert2list());
-					
-					// looking for expanded site-level dropboxes
-					// first check whether it's a dropbox
-					if(siteCollection.isDropbox())
-					{
-						// check whether it's a site-level dropbox
-						if(contentService.COLLECTION_DROPBOX.equals(siteCollection.getEntity().getContainingCollection().getId()))
-						{
-							// check whether it's expanded
-							if(need_to_expand_all || expandedCollections.contains(siteCollection.getId()))
-							{
-								// in that case, show the "hot folder" widget
-								showHotDropboxWidget = true;
-							}
-	
-						}
-					}
 				}
 				context.put("other_sites", otherSites);
 
@@ -4619,11 +4590,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 			}
 			
-			if(showHotDropboxWidget)
-			{
-				context.put("showHotDropboxWidget", Boolean.TRUE.toString());
-			}
-
 			context.put("listActions", listActions);
 			context.put("counter", new EntityCounter());
 
@@ -5002,13 +4968,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		item.metadataGroupsIntoContext(context);
 		context.put("item", item);
 		
-		String chhbeanname = item.entity.getProperties().getProperty(
-				ContentHostingHandlerResolver.CHH_BEAN_NAME);
-		if (chhbeanname == null || chhbeanname.equals("")) chhbeanname = "";
-		context.put("CHHmountpoint", chhbeanname);
-		
-
-		
 		if(ContentHostingService.isAvailabilityEnabled())
 		{
 			context.put("availability_is_enabled", Boolean.TRUE);
@@ -5018,12 +4977,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put("GROUP_ACCESS", AccessMode.GROUPED.toString());
 		context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 		context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
-
-		if(ContentHostingService.isContentHostingHandlersEnabled())
-		{
-			context.put("showMountPointProperty", Boolean.TRUE.toString());
-		}
-
+		
 		return TEMPLATE_REVISE_METADATA;
 	}
 
@@ -5595,16 +5549,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				// %%STATE_MODE_RESOURCES%%
 				if (RESOURCES_MODE_DROPBOX.equalsIgnoreCase((String) state.getAttribute(STATE_MODE_RESOURCES)))
 				{
-	   				boolean notification = params.getBoolean("notify_dropbox");
-	  				if(notification)
-	   				{
-	   					noti = NotificationService.NOTI_REQUIRED;
-	   				}
-	   				else
-	   				{
 					// set noti to none if in dropbox mode
 					noti = NotificationService.NOTI_NONE;
-				}
 				}
 				else
 				{
@@ -5699,7 +5645,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
             }
             catch (IdLengthException e)
             {
-				addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
+				addAlert(state, rb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
 	            // TODO Auto-generated catch block
 	            logger.warn("IdLengthException " + e);
             }
@@ -6033,21 +5979,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			logger.warn("doDispatchAction ", e);
 		}
-	}
-	
-	/**
-	 * Change the number of days for which individual dropboxes are highlighted in the instructor's list view.
-	 */
-	public void doSetHotDropbox(RunData data)
-	{
-		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
-		
-		//get the ParameterParser from RunData
-		ParameterParser params = data.getParameters ();
-
-		int dropboxHighlight = params.getInt("dropboxHighlight", 1);
-		
-		state.setAttribute(STATE_DROPBOX_HIGHLIGHT, new Integer(dropboxHighlight));
 	}
 
 	/**
@@ -6681,16 +6612,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// %%STATE_MODE_RESOURCES%%
 			if (RESOURCES_MODE_DROPBOX.equalsIgnoreCase((String) state.getAttribute(STATE_MODE_RESOURCES)))
 			{
-   				boolean notification = params.getBoolean("notify_dropbox");
-  				if(notification)
-   				{
-   					noti = NotificationService.NOTI_REQUIRED;
-   				}
-   				else
-   				{
-   					// set noti to none if in dropbox mode
-   					noti = NotificationService.NOTI_NONE;
-   				}
+				// set noti to none if in dropbox mode
+				noti = NotificationService.NOTI_NONE;
 			}
 			else
 			{
@@ -7561,8 +7484,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		state.setAttribute(STATE_EXPANDED_COLLECTIONS, expandedCollections);
 		state.setAttribute(STATE_EXPANDED_FOLDER_SORT_MAP, new HashMap());
 		
-		state.setAttribute(STATE_DROPBOX_HIGHLIGHT, new Integer(1));
-		
 		if(state.getAttribute(STATE_USING_CREATIVE_COMMONS) == null)
 		{
 			String usingCreativeCommons = ServerConfigurationService.getString("copyright.use_creative_commons");
@@ -7634,7 +7555,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		state.setAttribute(STATE_PREVENT_PUBLIC_DISPLAY, Boolean.FALSE);
 		String[] siteTypes = ServerConfigurationService.getStrings("prevent.public.resources");
 		String siteType = null;
-		Site site = null;
+		Site site;
 		try
 		{
 			site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
@@ -7659,15 +7580,33 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			// allow public display
 		}
-		
-		Time defaultRetractTime = null;
-		defaultRetractTime = TimeService.newTime(TimeService.newTime().getTime() + ONE_WEEK);			
-		org.sakaiproject.content.api.ContentHostingService chs = ContentHostingService.getInstance();
-		if ( site != null && chs instanceof SiteContentAdvisorProvider ) {
-			SiteContentAdvisorProvider scap = (SiteContentAdvisorProvider) chs;
-			SiteContentAdvisor sca =  scap.getContentAdvisor(site);
-			if ( sca != null ) {
-				defaultRetractTime = TimeService.newTime(sca.getDefaultRetractTime());
+
+		CourseManagementService courseManagementService = (CourseManagementService) ComponentManager.get(CourseManagementService.class);
+
+		Time defaultRetractTime = TimeService.newTime(TimeService.newTime().getTime() + ONE_WEEK);
+		Time guess = null;
+		Time now = TimeService.newTime();
+		if(siteType != null && siteType.equalsIgnoreCase("course") && courseManagementService != null)
+		{
+			List<AcademicSession> terms = courseManagementService.getAcademicSessions();
+			boolean found = false;
+			for(AcademicSession term : terms)
+			{
+				if(term.getEndDate() != null && term.getEndDate().getTime() > now.getTime())
+				{
+					if(guess == null)
+					{
+						guess = TimeService.newTime(term.getEndDate().getTime());
+					}
+					else if(term.getEndDate().getTime() < guess.getTime())
+					{
+						guess.setTime(term.getEndDate().getTime());
+					}
+				}
+			}
+			if(guess != null)
+			{
+				defaultRetractTime = guess;
 			}
 		}
 		state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractTime);
@@ -8353,7 +8292,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (IdLengthException e)
 			{
-				addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
+				addAlert(state, rb.getFormattedMessage("alert.toolong", new String[]{e.getMessage()}));
 				// TODO Auto-generated catch block
 				logger.warn("IdLengthException ", e);
 			}

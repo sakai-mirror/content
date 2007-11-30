@@ -46,9 +46,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.authz.api.SecurityAdvisor;
-import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
-import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.PagedResourceHelperAction;
@@ -946,31 +943,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 		return template;
 	    //return TEMPLATE_SELECT;
     }
-    
-    /**
-     * remove all security advisors
-     */
-    protected void disableSecurityAdvisors()
-    {
-    	// remove all security advisors
-    	SecurityService.clearAdvisors();
-    }
-
-    /**
-     * Establish a security advisor to allow the "embedded" azg work to occur
-     * with no need for additional security permissions.
-     */
-    protected void enableSecurityAdvisor()
-    {
-      // put in a security advisor so we can create citationAdmin site without need
-      // of further permissions
-      SecurityService.pushAdvisor(new SecurityAdvisor() {
-        public SecurityAdvice isAllowed(String userId, String function, String reference)
-        {
-          return SecurityAdvice.ALLOWED;
-        }
-      });
-    }
 
 	/**
      * @param filter 
@@ -1322,7 +1294,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 						toolSession.setAttribute(STATE_ATTACH_TOOL_NAME, toolName);
 					}
 
-					enableSecurityAdvisor();
 					ContentResource attachment = contentService.addAttachmentResource(resourceId, siteId, toolName, contentType, bytes, props);
 					
 					ContentResourceFilter filter = (ContentResourceFilter) state.getAttribute(STATE_ATTACHMENT_FILTER);
@@ -1354,7 +1325,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 					item.setHoverText(typedef.getLocalizedHoverText(attachment));
 					item.setIconLocation(typedef.getIconLocation(attachment));
 					new_items.add(item);
-					disableSecurityAdvisors();
 					
 					toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
 				}
@@ -1440,7 +1410,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 				toolSession.setAttribute(STATE_ATTACH_TOOL_NAME, toolName);
 			}
 
-			enableSecurityAdvisor();
 			ContentResource attachment = contentService.addAttachmentResource(newResourceId, siteId, toolName, ResourceProperties.TYPE_URL, newUrl, resourceProperties);
 
 			List<AttachItem> new_items = (List<AttachItem>) toolSession.getAttribute(STATE_ADDED_ITEMS);
@@ -1461,7 +1430,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 			item.setHoverText(typedef.getLocalizedHoverText(attachment));
 			item.setIconLocation(typedef.getIconLocation(attachment));
 			new_items.add(item);
-			disableSecurityAdvisors();
 			toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
 		}
 		catch(MalformedURLException e)
@@ -1739,9 +1707,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			try
 			{
 				resource = contentService.getResource(itemId);
-				Reference reference = EntityManager.newReference(resource.getReference());
 				
-				// we're making a copy, so we need to invoke the copy methods related to the resource-type registration 
 				String typeId = resource.getResourceType();
 				ResourceType typedef = registry.getType(typeId);
 				copyAction = typedef.getAction(ResourceToolAction.PASTE_COPIED);
@@ -1762,7 +1728,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				else if(copyAction instanceof ServiceLevelAction)
 				{
-					((ServiceLevelAction) copyAction).initializeAction(reference);
+					((ServiceLevelAction) copyAction).initializeAction(EntityManager.newReference(resource.getReference()));
 				}
 				else
 				{
@@ -1777,10 +1743,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 					{
 						String displayName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 						addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
-						if(copyAction != null && copyAction instanceof ServiceLevelAction)
-						{
-							((ServiceLevelAction) copyAction).cancelAction(reference);
-						}
 						return;
 					}
 				}
@@ -1788,7 +1750,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 				ResourcePropertiesEdit newprops = contentService.newResourceProperties();
 				newprops.set(props);
 
-				// TODO: should use stream instead of byte array here
 				byte[] bytes = resource.getContent();
 				String contentType = resource.getContentType();
 				String filename = Validator.getFileName(itemId);
@@ -1801,7 +1762,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					toolName = ToolManager.getCurrentPlacement().getTitle();
 				}
 			
-				enableSecurityAdvisor();
+				// TODO: we're making a copy, so we need to invoke the copy methods related to the resource-type registration 
 				attachment = contentService.addAttachmentResource(resourceId, siteId, toolName, contentType, bytes, props);
 
 				String displayName = newprops.getPropertyFormatted(ResourceProperties.PROP_DISPLAY_NAME);
@@ -1815,7 +1776,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 				item.setIconLocation(typedef.getIconLocation(resource));
 				new_items.add(item);
 				toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
-				disableSecurityAdvisors();
 			}
 			catch (PermissionException e)
 			{

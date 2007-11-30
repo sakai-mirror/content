@@ -3,14 +3,6 @@
 
 <beans>
 
-    <!-- database beans -->
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlDb2"       class="org.sakaiproject.content.impl.ContentServiceSqlDb2"     singleton="true"/>
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlDefault"   class="org.sakaiproject.content.impl.ContentServiceSqlDefault" singleton="true"/>
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlHSql"      class="org.sakaiproject.content.impl.ContentServiceSqlHSql"    singleton="true"/>
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlMsSql"     class="org.sakaiproject.content.impl.ContentServiceSqlMsSql"   singleton="true"/>
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlMySql"     class="org.sakaiproject.content.impl.ContentServiceSqlMySql"   singleton="true"/>
-    <bean id="org.sakaiproject.content.impl.ContentServiceSqlOracle"    class="org.sakaiproject.content.impl.ContentServiceSqlOracle"  singleton="true"/>
-
 	<bean id="org.sakaiproject.content.api.ContentHostingService"
 			class="org.sakaiproject.content.impl.DbContentService"
 			init-method="init"
@@ -28,40 +20,19 @@
 		<property name="authzGroupService"><ref bean="org.sakaiproject.authz.api.AuthzGroupService"/></property>
 		<property name="resourceTypeRegistry"><ref bean="org.sakaiproject.content.api.ResourceTypeRegistry"/></property>
  
-        <!--
         <property name="contentHostingHandlerResolver"><ref bean="org.sakaiproject.content.api.ContentHostingHandlerResolver"/></property>
-		-->
-        <property name="collectionSerializer"><ref bean="org.sakaiproject.content.api.ContentHostingService.collectionSerializer"/></property>
-        <property name="resourceSerializer"><ref bean="org.sakaiproject.content.api.ContentHostingService.resourceSerializer"/></property>
-        <!--
-        If you want to use the new serializers you have to let them migrate the data, set to true
-        so that they can write the new format when they update an item.
  
-        -->
-        <property name="migrateData"><value>true</value></property>
-
-
-        <property name="collectionTableName">       <value>CONTENT_COLLECTION</value>           </property>
-        <property name="resourceTableName">         <value>CONTENT_RESOURCE</value>             </property>
-        <property name="resourceBodyTableName">     <value>CONTENT_RESOURCE_BODY_BINARY</value> </property>
-        <property name="locksInDb">                 <value>false</value>                        </property>
-        <property name="bodyPath">                  <null/>                                     </property>
-        <property name="bodyVolumes">               <null/>                                     </property>
-        <property name="autoDdl">                   <value>${auto.ddl}</value>                  </property>
-        <property name="siteQuota">                 <value>1048576</value>                      </property>
-        <property name="availabilityChecksEnabled"> <value>true</value>                         </property>
-        <property name="prioritySortEnabled">       <value>true</value>                         </property>
-        <property name="useResourceTypeRegistry">   <value>true</value>                         </property>
-        <property name="databaseBeans">
-           <map>
-              <entry key="db2"    ><ref bean="org.sakaiproject.content.impl.ContentServiceSqlDb2"    /></entry>
-              <entry key="default"><ref bean="org.sakaiproject.content.impl.ContentServiceSqlDefault"/></entry>
-              <entry key="hsqldb" ><ref bean="org.sakaiproject.content.impl.ContentServiceSqlHSql"   /></entry>
-              <entry key="mssql"  ><ref bean="org.sakaiproject.content.impl.ContentServiceSqlMsSql"  /></entry>
-              <entry key="mysql"  ><ref bean="org.sakaiproject.content.impl.ContentServiceSqlMySql"  /></entry>
-              <entry key="oracle" ><ref bean="org.sakaiproject.content.impl.ContentServiceSqlOracle" /></entry>
-           </map>
-        </property>
+ 		<property name="collectionTableName"><value>CONTENT_COLLECTION</value></property>
+ 		<property name="resourceTableName"><value>CONTENT_RESOURCE</value></property>
+ 		<property name="resourceBodyTableName"><value>CONTENT_RESOURCE_BODY_BINARY</value></property>
+ 		<property name="locksInDb"><value>false</value></property>
+		<property name="bodyPath"><null/></property>
+		<property name="bodyVolumes"><null/></property>
+ 		<property name="autoDdl"><value>${auto.ddl}</value></property>
+ 		<property name="siteQuota"><value>1048576</value></property>
+		<property name="availabilityChecksEnabled"><value>true</value></property>
+		<property name="prioritySortEnabled"><value>true</value></property>
+		<property name="useResourceTypeRegistry"><value>true</value></property>
   	</bean>
 
 	<bean id="org.sakaiproject.content.api.ContentHostingHandlerResolver"
@@ -145,24 +116,6 @@
         <property name="entityManager">
         	<ref bean="org.sakaiproject.entity.api.EntityManager"/>
 		</property>
-	</bean>
-
-
-
-	<bean id="org.sakaiproject.content.api.ContentHostingService.collectionSerializer"
-			class="org.sakaiproject.content.impl.serialize.impl.Type1BaseContentCollectionSerializer"
-			singleton="true">
-        <property name="timeService">
-        	<ref bean="org.sakaiproject.time.api.TimeService"/>
-		</property>			
-	</bean>
-	
-	<bean id="org.sakaiproject.content.api.ContentHostingService.resourceSerializer"
-			class="org.sakaiproject.content.impl.serialize.impl.Type1BaseContentResourceSerializer"
-			singleton="true">
-        <property name="timeService">
-        	<ref bean="org.sakaiproject.time.api.TimeService"/>
-		</property>			
 	</bean>
 
 	<!-- enable logging of method calls on entrance and exit -->

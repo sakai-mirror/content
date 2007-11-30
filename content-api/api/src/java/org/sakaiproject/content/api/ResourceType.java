@@ -46,9 +46,6 @@ public interface ResourceType
 	public static final String MIME_TYPE_URL = "text/url";
 	
 	public static final int EXPANDABLE_FOLDER_SIZE_LIMIT = 256;
-	
-	public static final int MAX_LENGTH_SHORT_SIZE_LABEL = 18;
-	public static final int MAX_LENGTH_LONG_SIZE_LABEL = 80;
 
 	/**
 	 * Access the action specified by the parameter.  If the action is defined for this resource type,
@@ -115,36 +112,6 @@ public interface ResourceType
 	 */
 	public String getLocalizedHoverText(ContentEntity entity);
 	
-	/**
-	 * Access a short string that describes the "size" of an entity in some appropriate way.  For
-	 * example, the "size" of a folder might be the number of items it contains, the "size" of a text
-	 * document might be the number of bytes it contains, and the "size" of a audio file might be its
-	 * playing time at a normal speed.  If the method returns null, the Resources tool will display 
-	 * the number of bytes if the entity is a ContentResource or the number of members if the entity
-	 * is a ContentCollection.  The string must be short.  If it's longer than about 18 characters, 
-	 * it may be truncated arbitrarily, which may render it meaningless to users.
-	 * @param entity The resource that's being displayed, or null indicating that the entity might  
-	 * not yet exist.
-	 * @return A short string describing the size of an entity, or null. 
-	 * @see ResourceType.MAX_LENGTH_SHORT_SIZE_LABEL
-	 */
-	public String getSizeLabel(ContentEntity entity);
-	
-	/**
-	 * Access a short string that describes the "size" of an entity in some appropriate way.  For
-	 * example, the "size" of a folder might be the number of items it contains, the "size" of a text
-	 * document might be the number of bytes it contains, and the "size" of a audio file might be its
-	 * playing time at a normal speed.  If the method returns null, the Resources tool will display 
-	 * the number of bytes if the entity is a ContentResource or the number of members if the entity
-	 * is a ContentCollection.  The string must be short.  If it's longer than about 80 characters, 
-	 * it may be truncated arbitrarily, which may render it meaningless to users.
-	 * @param entity The resource that's being displayed, or null indicating that the entity might  
-	 * not yet exist.
-	 * @return A short string describing the size of an entity, or null. 
-	 * @see ResourceType.MAX_LENGTH_LONG_SIZE_LABEL
-	 */
-	public String getLongSizeLabel(ContentEntity entity);
-
 	/**
 	 * Should the Resources tool support hiding and scheduled release and/or retraction for items of this type?
 	 * @return true if availability is included among the resource properties in the UI, false otherwise.

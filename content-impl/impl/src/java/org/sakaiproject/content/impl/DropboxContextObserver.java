@@ -29,6 +29,7 @@ import java.util.Stack;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.entity.api.ContextObserver;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityManager;
@@ -55,12 +56,12 @@ public class DropboxContextObserver implements EntityProducer, ContextObserver
 	/**
 	 * Dependency: The content service.
 	 */
-	protected BaseContentService m_contentService = null;
+	protected ContentHostingService m_contentService = null;
 
 	/**
      * @return the contentService
      */
-    public BaseContentService getContentService()
+    public ContentHostingService getContentService()
     {
     	return m_contentService;
     }
@@ -68,7 +69,7 @@ public class DropboxContextObserver implements EntityProducer, ContextObserver
 	/**
      * @param contentService the contentService to set
      */
-    public void setContentService(BaseContentService contentService)
+    public void setContentService(ContentHostingService contentService)
     {
     	this.m_contentService = contentService;
     }
@@ -159,7 +160,7 @@ public class DropboxContextObserver implements EntityProducer, ContextObserver
 	{
 		if(toolPlacement)
 		{
-			m_contentService.enableDropbox(context);
+			((BaseContentService) m_contentService).enableDropbox(context);
 		}
 	}
 
@@ -167,7 +168,7 @@ public class DropboxContextObserver implements EntityProducer, ContextObserver
 	{
 		if(toolPlacement)
 		{
-			m_contentService.disableDropbox(context);
+			((BaseContentService) m_contentService).disableDropbox(context);
 		}
 	}
 
@@ -175,7 +176,7 @@ public class DropboxContextObserver implements EntityProducer, ContextObserver
 	{
 		if(toolPlacement)
 		{
-			m_contentService.enableDropbox(context);
+			((BaseContentService) m_contentService).enableDropbox(context);
 		}
 	}
 

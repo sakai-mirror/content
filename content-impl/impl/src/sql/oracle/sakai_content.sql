@@ -6,8 +6,7 @@ CREATE TABLE CONTENT_COLLECTION
 (
     COLLECTION_ID VARCHAR2 (255) NOT NULL,
 	IN_COLLECTION VARCHAR2 (255),
-    XML LONG,
-    BINARY_ENTITY BLOB
+    XML LONG
 );
 
 CREATE UNIQUE INDEX CONTENT_COLLECTION_INDEX ON CONTENT_COLLECTION
@@ -32,7 +31,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/','',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/group/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -46,7 +45,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/group/','/',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/public/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -60,7 +59,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/public/','/',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/attachment/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -74,7 +73,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/attachment/','/',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/private/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -88,7 +87,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/private/','/',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/user/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -102,7 +101,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/user/','/',
 		<property name="DAV:creationdate" value="20020401000000000"/>
 	</properties>
 </collection>
-',NULL);
+');
 
 INSERT INTO CONTENT_COLLECTION VALUES ('/group-user/','/',
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -116,7 +115,7 @@ INSERT INTO CONTENT_COLLECTION VALUES ('/group-user/','/',
 			<property name="DAV:creationdate" value="20020401000000000"/>
 		</properties>
 	</collection>
-',NULL);
+');
 
 
 -----------------------------------------------------------------------------
@@ -128,12 +127,8 @@ CREATE TABLE CONTENT_RESOURCE
     RESOURCE_ID VARCHAR2 (255) NOT NULL,
     RESOURCE_UUID VARCHAR2 (36),
 	IN_COLLECTION VARCHAR2 (255),
-	CONTEXT VARCHAR2 (99),
 	FILE_PATH VARCHAR2 (128),
-	FILE_SIZE NUMBER(18),
-	RESOURCE_TYPE_ID VARCHAR2 (255),
-    XML CLOB,
-    BINARY_ENTITY BLOB
+    XML LONG
 -- for BLOB body, add BODY BLOB -- and drop the content_resource_body_binary tables -ggolden
 );
 
@@ -151,17 +146,6 @@ CREATE INDEX CONTENT_UUID_RESOURCE_INDEX ON CONTENT_RESOURCE
 (
 	RESOURCE_UUID
 );
-
-CREATE INDEX CONTENT_RESOURCE_CI ON CONTENT_RESOURCE
-(
-	CONTEXT
-);
-
-CREATE INDEX CONTENT_RESOURCE_RTI ON CONTENT_RESOURCE
-(
-	RESOURCE_TYPE_ID
-);
-
 -----------------------------------------------------------------------------
 -- CONTENT_RESOURCE_BODY_BINARY
 -----------------------------------------------------------------------------
@@ -175,25 +159,4 @@ CREATE TABLE CONTENT_RESOURCE_BODY_BINARY
 CREATE UNIQUE INDEX CONTENT_RESOURCE_BB_INDEX ON CONTENT_RESOURCE_BODY_BINARY
 (
 	RESOURCE_ID
-);
-
------------------------------------------------------------------------------
--- CONTENT_DROPBOX_CHANGES
------------------------------------------------------------------------------
-
-CREATE TABLE CONTENT_DROPBOX_CHANGES
-(
-    DROPBOX_ID VARCHAR2 (255) NOT NULL,
-    IN_COLLECTION VARCHAR2 (255),
-    LAST_UPDATE VARCHAR2 (24)
-);
-
-CREATE UNIQUE INDEX CONTENT_DROPBOX_CI ON CONTENT_DROPBOX_CHANGES
-(
-	DROPBOX_ID
-);
-
-CREATE INDEX CONTENT_DROPBOX_II ON CONTENT_DROPBOX_CHANGES
-(
-	IN_COLLECTION
 );

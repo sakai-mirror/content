@@ -4,7 +4,6 @@
 package org.sakaiproject.content.impl;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -14,17 +13,13 @@ import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingHandler;
-import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
-import org.sakaiproject.content.api.OperationDelegationException;
 import org.sakaiproject.content.impl.BaseContentService.Storage;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.ServerOverloadException;
-import org.sakaiproject.exception.TypeException;
-import org.sakaiproject.util.StorageUser;
 
 /**
  * <p>
@@ -53,45 +48,27 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 
 	private static final Log log = LogFactory.getLog(ContentHostingHandlerResolverImpl.class);
 
-	protected StorageUser resourceStorageUser;
-
-	protected StorageUser collectionStorageUser;
-
-	private Storage storage;
-
 	/**
 	 * Find the closest real ancestor to the requested id, this recurses into itself
 	 * 
 	 * @param id
 	 * @return the closest ancestor or null if not found (bit unlikely)
 	 */
-	public ContentEntity getRealParent( String id)
+	public ContentEntity getRealParent(Storage storage, String id)
 	{
 		ContentEntity ce = storage.getCollection(id);
 		if (ce == null)
 		{
-			try {
 			ce = storage.getResource(id);
-		}
-			catch (TypeException e)
-			{
-				log.debug("Type Exception ",e);
-			}
-
 		}
 		if (ce == null)
 		{
-			if (id.equals(Entity.SEPARATOR)) {
-				// If the entity is the root and we didint get anything, there is nothing we can do
-				// no root, no content, no point in trying to get annother one
-				log.fatal("Unable to get Root node of the repository");
-				throw new Error("Unable to Get Root repository "+Entity.SEPARATOR);
-			}
+			if (id.equals(Entity.SEPARATOR)) return getRealParent(storage, Entity.SEPARATOR);
 			int lastSlash = id.lastIndexOf(Entity.SEPARATOR, id.length() - 2);
 			if (lastSlash > 0)
 			{
 				String parentId = id.substring(0, lastSlash + 1 /* ian@caret.cam wanted a "- 1" here */);
-				ce = getRealParent(parentId);
+				ce = getRealParent(storage, parentId);
 			}
 		}
 		return ce;
@@ -207,7 +184,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * Cancel collection, using storage if real, or the ContentHostingHandler if present.
 	 */
-	public void cancelCollection( ContentCollectionEdit edit)
+	public void cancelCollection(Storage storage, ContentCollectionEdit edit)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -223,7 +200,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc} Cancel collection, using storage if real, or the ContentHostingHandler if present
 	 */
-	public void cancelResource( ContentResourceEdit edit)
+	public void cancelResource(Storage storage, ContentResourceEdit edit)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -239,13 +216,13 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean checkCollection( String id)
+	public boolean checkCollection(Storage storage, String id)
 	{
 		if (storage.checkCollection(id))
 		{
 			return true;
 		}
-		ContentEntity ce = getVirtualChild(id, getRealParent( id), true);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), true);
 		if (ce != null)
 		{
 			if (id.equals(ce.getId()))
@@ -263,14 +240,14 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public boolean checkResource( String id)
+	public boolean checkResource(Storage storage, String id)
 	{
 		if (storage.checkResource(id))
 		{
 			return true;
 		}
 
-		ContentEntity ce = getVirtualChild(id, getRealParent( id), true);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), true);
 		if (ce != null)
 		{
 			if (id.equals(ce.getId()))
@@ -288,7 +265,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public void commitCollection( ContentCollectionEdit edit)
+	public void commitCollection(Storage storage, ContentCollectionEdit edit)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -305,7 +282,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public void commitDeleteResource( ContentResourceEdit edit, String uuid)
+	public void commitDeleteResource(Storage storage, ContentResourceEdit edit, String uuid)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -322,7 +299,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public void commitResource( ContentResourceEdit edit) throws ServerOverloadException
+	public void commitResource(Storage storage, ContentResourceEdit edit) throws ServerOverloadException
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -339,17 +316,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public ContentCollectionEdit editCollection( String id)
+	public ContentCollectionEdit editCollection(Storage storage, String id)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
 			if (chh != null)
 			{
-				ContentCollectionEdit cce = chh.getContentCollectionEdit(id);
-				cce.setVirtualContentEntity(getVirtualChild(id, getRealParent(id), false).getVirtualContentEntity());
-				return cce;
+				return chh.getContentCollectionEdit(id);
 			}
 		}
 		return storage.editCollection(id);
@@ -359,17 +334,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * {@inheritDoc}
 	 */
 
-	public ContentResourceEdit editResource( String id)
+	public ContentResourceEdit editResource(Storage storage, String id)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
 			if (chh != null)
 			{
-				ContentResourceEdit cre = chh.getContentResourceEdit(id);
-				cre.setVirtualContentEntity(getVirtualChild(id, getRealParent( id), false).getVirtualContentEntity());
-				return cre;
+				return chh.getContentResourceEdit(id);
 			}
 		}
 		return storage.editResource(id);
@@ -378,14 +351,14 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public ContentCollection getCollection( String id)
+	public ContentCollection getCollection(Storage storage, String id)
 	{
 		ContentCollection cc = storage.getCollection(id);
 		if (cc != null)
 		{
 			return cc;
 		}
-		ContentEntity rp = getRealParent( id);
+		ContentEntity rp = getRealParent(storage, id);
 		if (rp == null)
 		{
 			return null;
@@ -402,7 +375,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public List getCollections( ContentCollection collection)
+	public List getCollections(Storage storage, ContentCollection collection)
 	{
 		ContentHostingHandler chh = collection.getContentHandler();
 		if (chh != null)
@@ -418,7 +391,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 			for (java.util.Iterator i = l.iterator(); i.hasNext();)
 			{
 				ContentResource o = (ContentResource) i.next();
-				ContentResource cr = getResource( o.getId());
+				ContentResource cr = getResource(storage, o.getId());
 				if (cr != null)
 				{
 					ResourceProperties p = cr.getProperties();
@@ -435,14 +408,14 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public List getFlatResources( String id)
+	public List getFlatResources(Storage storage, String id)
 	{
 		List l = storage.getFlatResources(id);
 		if (l != null)
 		{
 			return l;
 		}
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), true);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), true);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
@@ -457,23 +430,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public ContentResource getResource( String id)
+	public ContentResource getResource(Storage storage, String id)
 	{
 
-		ContentResource cc = null;
-		try
-		{
-			cc = storage.getResource(id);
-		}
-		catch (TypeException e)
-		{
-			log.debug("Type Exception ",e);
-		}
+		ContentResource cc = storage.getResource(id);
 		if (cc != null)
 		{
 			return cc;
 		}
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), true);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), true);
 		if (ce instanceof ContentResource)
 		{
 			return (ContentResource) ce;
@@ -486,7 +451,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * 
 	 * @throws ServerOverloadException
 	 */
-	public byte[] getResourceBody( ContentResource resource) throws ServerOverloadException
+	public byte[] getResourceBody(Storage storage, ContentResource resource) throws ServerOverloadException
 	{
 		ContentHostingHandler chh = resource.getContentHandler();
 		if (chh != null)
@@ -502,7 +467,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public List getResources( ContentCollection collection)
+	public List getResources(Storage storage, ContentCollection collection)
 	{
 		ContentHostingHandler chh = collection.getContentHandler();
 		if (chh != null)
@@ -515,7 +480,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 			for (java.util.Iterator i = l.iterator(); i.hasNext();)
 			{
 				ContentResource o = (ContentResource) i.next();
-				ContentResource cr = getResource(o.getId());
+				ContentResource cr = getResource(storage, o.getId());
 				if (cr != null)
 				{
 					ResourceProperties p = cr.getProperties();
@@ -529,17 +494,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public ContentCollectionEdit putCollection( String id)
+	public ContentCollectionEdit putCollection(Storage storage, String id)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
 			if (chh != null)
 			{
-				ContentCollectionEdit cce = chh.getContentCollectionEdit(id);
-				cce.setVirtualContentEntity(getVirtualChild(id, getRealParent(id), false).getVirtualContentEntity());
-				return cce;
+				return chh.getContentCollectionEdit(id);
 			}
 		}
 		return storage.putCollection(id);
@@ -548,17 +511,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public ContentResourceEdit putDeleteResource( String id, String uuid, String userId)
+	public ContentResourceEdit putDeleteResource(Storage storage, String id, String uuid, String userId)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
 			if (chh != null)
 			{
-				ContentResourceEdit cre = chh.putDeleteResource(id, uuid, userId);
-				cre.setVirtualContentEntity(getVirtualChild(id, getRealParent(id), false).getVirtualContentEntity());
-				return cre;
+				return chh.putDeleteResource(id, uuid, userId);
 			}
 		}
 		return storage.putDeleteResource(id, uuid, userId);
@@ -567,17 +528,15 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public ContentResourceEdit putResource( String id)
+	public ContentResourceEdit putResource(Storage storage, String id)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
 			if (chh != null)
 			{
-				ContentResourceEdit cre = chh.getContentResourceEdit(id);
-				cre.setVirtualContentEntity(getVirtualChild(id, getRealParent(id), false).getVirtualContentEntity());
-				return cre;
+				return chh.getContentResourceEdit(id);
 			}
 		}
 		return storage.putResource(id);
@@ -586,7 +545,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public void removeCollection( ContentCollectionEdit edit)
+	public void removeCollection(Storage storage, ContentCollectionEdit edit)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -602,7 +561,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	/**
 	 * {@inheritDoc}
 	 */
-	public void removeResource( ContentResourceEdit edit)
+	public void removeResource(Storage storage, ContentResourceEdit edit)
 	{
 		ContentHostingHandler chh = edit.getContentHandler();
 		if (chh != null)
@@ -620,7 +579,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 	 * 
 	 * @throws ServerOverloadException
 	 */
-	public InputStream streamResourceBody( ContentResource resource) throws ServerOverloadException
+	public InputStream streamResourceBody(Storage storage, ContentResource resource) throws ServerOverloadException
 	{
 		ContentHostingHandler chh = resource.getContentHandler();
 		if (chh != null)
@@ -633,6 +592,9 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 		}
 	}
 
+	protected org.sakaiproject.util.StorageUser resourceStorageUser;
+
+	protected org.sakaiproject.util.StorageUser collectionStorageUser;
 
 	public void setResourceUser(org.sakaiproject.util.StorageUser rsu)
 	{
@@ -654,9 +616,9 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 		return resourceStorageUser.newResourceEdit(null, id, null);
 	}
 
-	public int getMemberCount(String id)
+	public int getMemberCount(Storage storage, String id)
 	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		ContentEntity ce = getVirtualChild(id, getRealParent(storage, id), false);
 		if (ce != null)
 		{
 			ContentHostingHandler chh = ce.getContentHandler();
@@ -666,124 +628,5 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 			}
 		}
 		return storage.getMemberCount(id);
-	}
-
-	/**
-	 * @param storage
-	 */
-	public void setStorage(Storage storage)
-	{
-		this.storage = storage;
-		
-	}
-
-	/**
-	 * @return the storage
-	 */
-	public Storage getStorage()
-	{
-		return storage;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getMemberCollectionIds(java.lang.String)
-	 */
-	public Collection<String> getMemberCollectionIds(String collectionId)
-	{
-		ContentEntity ce = getVirtualChild(collectionId, getRealParent(collectionId), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				return chh.getMemberCollectionIds(ce);
-			}
-		}
-		return storage.getMemberCollectionIds(collectionId);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getMemberResourceIds(java.lang.String)
-	 */
-	public Collection<String> getMemberResourceIds(String collectionId)
-	{
-		ContentEntity ce = getVirtualChild(collectionId, getRealParent(collectionId), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				return chh.getMemberResourceIds(ce);
-			}
-		}
-		return storage.getMemberResourceIds(collectionId);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveCollection(org.sakaiproject.content.api.ContentCollectionEdit, java.lang.String)
-	 */
-	public String moveCollection(ContentCollectionEdit thisCollection, String new_folder_id) throws OperationDelegationException
-	{
-		ContentEntity ce = getVirtualChild(new_folder_id, getRealParent(new_folder_id), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				return chh.moveCollection(thisCollection,new_folder_id);
-			}
-		}
-		throw new OperationDelegationException();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveResource(org.sakaiproject.content.api.ContentResourceEdit, java.lang.String)
-	 */
-	public String moveResource(ContentResourceEdit thisResource, String new_id) throws OperationDelegationException
-	{
-		ContentEntity ce = getVirtualChild(new_id, getRealParent(new_id), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				return chh.moveResource(thisResource,new_id);
-			}
-		}
-		throw new OperationDelegationException();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#setResourceUuid(java.lang.String, java.lang.String)
-	 */
-	public void setResourceUuid(String resourceId, String uuid) throws OperationDelegationException
-	{
-		ContentEntity ce = getVirtualChild(resourceId, getRealParent(resourceId), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				chh.setResourceUuid(resourceId,uuid);
-			}
-		}
-		throw new OperationDelegationException();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getUuid(java.lang.String)
-	 */
-	public String getUuid(String id) throws OperationDelegationException
-	{
-		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
-		if (ce != null)
-		{
-			ContentHostingHandler chh = ce.getContentHandler();
-			if (chh != null)
-			{
-				chh.getUuid(id);
-			}
-		}
-		throw new OperationDelegationException();
 	}
 }
