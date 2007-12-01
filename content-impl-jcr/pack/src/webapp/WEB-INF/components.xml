@@ -11,8 +11,11 @@
 	<bean id="org.sakaiproject.content.api.ContentHostingService"
 			class="org.sakaiproject.content.multiplex.ContentHostingMultiplexService"
             init-method="init" destroy-method="destroy" singleton="true">
-             <property name="defaultContentHostingService">              
+             <property name="contentHostingServices">              
+		<list>
+             	<ref bean="org.sakaiproject.content.api.ContentHostingService.jcrservice" />
              	<ref bean="org.sakaiproject.content.api.ContentHostingService.dbservice" />
+		</list>
              </property>
     </bean>
 -->
@@ -30,6 +33,8 @@
     <bean id="org.sakaiproject.content.api.ContentHostingService.dbservice"
 			class="org.sakaiproject.content.impl.DbContentService"
             init-method="init" destroy-method="destroy" singleton="true">
+
+        <property name="primaryContentService"><value>false</value></property>
 
         <property name="memoryService">              <ref bean="org.sakaiproject.memory.api.MemoryService"/>                 </property>
         <property name="aliasService">               <ref bean="org.sakaiproject.alias.api.AliasService"/>                   </property>
@@ -138,38 +143,18 @@
         <property name="sqlService"> <ref bean="org.sakaiproject.db.api.SqlService"/> </property>
         <property name="autoDdl">    <value>${auto.ddl}</value>                       </property>
 	</bean>
-	
-	
-	<bean id="ContentHostingTargetSource" init-method="init" destroy-method="destroy"
-	   class="org.sakaiproject.content.multiplex.ContentHostingTargetSource">
-	   <property name="targetBeanName" value="org.sakaiproject.content.api.ContentHostingService.dbservice" />
-	   <property name="targetClass" value="org.sakaiproject.content.api.ContentHostingService" />
-	</bean>
 
-	<bean id="org.sakaiproject.content.api.ContentHostingService"
-	  class="org.springframework.aop.framework.ProxyFactoryBean" >
-	  <property name="proxyInterfaces">
-	    <value>org.sakaiproject.content.api.ContentHostingService</value>
-	  </property>
-      <property name="targetName" value="ContentHostingTargetSource" />
-      <!-- <property name="proxyTargetClass" value="true" /> -->
-	</bean>
-	
-	
-	<bean id="org.sakaiproject.content.impl.DropboxContextObserver"
+
+	<bean id="org.sakaiproject.content.impl.DropboxContextObserver.dbservice"
 			class="org.sakaiproject.content.impl.DropboxContextObserver"
             init-method="init" destroy-method="destroy" singleton="true">
-
         <property name="contentService">
-        	<ref bean="org.sakaiproject.content.api.ContentHostingService"/>
+        	<ref bean="org.sakaiproject.content.api.ContentHostingService.dbservice"/>
 		</property>
         <property name="entityManager">
         	<ref bean="org.sakaiproject.entity.api.EntityManager"/>
 		</property>
 	</bean>
-
-
-
 
 
 	<bean id="org.sakaiproject.content.api.ContentHostingService.collectionSerializer"
