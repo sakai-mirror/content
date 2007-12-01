@@ -137,7 +137,7 @@
     class="org.sakaiproject.content.impl.jcr.migration.CHStoJCRMigratorImpl"
     init-method="init" destroy-method="destroy" >
     <property name="contentToJCRCopier" ref="org.sakaiproject.content.migration.api.ContentToJCRCopier" />
-    <property name="jcrService" ref="org.sakaiproject.jcr.api.JCRService" />
+    <property name="jcrService" ref="org.sakaiproject.jcr.api.UnboundJCRService" />
     <property name="migrationStatusReporter" ref="org.sakaiproject.content.migration.api.MigrationStatusReporter" />
     <property name="sqlService" ref="org.sakaiproject.db.api.SqlService" />
     <property name="autoDDL" value="true" />

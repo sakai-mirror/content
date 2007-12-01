@@ -1,5 +1,7 @@
 package org.sakaiproject.content.migration.api;
 
+import javax.jcr.Session;
+
 /*
  * This interface is used to copy a file or folder from the Legacy CHS Implementation
  * to the JCR Implementation.
@@ -21,20 +23,24 @@ public interface ContentToJCRCopier {
      * creates the empty nt:folder and copies all the Sakai metadata.
      * 
      * Needs to handle updating a collection if it already exists.
+     * 
+     * Saves the node but does not log out of the session.
      */
-    public boolean copyCollectionFromCHStoJCR(String abspath);
+    public boolean copyCollectionFromCHStoJCR(Session session, String abspath);
         
     /*
      * This will copy the resource from the Legacy ContentHosting implementation 
      * to the JCR Repository
      * 
      * Needs to handle replacing a resource (say from a content.write event)
+     * 
+     * Saves the node but does not log out of the session.
      */
-    public boolean copyResourceFromCHStoJCR(String abspath);
+    public boolean copyResourceFromCHStoJCR(Session session, String abspath);
             
     /*
      * Attempts to delete an item. If it ends with a slash it is assumed to be
      * a ContentCollections (generated from a content.remove event)
      */
-    public boolean deleteItem(String abspath);
+    public boolean deleteItem(Session session, String abspath);
 }

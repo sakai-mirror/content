@@ -3,9 +3,7 @@ package org.sakaiproject.content.impl.jcr.migration;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import javax.jcr.LoginException;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.logging.Log;
@@ -13,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.impl.JCRStorageUser;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
@@ -22,7 +21,7 @@ import org.sakaiproject.jcr.api.JCRService;
 public class ContentToJCRCopierImpl implements ContentToJCRCopier {
     private static Log log = LogFactory.getLog(ContentToJCRCopierImpl.class);
 
-    private JCRService jcrService;
+    //private JCRService jcrService;
     private JCRStorageUser jcrStorageUser;
     private ContentHostingService oldCHSService;
 
@@ -39,10 +38,14 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
      * Copies the ContentCollection folder to JCR for the content collection at 
      * absolute path 'abspath'. This does not copy the contents of the folder, just
      * creates the empty nt:folder and copies all the Sakai metadata.
+     * 
+     * If the collection already exists, all we will do is update the properties
+     * on it. We will not delete and recreate it completely, since that would
+     * destroy all the files underneath.
      */
-    public boolean copyCollectionFromCHStoJCR(String abspath) {
+    public boolean copyCollectionFromCHStoJCR(Session jcrSession, String abspath) {
         try {
-            Session jcrSession = jcrService.getSession();
+            //Session jcrSession = jcrService.login();
 
             // We don't need to convert the root node
             if (abspath == "/") {
@@ -50,13 +53,12 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
                 return true;
             }
 
-            ContentCollectionEdit   collection = oldCHSService.editCollection(abspath);
+            ContentCollection collection = oldCHSService.getCollection(abspath);  
+              //editCollection(abspath);
 
             // The parent folder in jcr
             String collectionIDwithNoSlash = collection.getId();
-            ///if (collectionIDwithNoSlash.endsWith("/")) {
-            //    collectionIDwithNoSlash = collectionIDwithNoSlash.substring(0, collectionIDwithNoSlash.length()-1);
-            //}
+
             collectionIDwithNoSlash = rstripSlash(collectionIDwithNoSlash);
 
             int lastSlashIndex = collectionIDwithNoSlash.lastIndexOf("/");
@@ -71,9 +73,11 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
             collectionNode.addMixin("sakaijcr:properties-mix");
             collectionNode.addMixin("mix:lockable");
 
-            jcrStorageUser.copy(collection,((Object) collectionNode));
-            jcrSession.save();
-            oldCHSService.cancelCollection(collection);
+            jcrStorageUser.copy((ContentCollectionEdit)collection,((Object) collectionNode));
+            
+            parentFolderNode.save();
+           
+            //oldCHSService.cancelCollection(collection);
             return true;
         }
         catch (Exception e) {
@@ -87,11 +91,12 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
      * This will copy the resource from the Legacy ContentHosting implementation 
      * to the JCR Repository
      */
-    public boolean copyResourceFromCHStoJCR(String abspath) {
+    public boolean copyResourceFromCHStoJCR(Session jcrSession, String abspath) {
         try {    
-            Session jcrSession = jcrService.getSession();
+            //Session jcrSession = jcrService.login();
 
-            ContentResourceEdit resource = oldCHSService.editResource(abspath);
+            ContentResource resource = oldCHSService.getResource(abspath);
+              //editResource(abspath);
 
             // See what the mimeType property is
             String resourceMimeType = resource.getProperties().getProperty(
@@ -121,9 +126,12 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
             contentNode.setProperty("jcr:data",resource.streamContent());
             contentNode.setProperty("jcr:mimeType",resourceMimeType);
             contentNode.setProperty("jcr:lastModified",lastModCalendar);
-            jcrStorageUser.copy(resource,resourceNode);
-            jcrSession.save();
-            oldCHSService.cancelResource(resource);
+            jcrStorageUser.copy((ContentResourceEdit)resource,resourceNode);
+            
+            parentNode.save();
+           
+           
+            //oldCHSService.cancelResource(resource);
             return true;
         }
         catch (Exception e) {
@@ -134,7 +142,7 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
     }
 
     public void setJcrService(JCRService jcrService) {
-        this.jcrService = jcrService;
+        //this.jcrService = jcrService;
     }
 
     public void setJcrStorageUser(JCRStorageUser jcrStorageUser) {
@@ -145,16 +153,17 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier {
         this.oldCHSService = oldCHSService;
     }
 
-    public boolean deleteItem(String abspath) {
+    public boolean deleteItem(Session session, String abspath) {
         String actualPath = MigrationConstants.jcr_content_prefix + abspath;
         if (abspath.endsWith("/")) {
             actualPath = actualPath.substring(0,actualPath.length()-1);
         }
         try {
-            Session session = jcrService.getSession();
+            //Session session = jcrService.getSession();
             Node node = (Node) session.getItem(actualPath);
             node.remove();
-            session.save();
+            node.save();
+            
         } catch (Exception e) {
             log.error("Problem Deleting item during CHS to JCR Migration", e);
         }
