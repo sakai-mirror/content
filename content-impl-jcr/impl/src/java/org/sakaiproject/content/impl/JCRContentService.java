@@ -220,7 +220,7 @@ public class JCRContentService extends DbContentService {
    @SuppressWarnings("unchecked")
    private int countCollectionMembers(String id, int currentCount) {
       ContentCollection cc = storage.getCollection(id);
-      int newCount = currentCount;
+      int newCount = 0;
       List<ContentEntity> members = cc.getMemberResources();
       for (ContentEntity ce : members) {
          if (ce instanceof ContentCollection) {
