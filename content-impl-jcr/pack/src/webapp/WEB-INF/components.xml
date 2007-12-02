@@ -169,6 +169,14 @@
         	<ref bean="org.sakaiproject.entity.api.EntityManager"/>
 		</property>
 	</bean>
+	
+	<bean class="org.sakaiproject.content.multiplex.ThirdPartyManagerRegistrar"
+	    init-method="init">
+	    <property name="contentHostingService" 
+	        ref="org.sakaiproject.content.api.ContentHostingService" />
+	    <property name="entityManager" 
+	        ref="org.sakaiproject.entity.api.EntityManager" />
+	</bean>
 
 
 	<bean id="org.sakaiproject.content.api.ContentHostingService.collectionSerializer"

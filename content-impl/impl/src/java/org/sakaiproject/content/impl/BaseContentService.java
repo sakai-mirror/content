@@ -716,7 +716,12 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 			// register as an entity producer
 			if ( m_primaryContentService ) {
-				m_entityManager.registerEntityProducer(this, REFERENCE_ROOT);
+				// As part of the work on creating a proxy for multiple 
+			    // ContentHostingService definitions, this registration is
+			    // being moved to a third party so it can register the proxy
+			    // rather than this concrete implementation.
+			    //
+			    //m_entityManager.registerEntityProducer(this, REFERENCE_ROOT);
 
 				// register functions
 				FunctionManager.registerFunction(AUTH_RESOURCE_ADD);

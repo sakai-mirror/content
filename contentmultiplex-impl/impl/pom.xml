@@ -39,6 +39,12 @@
     </dependency>
     
     <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-component</artifactId>
+      <version>${sakai.version}</version>
+    </dependency>
+    
+    <dependency>
       <groupId>${sakai.spring.groupId}</groupId>
       <artifactId>${sakai.spring.artifactId}</artifactId>
       <version>${sakai.spring.version}</version>
