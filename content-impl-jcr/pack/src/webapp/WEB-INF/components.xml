@@ -144,6 +144,20 @@
         <property name="autoDdl">    <value>${auto.ddl}</value>                       </property>
 	</bean>
 
+    <bean id="ContentHostingTargetSource" init-method="init" destroy-method="destroy"
+	   class="org.sakaiproject.content.multiplex.ContentHostingTargetSource">
+	   <property name="targetBeanName" value="org.sakaiproject.content.api.ContentHostingService.dbservice" />
+	   <property name="targetClass" value="org.sakaiproject.content.api.ContentHostingService" />
+	</bean>
+
+	<bean id="org.sakaiproject.content.api.ContentHostingService"
+	  class="org.springframework.aop.framework.ProxyFactoryBean" >
+	  <property name="proxyInterfaces">
+	    <value>org.sakaiproject.content.api.ContentHostingService</value>
+	  </property>
+      <property name="targetName" value="ContentHostingTargetSource" />
+      <!-- <property name="proxyTargetClass" value="true" /> -->
+	</bean>
 
 	<bean id="org.sakaiproject.content.impl.DropboxContextObserver.dbservice"
 			class="org.sakaiproject.content.impl.DropboxContextObserver"

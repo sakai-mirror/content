@@ -50,7 +50,7 @@
             init-method="init" destroy-method="destroy" singleton="true">
             
         <property name="contentService">
-                <ref bean="org.sakaiproject.content.api.ContentHostingService.jcrservice"/>
+                <ref bean="org.sakaiproject.content.api.ContentHostingService.jcrimpl"/>
                 </property>
         <property name="entityManager">
                 <ref bean="org.sakaiproject.entity.api.EntityManager"/>
