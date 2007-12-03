@@ -114,8 +114,6 @@ public class ListItem
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
 	public static final long ONE_WEEK = 7L * ONE_DAY;
 
-	public static final String DOT = "_";
-	
 	/**
 	 * @param entity
 	 * @param parent
@@ -355,13 +353,11 @@ public class ListItem
 	protected Reference m_reference;
 	protected AccessMode accessMode;
 	protected AccessMode inheritedAccessMode;
-
 	protected Collection<Group> groups = new ArrayList<Group>();
 	protected Collection<Group> inheritedGroups = new ArrayList<Group>();
 	protected Collection<Group> possibleGroups = new ArrayList<Group>();
 	protected Collection<Group> allowedRemoveGroups = null;
 	protected Collection<Group> allowedAddGroups = null;
-
 	protected Map<String,Group> siteGroupsMap = new HashMap<String, Group>();
 
 	protected boolean isPubviewPossible;
@@ -407,7 +403,6 @@ public class ListItem
 
 	protected Time lastChange = null;
 
-	
 	private org.sakaiproject.content.api.ContentHostingService contentService;
 
 	/**
@@ -431,7 +426,7 @@ public class ListItem
 		}
 	    String refstr = entity.getReference();
 		this.isSiteCollection = this.siteCollection(refstr);
-		
+
 		boolean isUserSite = isInWorkspace(parent, refstr);
 		setUserSite(isUserSite);
 		
@@ -443,7 +438,6 @@ public class ListItem
 		{
 			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
 		}
-
 		if(entity.getContainingCollection() == null)
 		{
 			this.containingCollectionId = null;
@@ -460,14 +454,15 @@ public class ListItem
 		{
 			this.isDropbox = contentService.isInDropbox(this.containingCollectionId);
 		}
+
 		ResourceProperties props = entity.getProperties();
 		this.accessUrl = entity.getUrl();
 		this.collection = entity.isCollection();
 		this.id = entity.getId();
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
-
 		if(name == null || name.trim().equals(""))
 		{
+			
 			String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
 			if(siteCollectionId != null && siteCollectionId.equals(id))
 			{
@@ -484,7 +479,6 @@ public class ListItem
 				}
 			}
 		}
-
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
 		if(this.isDropbox)
@@ -538,7 +532,7 @@ public class ListItem
 	        	}
 	        	else
 	        	{
-	        	String[] args = { Integer.toString(collection_size) };
+		        	String[] args = { Integer.toString(collection_size) };
 		        	shortSizeStr = rb.getFormattedMessage("size.items", args);
 	        	}
 			}
@@ -625,53 +619,53 @@ public class ListItem
 				{
 					if(size == null)
 					{
-					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
-					size = rb.getFormattedMessage("size.gb", args);
+						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
+						size = rb.getFormattedMessage("size.gb", args);
 					}
 					if(sizzle == null)
 					{
-					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.gbytes", argyles);
-				}
+						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.gbytes", argyles);
+					}
 				}
 				else if(size_long > 700000L)
 				{
 					if(size == null)
 					{
-					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
-					size = rb.getFormattedMessage("size.mb", args);
+						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
+						size = rb.getFormattedMessage("size.mb", args);
 					}
 					if(sizzle == null)
 					{
-					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.mbytes", argyles);
-				}
+						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.mbytes", argyles);
+					}
 				}
 				else if(size_long > 700L)
 				{
 					if(size == null)
 					{
-					String[] args = { formatter.format(1.0 * size_long / 1024L) };
-					size = rb.getFormattedMessage("size.kb", args);
+						String[] args = { formatter.format(1.0 * size_long / 1024L) };
+						size = rb.getFormattedMessage("size.kb", args);
 					}
 					if(sizzle == null)
 					{
-					String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.kbytes", argyles);
-				}
+						String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.kbytes", argyles);
+					}
 				}
 				else 
 				{
 					String[] args = { formatter.format(size_long) };
 					if(size == null)
 					{
-					size = rb.getFormattedMessage("size.bytes", args);
+						size = rb.getFormattedMessage("size.bytes", args);
 					}
 					if(sizzle == null)
 					{
-					sizzle = rb.getFormattedMessage("size.bytes", args);
+						sizzle = rb.getFormattedMessage("size.bytes", args);
+					}
 				}
-			}
 			}
 			if(size == null)
 			{

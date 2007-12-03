@@ -34,11 +34,14 @@ import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.Event;
+import org.sakaiproject.event.api.Notification;
 import org.sakaiproject.event.api.NotificationAction;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.util.EmailNotification;
 import org.sakaiproject.util.SiteEmailNotification;
 import org.sakaiproject.util.StringUtil;
+import org.sakaiproject.util.FormattedText;
 
 /**
  * <p>
@@ -50,6 +53,43 @@ import org.sakaiproject.util.StringUtil;
 public class SiteEmailNotificationContent extends SiteEmailNotification
 {
 	private static ResourceBundle rb = ResourceBundle.getBundle("siteemacon");
+	protected Event event;
+	
+	protected String plainTextContent() {
+		return generateContentForType(false);
+	}
+	
+	protected String htmlContent() {
+		return generateContentForType(true);
+	}
+
+	private String generateContentForType(boolean shouldProduceHtml) {
+		// get the content & properties
+		Reference ref = EntityManager.newReference(this.event.getResource());
+		// TODO:  ResourceProperties props = ref.getProperties();
+
+		// get the function
+		String function = this.event.getEvent();
+		String subject = getSubject(this.event);
+
+		// use either the configured site, or if not configured, the site (context) of the resource
+		String siteId = (getSite() != null) ? getSite() : ref.getContext();
+
+		// get a site title
+		String title = siteId;
+		try
+		{
+			Site site = SiteService.getSite(siteId);
+			title = site.getTitle();
+		}
+		catch (Exception ignore)
+		{
+		}
+		
+		StringBuilder buf = new StringBuilder();
+		addMessageText(buf, ref, subject, title, function, shouldProduceHtml);
+		return buf.toString();
+	}
 
 	/**
 	 * Construct.
@@ -73,53 +113,40 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 	{
 		return ContentHostingService.EVENT_RESOURCE_READ;
 	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public NotificationAction getClone()
-	{
-		SiteEmailNotificationContent clone = new SiteEmailNotificationContent();
-		clone.set(this);
-
-		return clone;
+	
+	protected EmailNotification makeEmailNotification() {
+		return new SiteEmailNotificationContent();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	protected String getMessage(Event event)
+	private void addMessageText(StringBuilder buf, Reference ref, String subject, String title, String function, boolean doHtml)
 	{
-		// get the content & properties
-		Reference ref = EntityManager.newReference(event.getResource());
 		ResourceProperties props = ref.getProperties();
-
-		// get the function
-		String function = event.getEvent();
-
-		// use either the configured site, or if not configured, the site (context) of the resource
-		String siteId = (getSite() != null) ? getSite() : ref.getContext();
-
-		// get a site title
-		String title = siteId;
-		try
-		{
-			Site site = SiteService.getSite(siteId);
-			title = site.getTitle();
-		}
-		catch (Exception ignore)
-		{
-		}
-
-		// get the URL and resource name.
-		StringBuffer buf = new StringBuffer();
-		String url = ref.getUrl();
 		String resourceName = props.getPropertyFormatted(ResourceProperties.PROP_DISPLAY_NAME);
+		String description = props.getPropertyFormatted(ResourceProperties.PROP_DESCRIPTION);
+		String url = ref.getUrl();
+		String blankLine = "\n\n";
+		String newLine = "\n";
+
+		if ( doHtml ) 
+		{
+			title = FormattedText.escapeHtmlFormattedTextarea(title);
+			subject = FormattedText.escapeHtmlFormattedTextarea(subject);
+			resourceName = FormattedText.escapeHtmlFormattedTextarea(resourceName);
+			description = FormattedText.escapeHtmlFormattedTextarea(description);
+			blankLine = "\n</p><p>\n";
+			newLine = "<br/>\n";
+		}
 
 		// get the resource copyright alert property
 		boolean copyrightAlert = props.getProperty(ResourceProperties.PROP_COPYRIGHT_ALERT) != null ? true : false;
 
 		// Now build up the message text.
+		if (doHtml) {
+			buf.append("<p>");
+		}
 		if (ContentHostingService.EVENT_RESOURCE_ADD.equals(function))
 		{
 			buf.append(rb.getString("anewres"));
@@ -135,46 +162,88 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 		buf.append("\" ");
 		buf.append(rb.getString("sitat"));
 		buf.append(" ");
-		buf.append(ServerConfigurationService.getString("ui.service", "Sakai"));
-		buf.append(" (");
-		buf.append(ServerConfigurationService.getPortalUrl());
-		buf.append(")\n");
+		if ( doHtml )
+		{
+			buf.append("<a href=\"");
+			buf.append(ServerConfigurationService.getPortalUrl());
+			buf.append("\">");
+			buf.append(ServerConfigurationService.getString("ui.service", "Sakai"));
+			buf.append("</a>");
+		}
+		else
+		{
+			buf.append(ServerConfigurationService.getString("ui.service", "Sakai"));
+			buf.append(" (");
+			buf.append(ServerConfigurationService.getPortalUrl());
+			buf.append(")");
+		}
+		buf.append(blankLine);
 
 		// add location
 		String path = constructPath(ref.getReference());
-		buf.append("\n" + rb.getString("locsit") + " \"" + title + "\" > " + rb.getString("reso") + " " + path + " > "
-				+ resourceName);
+		buf.append(rb.getString("locsit") + " \"" + title + "\" > " + rb.getString("reso") + " " + path + " > ");
+		if ( doHtml ) 
+		{
+			buf.append("<a href=\"");
+			buf.append(url);
+			buf.append("\">");
+			buf.append(resourceName);
+			buf.append("</a>");
+		}
+		else
+		{
+			buf.append(resourceName);
+		}
+
 		if (copyrightAlert)
 		{
 			buf.append(" (c)");
 		}
-		buf.append("\n");
+		buf.append(blankLine);
 
 		// resource description
-		String description = props.getPropertyFormatted(ResourceProperties.PROP_DESCRIPTION);
 		if ((description != null) && (description.length() > 0))
 		{
-			buf.append("\n" + rb.getString("descrip") + " " + description + "\n");
+			buf.append(rb.getString("descrip") + " " + description);
+			buf.append(blankLine);
 		}
 
-		// add a reference to the resource
-		buf.append("\n" + rb.getString("resour") + " " + resourceName);
-		if (copyrightAlert)
+		// add a reference to the resource for non-HTML
+		if ( ! doHtml )
 		{
-			buf.append(" (c)");
+			buf.append("\n" + rb.getString("resour") + " " + resourceName);
+			if (copyrightAlert)
+			{
+				buf.append(" (c)");
+			}
+			buf.append(" " + url);
+			buf.append("\n\n");  // End on a blank line
 		}
-		buf.append(" " + url);
-		buf.append("\n");
 
-		return buf.toString();
+		// Add the tag
+		if (doHtml) {
+			buf.append("<hr/>" + newLine + rb.getString("this") + " "
+	                                + ServerConfigurationService.getString("ui.service", "Sakai") + " (<a href=\"" + ServerConfigurationService.getPortalUrl()
+	                                + "\" >" + ServerConfigurationService.getPortalUrl() + "</a>) " + rb.getString("forthe") + " " + title + " "
+	                                + rb.getString("site") + newLine + rb.getString("youcan"));
+		} else {
+			buf.append(rb.getString("separator") + newLine + rb.getString("this") + " "
+                    + ServerConfigurationService.getString("ui.service", "Sakai") + " (" + ServerConfigurationService.getPortalUrl()
+                    + ") " + rb.getString("forthe") + " " + title + " " + rb.getString("site") + newLine + rb.getString("youcan"));
+		}
+		
+		if (doHtml) {
+			buf.append("</p>");
+		}
+		
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	protected List getHeaders(Event event)
+	protected List<String> getHeaders(Event event)
 	{
-		List rv = new Vector();
+		List<String> rv = super.getHeaders(event);
 
 		// the Subject
 		rv.add("Subject: " + getSubject(event));
@@ -191,14 +260,10 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 	/**
 	 * @inheritDoc
 	 */
-	protected String getTag(String newline, String title)
+	protected String getTag(String newLine, String title)
 	{
-		// tag the message
-		String rv = newline + rb.getString("separator") + newline + rb.getString("this") + " "
-				+ ServerConfigurationService.getString("ui.service", "Sakai") + " (" + ServerConfigurationService.getPortalUrl()
-				+ ") " + rb.getString("forthe") + " " + title + " " + rb.getString("site") + newline + rb.getString("youcan")
-				+ newline;
-		return rv;
+		// We handle this in the bodies of the messages
+		return "";
 	}
 
 	/**
@@ -310,4 +375,20 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 		// combine
 		users.addAll(allGroupUsers);
 	}
+	
+	/**
+	 * Do the notification.
+	 * 
+	 * @param notification
+	 *        The notification responding to the event.
+	 * @param event
+	 *        The event that matched criteria to cause the notification.
+	 */
+	public void notify(Notification notification, Event event)
+	{
+		this.event = event;
+	
+		super.notify(notification, event);
+	}
+
 }

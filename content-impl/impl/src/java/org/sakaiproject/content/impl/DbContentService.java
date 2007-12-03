@@ -4,22 +4,20 @@
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007 The Sakai Foundation.
- * 
- * Licensed under the Educational Community License, Version 1.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
+ *
+ * Licensed under the Educational Community License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.opensource.org/licenses/ecl1.php
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  *
  **********************************************************************************/
-
-
 // TODO: check against 15608
 
 package org.sakaiproject.content.impl;
@@ -30,8 +28,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -90,8 +86,7 @@ import org.w3c.dom.Element;
 
 /**
  * <p>
- * DbContentService is an extension of the BaseContentService with a database
- * implementation.
+ * DbContentService is an extension of the BaseContentService with a database implementation.
  * </p>
  * <p>
  * The sql scripts in src/sql/chef_content.sql must be run on the database.
@@ -114,9 +109,9 @@ public class DbContentService extends BaseContentService
 	/** Table name for entity-group relationships. */
 	protected String m_groupTableName = "CONTENT_ENTITY_GROUPS";
 
+	
 	/**
-	 * If true, we do our locks in the remote database, otherwise we do them
-	 * here.
+	 * If true, we do our locks in the remote database, otherwise we do them here.
 	 */
 	protected boolean m_locksInDb = true;
 
@@ -148,7 +143,7 @@ public class DbContentService extends BaseContentService
 
 	/** Table name for resources delete. */
 	protected String m_resourceBodyDeleteTableName = "CONTENT_RESOURCE_BODY_BINARY_DELETE";
-	
+
 	/** The chunk size used when streaming (100k). */
 	protected static final int STREAM_BUFFER_SIZE = 102400;
 
@@ -157,7 +152,7 @@ public class DbContentService extends BaseContentService
 
 	/*************************************************************************************************************************************************
 	 * Constructors, Dependencies and their setter methods
-	 **************************************************************************/
+	 ************************************************************************************************************************************************/
 
 	/** Dependency: LockManager */
 	protected LockManager m_lockManager = null;
@@ -248,7 +243,7 @@ public class DbContentService extends BaseContentService
 	/** Configuration: to run the ddl on init or not. */
 	protected boolean m_autoDdl = false;
 
-	/* Virtual Content Hosting Handler -- handler which resolves virtual entities to real ones */
+	/** Virtual Content Hosting Handler -- handler which resolves virtual entities to real ones. */
 	private ContentHostingHandlerResolverImpl contentHostingHandlerResolver = null;
 
 	/**
@@ -308,7 +303,7 @@ public class DbContentService extends BaseContentService
 
 	/*************************************************************************************************************************************************
 	 * Init and Destroy
-	 **************************************************************************/
+	 ************************************************************************************************************************************************/
 
 	/**
 	 * Final initialization, once all dependencies are set.
@@ -355,12 +350,10 @@ public class DbContentService extends BaseContentService
 			// if we are auto-creating our schema, check and create
 			if ( m_sqlService != null && m_autoDdl)
 			{
-				m_sqlService.ddl(this.getClass().getClassLoader(),
-						"sakai_content");
+				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content");
 
 				// add the delete table
-				m_sqlService.ddl(this.getClass().getClassLoader(),
-				"sakai_content_delete");
+				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_delete");
 
 				// do the 2.1.0 conversions
 				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_2_1_0");
@@ -380,7 +373,7 @@ public class DbContentService extends BaseContentService
 					{
 						populateNewColumns();
 					}
-			}
+				}
 			}
 
 			filesizeColumnExists = filesizeColumnExists();
@@ -395,11 +388,11 @@ public class DbContentService extends BaseContentService
 
 			// convert?
 			if ( m_sqlService != null ) {
-			if (m_convertToFile)
-			{
-				m_convertToFile = false;
-				convertToFile();
-			}
+				if (m_convertToFile)
+				{
+					m_convertToFile = false;
+					convertToFile();
+				}
 	
 				M_log.info("init(): tables: " + m_collectionTableName + " " + m_resourceTableName + " " + m_resourceBodyTableName + " "
 						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath);
@@ -615,7 +608,7 @@ public class DbContentService extends BaseContentService
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	protected int countQuery(String sql, String param) throws IdUnusedException
 	{
@@ -645,13 +638,11 @@ public class DbContentService extends BaseContentService
 		throw new IdUnusedException(param);
 	}
 
-	public int getCollectionSize(String id) throws IdUnusedException,
-	TypeException, PermissionException
+	public int getCollectionSize(String id) throws IdUnusedException, TypeException, PermissionException
 	{
 
 		/*
-		 * Note: Content Hosting Handler This will only count local collection
-		 * information For the moment its only used by setPriority
+		 * Note: Content Hosting Handler This will only count local collection information For the moment its only used by setPriority
 		 */
 		String wildcard;
 
@@ -666,24 +657,22 @@ public class DbContentService extends BaseContentService
 
 		int fileCount = countQuery(contentServiceSql.getNumContentResources1Sql(), wildcard);
 		int folderCount = countQuery(contentServiceSql.getNumContentResources2Sql(), wildcard);
-				return fileCount + folderCount;
+		return fileCount + folderCount;
 	}
 
-	/***************************************************************************
+	/*************************************************************************************************************************************************
 	 * UUID Support
-	 **************************************************************************/
+	 ************************************************************************************************************************************************/
 
 	/**
-	 * For a given id, return its UUID (creating it if it does not already
-	 * exist)
+	 * For a given id, return its UUID (creating it if it does not already exist)
 	 */
 
 	public String getUuid(String id)
 	{
 
 		/*
-		 * Note: Content Hosting Handler This will only operate on local
-		 * resources The only thing that may not work is move.
+		 * Note: Content Hosting Handler This will only operate on local resources The only thing that may not work is move.
 		 */
 		String uuid = null;
 
@@ -693,8 +682,7 @@ public class DbContentService extends BaseContentService
 
 		// UUID not found, so create one and store it
 
-		IdManager uuidManager = (IdManager) ComponentManager
-		.get(IdManager.class);
+		IdManager uuidManager = (IdManager) ComponentManager.get(IdManager.class);
 		uuid = uuidManager.createUuid();
 
 		setUuidInternal(id, uuid);
@@ -811,9 +799,9 @@ public class DbContentService extends BaseContentService
 		return id;
 	}
 
-	/***************************************************************************
+	/*************************************************************************************************************************************************
 	 * BaseContentService extensions
-	 **************************************************************************/
+	 ************************************************************************************************************************************************/
 
 	/**
 	 * Construct a Storage object.
@@ -848,9 +836,9 @@ public class DbContentService extends BaseContentService
 		return storage;
 	} // newStorage
 
-	/***************************************************************************
+	/*************************************************************************************************************************************************
 	 * Storage implementation
-	 **************************************************************************/
+	 ************************************************************************************************************************************************/
 	protected class DbStorage implements Storage
 	{
 		/** A storage for collections. */
@@ -882,9 +870,9 @@ public class DbContentService extends BaseContentService
 		{
 			this.resolver = resolver;
 			if (resolver != null)
-		{
-			this.resolver.setResourceUser(resourceUser);
-			this.resolver.setCollectionUser(collectionUser);
+			{
+				this.resolver.setResourceUser(resourceUser);
+				this.resolver.setCollectionUser(collectionUser);
 			}
 			
 			Connection connection = null;
@@ -1014,7 +1002,7 @@ public class DbContentService extends BaseContentService
 				m_collectionStorageFields = BaseDbBinarySingleStorage.STORAGE_FIELDS;
 				
 			} else {
-			// build the collection store - a single level store
+				// build the collection store - a single level store
 				m_collectionStore = new BaseDbSingleStorage(m_collectionTableName, "COLLECTION_ID", COLLECTION_FIELDS, m_locksInDb, "collection",
 						collectionUser, m_sqlService);
 				m_collectionStorageFields = BaseDbSingleStorage.STORAGE_FIELDS;
@@ -1036,7 +1024,7 @@ public class DbContentService extends BaseContentService
 				m_resourceStorageFields = BaseDbBinarySingleStorage.STORAGE_FIELDS;
 				
 			}else {
-			// build the resources store - a single level store
+				// build the resources store - a single level store
 				m_resourceStore = new BaseDbSingleStorage(m_resourceTableName, "RESOURCE_ID", 
 						(bodyInFile ? RESOURCE_FIELDS_FILE_CONTEXT : RESOURCE_FIELDS_CONTEXT ),
 						m_locksInDb, "resource", resourceUser, m_sqlService);
@@ -1059,8 +1047,8 @@ public class DbContentService extends BaseContentService
 						m_locksInDb, "resource", resourceUser, m_sqlService);
 				
 			} else {
-			// htripath-build the resource for store of deleted record-single
-			// level store
+				// htripath-build the resource for store of deleted record-single
+				// level store
 				m_resourceDeleteStore = new BaseDbSingleStorage(m_resourceDeleteTableName, "RESOURCE_ID", 
 						(bodyInFile ? RESOURCE_FIELDS_FILE_CONTEXT : RESOURCE_FIELDS_CONTEXT ),
 						m_locksInDb, "resource", resourceUser, m_sqlService);
@@ -1206,7 +1194,7 @@ public class DbContentService extends BaseContentService
 					 */
 
 					List collections = (List) ThreadLocalManager.get("getCollections@" + target);
-					if(collections == null)
+					if (collections == null)
 					{
 						collections = m_collectionStore.getAllResourcesWhere("IN_COLLECTION", target);
 						if(collections != null && collections.size() > 0 && isSiteLevelDropbox(target))
@@ -1462,7 +1450,7 @@ public class DbContentService extends BaseContentService
 					 */
 
 					List resources = (List) ThreadLocalManager.get("getResources@" + target);
-					if(resources == null)
+					if (resources == null)
 					{
 						resources = m_resourceStore.getAllResourcesWhere("IN_COLLECTION", target);
 						ThreadLocalManager.set("getResources@" + target, resources);
@@ -1601,10 +1589,11 @@ public class DbContentService extends BaseContentService
 					boolean ok = true;
 					if (redit.m_body == null)
 					{
-						if(redit.m_contentStream == null)
+						if (redit.m_contentStream == null)
 						{
 							// no body and no stream -- may result from edit in which body is not accessed or modified
-							M_log.info("ContentResource committed with no change to contents (i.e. no body and no stream for content): " + edit.getReference());
+							M_log.debug("ContentResource committed with no change to contents (i.e. no body and no stream for content): "
+									+ edit.getReference());
 						}
 						else
 						{
@@ -1615,7 +1604,7 @@ public class DbContentService extends BaseContentService
 								message += "to file";
 								ok = putResourceBodyFilesystem(edit, redit.m_contentStream);
 							}
-	
+
 							// otherwise use the database
 							else
 							{
@@ -1624,12 +1613,12 @@ public class DbContentService extends BaseContentService
 							}
 						}
 					}
-					else 
+					else
 					{
 						message += "from byte-array ";
 						byte[] body = ((BaseResourceEdit) edit).m_body;
 						((BaseResourceEdit) edit).m_body = null;
-	
+
 						// update the resource body
 						if (body != null)
 						{
@@ -1640,7 +1629,7 @@ public class DbContentService extends BaseContentService
 								message += "to file";
 								ok = putResourceBodyFilesystem(edit, body);
 							}
-	
+
 							// otherwise use the database
 							else
 							{
@@ -1663,7 +1652,7 @@ public class DbContentService extends BaseContentService
 					}
 					m_resourceStore.commitResource(edit);
 				}
-				
+
 			}
 			finally
 			{
@@ -1772,7 +1761,8 @@ public class DbContentService extends BaseContentService
 		 *        The resource whose body is desired.
 		 * @return The resources's body content as a byte array.
 		 * @exception ServerOverloadException
-		 *            if the server is configured to save the resource body in the filesystem and an error occurs while accessing the server's filesystem.
+		 *            if the server is configured to save the resource body in the filesystem and an error occurs while accessing the server's
+		 *            filesystem.
 		 */
 		public byte[] getResourceBody(ContentResource resource) throws ServerOverloadException
 		{
@@ -1995,11 +1985,11 @@ public class DbContentService extends BaseContentService
 			return m_sqlService.dbWriteBinary(statement, fields, body, 0, body.length);
 
 			/*
-			 * %%% BLOB code // read the record's blob and update statement = "select body from " + m_resourceTableName + " where ( resource_id = '" + Validator.escapeSql(resource.getId()) + "' ) for update"; Sql.dbReadBlobAndUpdate(statement,
-			 * ((BaseResource)resource).m_body);
+			 * %%% BLOB code // read the record's blob and update statement = "select body from " + m_resourceTableName + " where ( resource_id = '" +
+			 * Validator.escapeSql(resource.getId()) + "' ) for update"; Sql.dbReadBlobAndUpdate(statement, ((BaseResource)resource).m_body);
 			 */
 		}
-		
+
 		/**
 		 * @param edit
 		 * @param stream
@@ -2009,50 +1999,50 @@ public class DbContentService extends BaseContentService
 		{
 			// Do not create the files for resources with zero length bodies
 			if ((stream == null)) return true;
-       	
+
 			ByteArrayOutputStream bstream = new ByteArrayOutputStream();
-			
+
 			int byteCount = 0;
 			
 			// chunk
 			byte[] chunk = new byte[STREAM_BUFFER_SIZE];
 			int lenRead;
 			try
-            {
-	            while ((lenRead = stream.read(chunk)) != -1)
-	            {
-	            	bstream.write(chunk, 0, lenRead);
-	            	byteCount += lenRead;
-	            }
-	            
-	            edit.setContentLength(byteCount);
+			{
+				while ((lenRead = stream.read(chunk)) != -1)
+				{
+					bstream.write(chunk, 0, lenRead);
+					byteCount += lenRead;
+				}
+
+				edit.setContentLength(byteCount);
 				ResourcePropertiesEdit props = edit.getPropertiesEdit();
 				props.addProperty(ResourceProperties.PROP_CONTENT_LENGTH, Long.toString(byteCount));
-				if(edit.getContentType() != null)
+				if (edit.getContentType() != null)
 				{
 					props.addProperty(ResourceProperties.PROP_CONTENT_TYPE, edit.getContentType());
 				}
-            }
-            catch (IOException e)
-            {
-	            // TODO Auto-generated catch block
-	            M_log.warn("IOException ", e);
-            }
-            finally
-            {
-            	if(stream != null)
-            	{
-            		try
-                    {
-	                    stream.close();
-                    }
-                    catch (IOException e)
-                    {
-	                    // TODO Auto-generated catch block
-	                    M_log.warn("IOException ", e);
-                    }
-            	}
-            }
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				M_log.warn("IOException ", e);
+			}
+			finally
+			{
+				if (stream != null)
+				{
+					try
+					{
+						stream.close();
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						M_log.warn("IOException ", e);
+					}
+				}
+			}
 
 			boolean ok = true;
 			if (bstream != null && bstream.size() > 0)
@@ -2083,7 +2073,7 @@ public class DbContentService extends BaseContentService
 			}
 
 			FileOutputStream out = null;
-			
+
 			// add the new
 			try
 			{
@@ -2096,7 +2086,7 @@ public class DbContentService extends BaseContentService
 
 				// write the file
 				out = new FileOutputStream(file);
-				
+
 				int byteCount = 0;
 				// chunk
 				byte[] chunk = new byte[STREAM_BUFFER_SIZE];
@@ -2106,56 +2096,56 @@ public class DbContentService extends BaseContentService
 					out.write(chunk, 0, lenRead);
 					byteCount += lenRead;
 				}
-				
+
 				resource.setContentLength(byteCount);
 				ResourcePropertiesEdit props = resource.getPropertiesEdit();
 				props.addProperty(ResourceProperties.PROP_CONTENT_LENGTH, Long.toString(byteCount));
-				if(resource.getContentType() != null)
+				if (resource.getContentType() != null)
 				{
 					props.addProperty(ResourceProperties.PROP_CONTENT_TYPE, resource.getContentType());
 				}
 			}
-//			catch (Throwable t)
-//			{
-//				M_log.warn(": failed to write resource: " + resource.getId() + " : " + t);
-//				return false;
-//			}
-			catch(IOException e)
+			// catch (Throwable t)
+			// {
+			// M_log.warn(": failed to write resource: " + resource.getId() + " : " + t);
+			// return false;
+			// }
+			catch (IOException e)
 			{
 				M_log.warn("IOException", e);
 				return false;
 			}
 			finally
 			{
-				if(stream != null)
+				if (stream != null)
 				{
 					try
-                    {
+					{
 						stream.close();
-                    }
-                    catch (IOException e)
-                    {
-	                    // TODO Auto-generated catch block
-	                    M_log.warn("IOException ", e);
-                    }
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						M_log.warn("IOException ", e);
+					}
 				}
-				
-				if(out != null)
+
+				if (out != null)
 				{
 					try
-	                {
-		                out.close();
-	                }
-	                catch (IOException e)
-	                {
-		                // TODO Auto-generated catch block
-		                M_log.warn("IOException ", e);
-	                }
+					{
+						out.close();
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						M_log.warn("IOException ", e);
+					}
 				}
 			}
 
 			return true;
-        }
+		}
 
 		/**
 		 * Write the resource body to the external file system. The file name is the m_bodyPath with the resource id appended.
@@ -2283,7 +2273,7 @@ public class DbContentService extends BaseContentService
 		}
 
 		public Collection<String> getMemberCollectionIds(String collectionId)
-        {
+		{
 			List list = null;
 			try
 			{
@@ -2298,10 +2288,10 @@ public class DbContentService extends BaseContentService
 				M_log.warn("getMemberCollectionIds: failed: " + t);
 			}
 			return (Collection<String>) list;
-        }
+		}
 
 		public Collection<String> getMemberResourceIds(String collectionId)
-        {
+		{
 			List list = null;
 			try
 			{
@@ -2489,8 +2479,7 @@ public class DbContentService extends BaseContentService
 	}
 
 	/**
-	 * Create a file system body binary for any content_resource record that has
-	 * a null file_path.
+	 * Create a file system body binary for any content_resource record that has a null file_path.
 	 */
 	protected void convertToFile()
 	{
@@ -2548,8 +2537,7 @@ public class DbContentService extends BaseContentService
 						// zero length?
 						if (edit.getContentLength() == 0)
 						{
-							M_log.warn("convertToFile: zero length body : "
-									+ id);
+							M_log.warn("convertToFile: zero length body : " + id);
 							return null;
 						}
 

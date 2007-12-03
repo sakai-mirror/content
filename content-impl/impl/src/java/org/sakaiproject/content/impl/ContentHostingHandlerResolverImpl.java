@@ -48,7 +48,7 @@ import org.sakaiproject.util.StorageUser;
  * 
  * @author ieb (initial version), johnf (substantial edits)
  */
-public class ContentHostingHandlerResolverImpl implements BaseContentHostingHandlerResolver
+public class ContentHostingHandlerResolverImpl implements ContentHostingHandlerResolver
 {
 
 	private static final Log log = LogFactory.getLog(ContentHostingHandlerResolverImpl.class);
@@ -72,7 +72,7 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 		{
 			try {
 			ce = storage.getResource(id);
-		}
+			}
 			catch (TypeException e)
 			{
 				log.debug("Type Exception ",e);
@@ -666,5 +666,124 @@ public class ContentHostingHandlerResolverImpl implements BaseContentHostingHand
 			}
 		}
 		return storage.getMemberCount(id);
+	}
+
+	/**
+	 * @param storage
+	 */
+	public void setStorage(Storage storage)
+	{
+		this.storage = storage;
+		
+	}
+
+	/**
+	 * @return the storage
+	 */
+	public Storage getStorage()
+	{
+		return storage;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getMemberCollectionIds(java.lang.String)
+	 */
+	public Collection<String> getMemberCollectionIds(String collectionId)
+	{
+		ContentEntity ce = getVirtualChild(collectionId, getRealParent(collectionId), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.getMemberCollectionIds(ce);
+			}
+		}
+		return storage.getMemberCollectionIds(collectionId);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getMemberResourceIds(java.lang.String)
+	 */
+	public Collection<String> getMemberResourceIds(String collectionId)
+	{
+		ContentEntity ce = getVirtualChild(collectionId, getRealParent(collectionId), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.getMemberResourceIds(ce);
+			}
+		}
+		return storage.getMemberResourceIds(collectionId);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveCollection(org.sakaiproject.content.api.ContentCollectionEdit, java.lang.String)
+	 */
+	public String moveCollection(ContentCollectionEdit thisCollection, String new_folder_id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(new_folder_id, getRealParent(new_folder_id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.moveCollection(thisCollection,new_folder_id);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#moveResource(org.sakaiproject.content.api.ContentResourceEdit, java.lang.String)
+	 */
+	public String moveResource(ContentResourceEdit thisResource, String new_id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(new_id, getRealParent(new_id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				return chh.moveResource(thisResource,new_id);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#setResourceUuid(java.lang.String, java.lang.String)
+	 */
+	public void setResourceUuid(String resourceId, String uuid) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(resourceId, getRealParent(resourceId), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				chh.setResourceUuid(resourceId,uuid);
+			}
+		}
+		throw new OperationDelegationException();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.api.ContentHostingHandlerResolver#getUuid(java.lang.String)
+	 */
+	public String getUuid(String id) throws OperationDelegationException
+	{
+		ContentEntity ce = getVirtualChild(id, getRealParent(id), false);
+		if (ce != null)
+		{
+			ContentHostingHandler chh = ce.getContentHandler();
+			if (chh != null)
+			{
+				chh.getUuid(id);
+			}
+		}
+		throw new OperationDelegationException();
 	}
 }

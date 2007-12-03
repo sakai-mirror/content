@@ -72,6 +72,9 @@ import org.sakaiproject.content.api.GroupAwareEntity;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceTypeRegistry;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
+import org.sakaiproject.content.api.providers.SiteContentAdvisor;
+import org.sakaiproject.content.api.providers.SiteContentAdvisorProvider;
+import org.sakaiproject.content.api.providers.SiteContentAdvisorTypeRegistry;
 import org.sakaiproject.content.cover.ContentTypeImageService;
 import org.sakaiproject.content.impl.serialize.api.SerializableCollectionAccess;
 import org.sakaiproject.content.impl.serialize.api.SerializableResourceAccess;
@@ -156,7 +159,8 @@ import org.xml.sax.SAXException;
  * BaseContentService is an abstract base implementation of the Sakai ContentHostingService.
  * </p>
  */
-public abstract class BaseContentService implements ContentHostingService, CacheRefresher, ContextObserver, EntityTransferrer
+public abstract class BaseContentService implements ContentHostingService, CacheRefresher, ContextObserver, EntityTransferrer, 
+	SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry
 {
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseContentService.class);
@@ -408,14 +412,14 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			
 			if(value != null && ! value.trim().equals(""))
 			{
-			String[] bodyVolumes = StringUtil.split(value, ",");
-			for(int i = 0; i < bodyVolumes.length; i++)
-			{
-				String name = bodyVolumes[i];
-				if(name == null || name.trim().equals(""))
+				String[] bodyVolumes = StringUtil.split(value, ",");
+				for(int i = 0; i < bodyVolumes.length; i++)
 				{
-					continue;
-				}
+					String name = bodyVolumes[i];
+					if(name == null || name.trim().equals(""))
+					{
+						continue;
+					}
 					list.add(trimWhitespace ? name.trim() : name);
 				}
 			}
@@ -664,7 +668,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			edit.addFunction(EVENT_RESOURCE_WRITE);
 
 			// set the filter to any site related resource
-			edit.setResourceFilter(getAccessPoint(true) + Entity.SEPARATOR + "group");
+			edit.setResourceFilter(getAccessPoint(true) + Entity.SEPARATOR + "group" + Entity.SEPARATOR);
 			// %%% is this the best we can do? -ggolden
 
 			// set the action
@@ -684,7 +688,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			dbNoti.setAction(new DropboxNotification());
 			
 
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			if (m_bodyVolumes != null)
 			{
 				for (int i = 0; i < m_bodyVolumes.length; i++)
@@ -1106,22 +1110,22 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			else
 			{
-			// include the file path field if we are doing body in the file system
-			if (m_bodyPath != null)
-			{
-				Object[] rv = new Object[2];
-				rv[0] = StringUtil.referencePath(((ContentResource) r).getId());
-				rv[1] = StringUtil.trimToZero(((BaseResourceEdit) r).m_filePath);
-				return rv;
-			}
-
-			// otherwise don't include the file path field
-			else
-			{
-				Object[] rv = new Object[1];
-				rv[0] = StringUtil.referencePath(((ContentResource) r).getId());
-				return rv;
-			}
+				// include the file path field if we are doing body in the file system
+				if (m_bodyPath != null)
+				{
+					Object[] rv = new Object[2];
+					rv[0] = StringUtil.referencePath(((ContentResource) r).getId());
+					rv[1] = StringUtil.trimToZero(((BaseResourceEdit) r).m_filePath);
+					return rv;
+				}
+	
+				// otherwise don't include the file path field
+				else
+				{
+					Object[] rv = new Object[1];
+					rv[0] = StringUtil.referencePath(((ContentResource) r).getId());
+					return rv;
+				}
 
 			}
 		}
@@ -7983,6 +7987,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	}
   	private Map<String, SizeHolder> quotaMap = new ConcurrentHashMap<String, SizeHolder>();
 
+	private Map<String, SiteContentAdvisorProvider> siteContentAdvisorsProviders = new HashMap<String, SiteContentAdvisorProvider>();
+
 	private long getCachedBodySizeK(BaseCollectionEdit collection) {
 		return getCachedSizeHolder(collection,true).size;
 	}
@@ -9692,6 +9698,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			};
 		}
 
+
 		/**
 		 * Construct as a copy of another.
 		 * 
@@ -10244,6 +10251,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		} // toXml
 
+		
 		/**
 		 * Access the event code for this edit.
 		 * 
@@ -10460,8 +10468,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			if ( ce == null ) {
 				try
 				{
-				ce = m_storage.getResource(nextId);
-			}
+					ce = m_storage.getResource(nextId);
+				}
 				catch (TypeException e)
 				{
 					M_log.error("Type Exception ",e);
@@ -10485,7 +10493,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		 * @see org.sakaiproject.content.impl.serialize.api.SerializableCollectionAccess#getSerializableAccess()
 		 */
 		public AccessMode getSerializableAccess()
-	{
+		{
 			return m_access;
 		}
 
@@ -10641,6 +10649,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				setFilePath(TimeService.newTime());
 			}
 		} // BaseResourceEdit
+
+
 
 
 		/**
@@ -11458,6 +11468,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		 */
 		private ContentHostingHandler chh = null;
 		private ContentEntity chh_vce = null; // the wrapped virtual content entity
+
 		public ContentHostingHandler getContentHandler() {return chh;}
 		public void setContentHandler(ContentHostingHandler chh) {this.chh = chh;}
 		public ContentEntity getVirtualContentEntity() {return chh_vce;}
@@ -11956,8 +11967,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			try
 			{
-			rv = m_storage.getResource(id);
-		}
+				rv = m_storage.getResource(id);
+			}
 			catch (TypeException e)
 			{
 				M_log.error("Type Exception",e);

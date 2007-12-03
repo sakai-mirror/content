@@ -16,10 +16,22 @@
 			<label for="content" class="block">$tlang.getString("label.url")</label>
 			<input type="text" name="content" id="content" size="60" value="$!validator.escapeHtml("$!pipe.contentstring")" />
 		</p>
-		#if(! $item.isDropbox() && ! $item.isUserSite())
-			#if ($hasNotificationDialog)
-				<p class="longtext" >
-					<label for="notify" class="block">
+		#if ($hasNotificationDialog)
+			#if($item.isDropbox())
+				<p class="act">
+					<input type="checkbox" name="notify_dropbox" id="notify_dropbox" value="true" /> 
+					<label for="notify_dropbox">
+						#if($model.userIsMaintainer())
+							$tlang.getString("notify.student")
+						#else
+							$tlang.getString("notify.instructor")
+						#end
+					</label>
+				</p>
+			#elseif($item.isUserSite())
+			#else
+				<p class="shorttext">
+					<label for="notify">
 						$tlang.getString("gen.email1")
 					</label>	
 					<select name="notify" id="notify">

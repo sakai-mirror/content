@@ -825,7 +825,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public static final String TYPE_URL = "Url";
 	
 	public static final String UTF_8_ENCODING = "UTF-8";
-
+	
 	// may need to distinguish permission on entity vs permission on its containing collection
 	static
 	{
@@ -4578,7 +4578,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 				}
 				context.put("other_sites", otherSites);
-
+				
 				if (state.getAttribute(STATE_NUM_MESSAGES) != null)
 				{
 					context.put("allMsgNumber", state.getAttribute(STATE_NUM_MESSAGES).toString());
@@ -5602,9 +5602,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	   				}
 	   				else
 	   				{
-					// set noti to none if in dropbox mode
-					noti = NotificationService.NOTI_NONE;
-				}
+	   					// set noti to none if in dropbox mode
+	   					noti = NotificationService.NOTI_NONE;
+	   				}
 				}
 				else
 				{
@@ -7670,6 +7670,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				defaultRetractTime = TimeService.newTime(sca.getDefaultRetractTime());
 			}
 		}
+		
+		
 		state.setAttribute(STATE_DEFAULT_RETRACT_TIME, defaultRetractTime);
 		
 		if(state.getAttribute(STATE_LIST_PREFERENCE) == null)

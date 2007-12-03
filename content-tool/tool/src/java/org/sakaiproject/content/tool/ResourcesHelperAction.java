@@ -1,6 +1,6 @@
 /**********************************************************************************
- * $URL:  $
- * $Id:  $
+ * $URL:	 $
+ * $Id:	$
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007 The Sakai Foundation.
@@ -9,7 +9,7 @@
  * you may not use this file except in compliance with the License. 
  * You may obtain a copy of the License at
  * 
- *      http://www.opensource.org/licenses/ecl1.php
+ *		  http://www.opensource.org/licenses/ecl1.php
  * 
  * Unless required by applicable law or agreed to in writing, software 
  * distributed under the License is distributed on an "AS IS" BASIS, 
@@ -314,7 +314,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	}
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
-    {
+	 {
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
@@ -356,7 +356,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ResourcesAction.publicDisplayChoicesIntoContext(state, context);
 		
 		return CREATE_URLS_TEMPLATE;
-    }
+	 }
 
 
 
@@ -510,7 +510,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	protected String buildUploadFilesContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	{
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
-
+		
 		String max_file_size_mb = (String) state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
 		if(max_file_size_mb == null)
 		{
@@ -630,6 +630,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		// notification
 		int noti = NotificationService.NOTI_NONE;
+
 		// read the notification options
 		String notification = params.getString("notify");
 		if ("r".equals(notification))
@@ -640,6 +641,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		{
 			noti = NotificationService.NOTI_OPTIONAL;
 		}
+		// boolean notification = params.getBoolean("notify_dropbox");
+
 		
 		pipe.setRevisedMimeType(pipe.getMimeType());
 		if(ResourceType.TYPE_TEXT.equals(resourceType) || ResourceType.MIME_TYPE_TEXT.equals(mimetype))
@@ -890,9 +893,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 					}
 					else
 					{
-				// set noti to none if in dropbox mode
-				noti = NotificationService.NOTI_NONE;
-			}
+						// set noti to none if in dropbox mode
+						noti = NotificationService.NOTI_NONE;
+					}
 			}
 			else
 			{
@@ -976,12 +979,12 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 				{
 					try
 					 {
-	                url = ResourcesAction.validateURL(url);
+						 url = ResourcesAction.validateURL(url);
 					 }
 					 catch (MalformedURLException e)
 					 {
 						addAlert(state, rb.getFormattedMessage("url.invalid", new String[]{url}));
-	                continue;
+						 continue;
 					 }
 					
 					 pipe.setRevisedContent(url.getBytes());
@@ -1031,9 +1034,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 					}
 					else
 					{
-				// set noti to none if in dropbox mode
-				noti = NotificationService.NOTI_NONE;
-			}
+						// set noti to none if in dropbox mode
+						noti = NotificationService.NOTI_NONE;
+					}
 			}
 			else
 			{
@@ -1051,9 +1054,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			newFile.setNotification(noti);
 			
 			//alerts.addAll(newFile.checkRequiredProperties());
-			            
+							
 			pipe.setRevisedListItem(newFile);
-    			
+				
 			actualCount++;
 			
 		}
