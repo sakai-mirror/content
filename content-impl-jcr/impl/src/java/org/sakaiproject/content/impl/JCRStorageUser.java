@@ -372,21 +372,21 @@ public class JCRStorageUser implements LiteStorageUser {
 					try
 					{
 						log.warn("Failed to set Modified date ", ex);
-						log.info("Primary Node Type is " + n.getPrimaryNodeType());
+						if (log.isDebugEnabled()) log.debug("Primary Node Type is " + n.getPrimaryNodeType());
 						for (NodeType nt : n.getMixinNodeTypes())
 						{
-							log.info(" Mixing  " + nt);
+						   if (log.isDebugEnabled()) log.debug(" Mixing  " + nt);
 						}
 						for (PropertyIterator pi = n.getProperties(); pi.hasNext();)
 						{
 							Property p = pi.nextProperty();
-							log.info(" Property [" + p.getName() + "][" + p.getString()
+							if (log.isDebugEnabled()) log.debug(" Property [" + p.getName() + "][" + p.getString()
 									+ "]");
 						}
 					}
 					catch (Exception ex2)
 					{
-						log.info("Failed to debug ", ex2);
+						log.error("Failed to debug ", ex2);
 					}
 				}
 			}
@@ -413,10 +413,10 @@ public class JCRStorageUser implements LiteStorageUser {
 					p = content.getProperty(JCRConstants.JCR_MIMETYPE);
 					if ( p != null ) {
 						bedit.m_contentType = p.getString();
-						log.info("Content type set to "+bedit.m_contentType);
+						if (log.isDebugEnabled()) log.debug("Content type set to "+bedit.m_contentType);
 					} else {
 						bedit.m_contentType = "application/octet-stream";
-						log.info("Content default to "+bedit.m_contentType);
+						if (log.isDebugEnabled()) log.debug("Content default to "+bedit.m_contentType);
 					}
 				}
 				else if (n.hasProperty(DAVConstants.DAV_GETCONTENTLENGTH))
@@ -1393,7 +1393,7 @@ public class JCRStorageUser implements LiteStorageUser {
 		{
 			return;
 		}
-		// log.info("Converting " + p.getName());
+		if (log.isDebugEnabled()) log.debug("Converting " + p.getName());
 
 		PropertyDefinition pd = p.getDefinition();
 		if (pd.isMultiple())
@@ -1469,7 +1469,7 @@ public class JCRStorageUser implements LiteStorageUser {
 		{
 			jcrPath = jcrPath.substring(0, jcrPath.length() - 1);
 		}
-		// log.info(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
+		if (log.isDebugEnabled()) log.debug(" Id2JCR [" + id + "] >> [" + jcrPath + "]");
 		return jcrPath;
 	}
 
@@ -1495,7 +1495,7 @@ public class JCRStorageUser implements LiteStorageUser {
 		{
 			id = "/";
 		}
-		// log.info(" JCR2Id [" + path + "] >> [" + id + "]");
+		if (log.isDebugEnabled()) log.debug(" JCR2Id [" + path + "] >> [" + id + "]");
 		return id;
 	}
 
