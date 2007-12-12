@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentHostingService;
@@ -74,18 +76,21 @@ import org.w3c.dom.Element;
 public class ContentHostingMultiplexService implements ContentHostingService
 {
 
+	private static final Log log = LogFactory.getLog(ContentHostingMultiplexService.class);
+
 	private ThreadLocal<Stack<ContentHostingService>> selectedService = new ThreadLocal<Stack<ContentHostingService>>();
 
 	private ContentHostingService defaultContentHostingService = null;
-	
-	private Map<String,ContentHostingService> services = null;
 
+	private List<ContentHostingService> contentHostingServices = null;
+	
 	public ContentHostingService getService()
 	{
 		Stack<ContentHostingService> s = selectedService.get();
 		if (s == null)
 		{
 			s = new Stack<ContentHostingService>();
+			selectedService.set(s);
 		}
 		if (s.size() == 0)
 		{
@@ -105,6 +110,7 @@ public class ContentHostingMultiplexService implements ContentHostingService
 		if (s == null)
 		{
 			s = new Stack<ContentHostingService>();
+			selectedService.set(s);
 		}
 		s.push(service);
 	}
@@ -115,8 +121,13 @@ public class ContentHostingMultiplexService implements ContentHostingService
 		if (s == null)
 		{
 			s = new Stack<ContentHostingService>();
+			selectedService.set(s);
 		}
+		if ( s.size() > 0 ) {
 		s.pop();
+		} else {
+			log.warn("Multiplexer Stack is empty, this should not happen ");
+		}
 	}
 
 	/**
@@ -126,6 +137,36 @@ public class ContentHostingMultiplexService implements ContentHostingService
 	{
 	}
 
+	public void init() {
+		int i = 0;
+		for ( ContentHostingService chs : contentHostingServices ) 
+		{
+			if ( chs.getPrimaryContentService() ) {
+				defaultContentHostingService = chs;	
+				log.info("Selected Default Service as "+chs);
+				i++;
+			}
+		}
+		if ( i != 1 ) {
+			log.fatal("Only One ContentHostingService can be marked as primary");
+			System.exit(-10);
+		}
+	}
+
+
+	public void setContentHostingServices(List<ContentHostingService> contentHostingServices ) 
+	{
+		this.contentHostingServices = contentHostingServices;
+	}
+
+	public List<ContentHostingService> getContentHostingServices() 
+	{
+		return contentHostingServices;
+	}
+	
+	public void destory() {
+		
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -2123,4 +2164,9 @@ public class ContentHostingMultiplexService implements ContentHostingService
 		}
 	}
 
+
+	public boolean getPrimaryContentService()
+	{
+		return true;
+	}
 }
