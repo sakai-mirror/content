@@ -699,20 +699,20 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 
 			// register as an entity producer
-			m_entityManager.registerEntityProducer(this, REFERENCE_ROOT);
+				m_entityManager.registerEntityProducer(this, REFERENCE_ROOT);
 
-			// register functions
-			FunctionManager.registerFunction(AUTH_RESOURCE_ADD);
-			FunctionManager.registerFunction(AUTH_RESOURCE_READ);
-			FunctionManager.registerFunction(AUTH_RESOURCE_WRITE_ANY);
-			FunctionManager.registerFunction(AUTH_RESOURCE_WRITE_OWN);
-			FunctionManager.registerFunction(AUTH_RESOURCE_REMOVE_ANY);
-			FunctionManager.registerFunction(AUTH_RESOURCE_REMOVE_OWN);
-			FunctionManager.registerFunction(AUTH_RESOURCE_ALL_GROUPS);
-			FunctionManager.registerFunction(AUTH_RESOURCE_HIDDEN);
+				// register functions
+				FunctionManager.registerFunction(AUTH_RESOURCE_ADD);
+				FunctionManager.registerFunction(AUTH_RESOURCE_READ);
+				FunctionManager.registerFunction(AUTH_RESOURCE_WRITE_ANY);
+				FunctionManager.registerFunction(AUTH_RESOURCE_WRITE_OWN);
+				FunctionManager.registerFunction(AUTH_RESOURCE_REMOVE_ANY);
+				FunctionManager.registerFunction(AUTH_RESOURCE_REMOVE_OWN);
+				FunctionManager.registerFunction(AUTH_RESOURCE_ALL_GROUPS);
+				FunctionManager.registerFunction(AUTH_RESOURCE_HIDDEN);
 
-			FunctionManager.registerFunction(AUTH_DROPBOX_OWN);
-			FunctionManager.registerFunction(AUTH_DROPBOX_MAINTAIN);
+				FunctionManager.registerFunction(AUTH_DROPBOX_OWN);
+				FunctionManager.registerFunction(AUTH_DROPBOX_MAINTAIN);
 
 			M_log.info("init(): site quota: " + m_siteQuota + " body path: " + m_bodyPath + " volumes: "
 					+ buf.toString());
@@ -960,6 +960,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			collectionSerializer.parse(bce,blob);
 			return bce;
 		}
+		/* (non-Javadoc)
+		 * @see org.sakaiproject.entity.api.serialize.EntityReaderHandler#parse(org.sakaiproject.entity.api.Entity, java.lang.String, byte[])
+		 */
+		public Entity parse(Entity container, String xml, byte[] blob) throws EntityParseException
+		{
+			BaseCollectionEdit bce = new BaseCollectionEdit();
+			collectionSerializer.parse(bce,blob);
+			return bce;
+		}
+
 
 		/* (non-Javadoc)
 		 * @see org.sakaiproject.util.EntityReader#toString(org.sakaiproject.entity.api.Entity)
@@ -996,6 +1006,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			this.entityReaderAdapter = entityReaderAdapter;
 		}
+
 
 
 
@@ -1244,6 +1255,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			resourceSerializer.parse(bre,blob);
 			return bre;
 		}
+		/* (non-Javadoc)
+		 * @see org.sakaiproject.entity.api.serialize.EntityReaderHandler#parse(org.sakaiproject.entity.api.Entity, java.lang.String, byte[])
+		 */
+		public Entity parse(Entity container, String xml, byte[] blob) throws EntityParseException
+		{
+			BaseResourceEdit bre = new BaseResourceEdit();
+			resourceSerializer.parse(bre,blob);
+			return bre;
+		}
+
 
 		/* (non-Javadoc)
 		 * @see org.sakaiproject.util.EntityReader#toString(org.sakaiproject.entity.api.Entity)
@@ -1279,6 +1300,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			this.entityReaderAdapter = entityReaderAdapter;
 		}
+
 
 
 
@@ -4263,7 +4285,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// close the edit object
 		((BaseResourceEdit) edit).closeEdit();
 		
-		removeSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			removeSizeCache(edit);
+		}
 
 		((BaseResourceEdit) edit).setRemoved();
 
@@ -5384,7 +5409,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		commitResourceEdit(edit, priority);
 		
-		addSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			addSizeCache(edit);
+		}
 
 	} // commitResource
 
@@ -7787,7 +7815,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// complete the edit
 		m_storage.commitResource(edit);
 		
-		addSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			addSizeCache(edit);
+		}
 
 		// track it
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(null), true,
@@ -7936,8 +7967,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			return false;
 		}
       
-        long size = getCachedBodySizeK((BaseCollectionEdit)collection);
-
+        long size = 0;
+        
+        if(readyToUseFilesizeColumn())
+        {
+        	size = collection.getBodySizeK();
+        }
+        else
+        {
+        	size = getCachedBodySizeK((BaseCollectionEdit)collection);
+        }
 
 		// find the resource being edited
 		ContentResource inThere = null;
