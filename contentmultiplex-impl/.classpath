@@ -8,5 +8,10 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/component-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util-api"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.6/spring-2.0.6.jar" sourcepath="/SPRING_HOME"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/content-jcr-migration-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/site-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/memory-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/event-api"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
