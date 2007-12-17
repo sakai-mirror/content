@@ -44,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -367,7 +368,9 @@ public class ListItem
 	private String submittedResourceFilter;
 	private String selectedConditionKey;
 	private String conditionArgument;
+	private String conditionAssignmentPoints;
 	private String notificationId;
+	private Collection<String> accessControlList;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -396,8 +399,13 @@ public class ListItem
 
 	private int constructor;
 
+	protected boolean numberFieldIsInvalid;
+	protected boolean numberFieldIsOutOfRange;
+
 
 	
+	private org.sakaiproject.content.api.ContentHostingService contentService;
+
 	/**
 	 * @param entity
 	 */
@@ -455,6 +463,7 @@ public class ListItem
 		
 		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
 		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		this.accessControlList = props.getPropertyList(ResourceProperties.CONDITIONAL_ACCESS_LIST);
 		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
 		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
 		//this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
@@ -1183,6 +1192,28 @@ public class ListItem
 		else
 		{
 			this.retractDate = null;
+		}
+		
+		String selectedConditionValue = params.get("selectCondition" + index);
+		if (selectedConditionValue == null) return;
+		String[] conditionTokens = selectedConditionValue.split("\\|");
+		int selectedIndex = Integer.valueOf(conditionTokens[0]);
+		if ((selectedIndex == 9) || (selectedIndex == 10)) {
+			this.conditionArgument = params.get("assignment_grade" + index);
+			Double argument = null;
+			try {
+				argument = new Double(this.conditionArgument);
+			} catch (NumberFormatException nfe) {
+				this.numberFieldIsInvalid = true;
+			}
+			
+			String submittedResourceFilter = params.get("selectResource" + index);
+			// the number of grade points are tagging along for the ride. chop this off.
+			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
+			Double assignmentPoints = new Double(conditionAssignmentPoints);
+			if ((argument > assignmentPoints) || (argument < 0)) {
+				this.numberFieldIsOutOfRange = true;
+			}
 		}
 		
 	}
@@ -2767,8 +2798,14 @@ public class ListItem
 	
 	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
 	{
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));		
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
 		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
+		props.removeProperty(ResourceProperties.CONDITIONAL_ACCESS_LIST);
+		if (this.accessControlList != null) {
+			for (String id : this.accessControlList) {
+				props.addPropertyToList(ResourceProperties.CONDITIONAL_ACCESS_LIST, id);
+			}
+		}
 	}
 	
 	public String getCopyrightStatus() 
@@ -3361,11 +3398,24 @@ public class ListItem
 	}
 
 	public String getNotificationId() {
-		return notificationId;
+		return this.notificationId;
 	}
 
 	public void setNotificationId(String notificationId) {
 		this.notificationId = notificationId;
+	}
+
+	public void setNumberFieldIsInvalid(boolean b) {
+		this.numberFieldIsInvalid = b;
+		
+	}
+
+	public String getConditionAssignmentPoints() {
+		return conditionAssignmentPoints;
+	}
+
+	public void setConditionAssignmentPoints(String conditionAssignmentPoints) {
+		this.conditionAssignmentPoints = conditionAssignmentPoints;
 	}
 
 

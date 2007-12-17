@@ -61,6 +61,8 @@ import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.event.cover.EventTrackingService;
+import org.sakaiproject.conditions.api.ConditionTemplate;
+import org.sakaiproject.conditions.api.Criterion;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.conditions.impl.BooleanExpression;
@@ -1226,6 +1228,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				if(obj != null && obj instanceof ListItem)
 				{
 					((ListItem) obj).updateContentCollectionEdit(edit);
+					List<String> alerts = ((ListItem) obj).checkRequiredProperties();
+					for (String alert : alerts) {
+						addAlert(state, alert);
+					}
 				}
 				ResourcePropertiesEdit resourceProperties = edit.getPropertiesEdit();
 				String displayName = null;
@@ -1250,6 +1256,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					resourceProperties.addProperty(pname, pvalue);
 				}
 				ContentHostingService.commitCollection(edit);
+				notifyCondition(edit);
 				new_collections.add(edit);
 			}
 			catch (PermissionException e)
@@ -1287,6 +1294,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 		}
 		return (new_collections.isEmpty() ? null : new_collections);
+	}
+
+	private static void notifyCondition(Entity entity) {
+		Notification resourceNotification = null;
+		String notificationId = entity.getProperties().getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		if (notificationId != null && !"".equals(notificationId)) {
+			try {
+				resourceNotification = NotificationService.getNotification(notificationId);
+			} catch (NotificationNotDefinedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+			
+		if (resourceNotification != null) {
+			EventTrackingService.post(EventTrackingService.newEvent("cond+" + resourceNotification.getFunction(), resourceNotification.getResourceFilter(), true));
+		}
+		
 	}
 
 	/**
@@ -5410,6 +5435,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		else if(user_action.equals("save"))
 		{
 			item.captureProperties(params, ListItem.DOT + "0");
+			if (item.numberFieldIsInvalid) {
+				addAlert(state, rb.getString("invalid.condition.argument"));
+				return;
+			}
+			if (item.numberFieldIsOutOfRange) {
+				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + item.getConditionAssignmentPoints() + ".");
+				return;
+			}
 			String name = params.getString("name" + ListItem.DOT + "0");
 			if(name == null)
 			{
@@ -5474,10 +5507,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				
 				resource.setResourceType(resourceType);
-				
-				saveCondition(item, params, state);
-				
+				item.setId(resource.getId());
+				saveCondition(item, params, state, 0);
 				item.updateContentResourceEdit(resource);
+				
 				
 				byte[] content = pipe.getRevisedContent();
 				if(content == null)
@@ -6545,6 +6578,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				
 			}
 			item.captureProperties(params, ListItem.DOT + "0");
+			if (item.numberFieldIsInvalid) {
+				addAlert(state, rb.getString("invalid.condition.argument"));
+				return;
+			}
+			if (item.numberFieldIsOutOfRange) {
+				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + item.getConditionAssignmentPoints() + ".");
+				return;
+			}
 			
 			// notification
 			int noti = NotificationService.NOTI_NONE;
@@ -6575,22 +6616,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				try 
 				{
 					String autoDdl = ServerConfigurationService.getString("auto.ddl");
-					saveCondition(item, params, state);
+					saveCondition(item, params, state, 0);
 					
+					Entity entity = null;
 					if(item.isCollection())
 					{
-						ContentCollectionEdit entity = ContentHostingService.editCollection(entityId);
-						item.updateContentCollectionEdit(entity);
+						entity = ContentHostingService.editCollection(entityId);
+						item.updateContentCollectionEdit((ContentCollectionEdit)entity);
 						
-						ContentHostingService.commitCollection(entity);
+						ContentHostingService.commitCollection((ContentCollectionEdit)entity);
 					}
 					else
 					{
-						ContentResourceEdit entity = ContentHostingService.editResource(entityId);
-						item.updateContentResourceEdit(entity);
-						ContentHostingService.commitResource(entity, noti);
+						entity = ContentHostingService.editResource(entityId);
+						item.updateContentResourceEdit((ContentResourceEdit)entity);
+						ContentHostingService.commitResource((ContentResourceEdit)entity, noti);
 					}
-
+					
+					notifyCondition(entity);
 					state.setAttribute(STATE_MODE, MODE_LIST);
 				} 
 				catch (IdUnusedException e) 
@@ -6635,9 +6678,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 
-	public static void saveCondition(ListItem item, ParameterParser params, SessionState state) {
-		boolean cbSelected = Boolean.valueOf(params.get("cbCondition"));
-		String selectedConditionValue = params.get("selectCondition");
+	public static void saveCondition(ListItem item, ParameterParser params, SessionState state, int index) {
+		boolean cbSelected = Boolean.valueOf(params.get("cbCondition" + ListItem.DOT + index));
+		String selectedConditionValue = params.get("selectCondition" + ListItem.DOT + index);
+		if (selectedConditionValue == null) return;
 		logger.debug("Selected condition value: " + selectedConditionValue);
 		//The selectCondition value must be broken up so we can get at the values
 		//that make up the index, submittedFunctionName, missingTermQuery, and operatorValue in that order
@@ -6649,12 +6693,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		logger.debug("submittedFunctionName: " + submittedFunctionName);
 		logger.debug("missingTermQuery: " + missingTermQuery);
 		logger.debug("operatorValue: " + operatorValue);			
-		String submittedResourceFilter = params.get("selectResource");
+		String submittedResourceFilter = params.get("selectResource" + ListItem.DOT + index);
+		// the number of grade points are tagging along for the ride. chop this off.
+		String assignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
+		submittedResourceFilter = submittedResourceFilter.substring(0, submittedResourceFilter.lastIndexOf("/"));
 		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
 		String eventDataClass = ConditionService.getClassNameForEvent(submittedFunctionName);
 		Object argument = null;
-		if ((selectedIndex == 7) || (selectedIndex == 8)) {
-			argument = new Double(params.get("assignment_grade"));
+		if ((selectedIndex == 9) || (selectedIndex == 10)) {
+			try {
+				argument = new Double(params.get("assignment_grade" + ListItem.DOT + index));
+			} catch (NumberFormatException e) {
+				return;
+			}
 			logger.debug("argument: " + argument);
 		}
 
@@ -6664,7 +6715,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				removeExistingNotification(item, state);
 			}
 			
+			String containingCollectionId = item.containingCollectionId;
 			String resourceId = item.getId();
+			if (! resourceId.startsWith(containingCollectionId)) {
+				resourceId = containingCollectionId + resourceId;
+				if (item.isCollection() && !resourceId.endsWith("/")) resourceId = resourceId + "/";
+			}
 			List<Predicate> predicates = new ArrayList();
 			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operatorValue, argument);
 			
@@ -6674,18 +6730,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			NotificationEdit notification = NotificationService.addNotification();
 			notification.addFunction(submittedFunctionName);
 			notification.addFunction("cond+" + submittedFunctionName);
+			if (missingTermQuery.contains("Date")) {
+				notification.addFunction("datetime.update");
+			}
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
 			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
 			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
 			notification.getProperties().addProperty(ResourceProperties.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
-			notification.getProperties().addProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade"));
+			notification.getProperties().addProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade" + ListItem.DOT + index));
 			NotificationService.commitEdit(notification);
 			
 			item.setUseConditionalRelease(true);
 			item.setNotificationId(notification.getId());
-			
-			EventTrackingService.post(EventTrackingService.newEvent("cond+" + submittedFunctionName, submittedResourceFilter, true));
 		} else {
 			//only remove the condition if it previously existed
 			if (item.useConditionalRelease) {
@@ -6726,8 +6783,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		conditionSelections.put("4|gradebook.updateAssignment|isNotReleasedToStudents|no_operator","is not released to students.");
 		conditionSelections.put("5|gradebook.updateAssignment|isIncludedInCourseGrade|no_operator","is included in course grade.");
 		conditionSelections.put("6|gradebook.updateAssignment|isNotIncludedInCourseGrade|no_operator","is not included in course grade.");
-		conditionSelections.put("7|gradebook.updateItemScore|getScore|less_than","grade is less than:");
-		conditionSelections.put("8|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");	
+		conditionSelections.put("7|gradebook.updateItemScore|isScoreBlank|no_operator", "grade is blank.");
+		conditionSelections.put("8|gradebook.updateItemScore|isScoreNonBlank|no_operator", "grade is non-blank.");
+		conditionSelections.put("9|gradebook.updateItemScore|getScore|less_than","grade is less than:");
+		conditionSelections.put("10|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");	
 		
 		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
 		state.setAttribute("resourceSelections", resourceSelections);
@@ -8215,6 +8274,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				if(obj != null && obj instanceof ListItem)
 				{
 					displayName = ((ListItem) obj).getName();
+					List<String> alerts = ((ListItem) obj).checkRequiredProperties();
+					for (String alert : alerts) {
+						addAlert(state, alert);
+					}
 				}
 				if(displayName == null || displayName.trim().equals(""))
 				{

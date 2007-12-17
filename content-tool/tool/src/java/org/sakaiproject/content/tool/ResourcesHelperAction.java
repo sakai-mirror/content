@@ -769,10 +769,18 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 			// capture properties
 			newFolder.captureProperties(params, ListItem.DOT + i);
+			if (newFolder.numberFieldIsInvalid) {
+				addAlert(state, rb.getString("invalid.condition.argument"));
+				return;
+			}
+			if (newFolder.numberFieldIsOutOfRange) {
+				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFolder.getConditionAssignmentPoints() + ".");
+				return;
+			}
 
 			fp.setRevisedListItem(newFolder);
 
-			ResourcesAction.saveCondition(newFolder, params, state);
+			ResourcesAction.saveCondition(newFolder, params, state, i);
 			
 			c++;
 		}
@@ -992,6 +1000,14 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			
 			// capture properties
 			newFile.captureProperties(params, ListItem.DOT + i);
+			if (newFile.numberFieldIsInvalid) {
+				addAlert(state, rb.getString("invalid.condition.argument"));
+				return;
+			}
+			if (newFile.numberFieldIsOutOfRange) {
+				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFile.getConditionAssignmentPoints() + ".");
+				return;
+			}
 			// notification
 			int noti = NotificationService.NOTI_NONE;
 			// %%STATE_MODE_RESOURCES%%
@@ -1019,7 +1035,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			            
 			pipe.setRevisedListItem(newFile);
     			
-			ResourcesAction.saveCondition(newFile, params, state);
+			ResourcesAction.saveCondition(newFile, params, state, i);
 			
 			actualCount++;
 			
@@ -1187,6 +1203,14 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
     			// capture properties
     			newFile.captureProperties(params, ListItem.DOT + i);
+    			if (newFile.numberFieldIsInvalid) {
+    				addAlert(state, rb.getString("invalid.condition.argument"));
+    				return;
+    			}
+    			if (newFile.numberFieldIsOutOfRange) {
+    				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFile.getConditionAssignmentPoints() + ".");
+    				return;
+    			}
     			
     			// notification
     			int noti = NotificationService.NOTI_NONE;
@@ -1213,7 +1237,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
     			// allAlerts.addAll(newFile.checkRequiredProperties());
     			
     			pipe.setRevisedListItem(newFile);
-    			ResourcesAction.saveCondition(newFile, params, state);
+    			ResourcesAction.saveCondition(newFile, params, state, i);
     			uploadCount++;
     			
 			}
