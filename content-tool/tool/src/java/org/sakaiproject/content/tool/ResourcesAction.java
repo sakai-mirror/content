@@ -61,8 +61,6 @@ import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.event.cover.EventTrackingService;
-import org.sakaiproject.conditions.api.ConditionTemplate;
-import org.sakaiproject.conditions.api.Criterion;
 import org.sakaiproject.conditions.api.Rule;
 import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.conditions.impl.BooleanExpression;
