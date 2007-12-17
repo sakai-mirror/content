@@ -463,7 +463,7 @@ public class ListItem
 		
 		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
 		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
-		this.accessControlList = props.getPropertyList(ResourceProperties.CONDITIONAL_ACCESS_LIST);
+		this.accessControlList = props.getPropertyList(ContentHostingService.CONDITIONAL_ACCESS_LIST);
 		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
 		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
 		//this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
@@ -2800,10 +2800,10 @@ public class ListItem
 	{
 		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
 		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
-		props.removeProperty(ResourceProperties.CONDITIONAL_ACCESS_LIST);
+		props.removeProperty(ContentHostingService.CONDITIONAL_ACCESS_LIST);
 		if (this.accessControlList != null) {
 			for (String id : this.accessControlList) {
-				props.addPropertyToList(ResourceProperties.CONDITIONAL_ACCESS_LIST, id);
+				props.addPropertyToList(ContentHostingService.CONDITIONAL_ACCESS_LIST, id);
 			}
 		}
 	}

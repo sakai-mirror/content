@@ -6735,10 +6735,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			notification.setAction(resourceConditionRule);
 			notification.setResourceFilter(submittedResourceFilter);
-			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
-			notification.getProperties().addProperty(ResourceProperties.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
-			notification.getProperties().addProperty(ResourceProperties.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
-			notification.getProperties().addProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade" + ListItem.DOT + index));
+			notification.getProperties().addProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
+			notification.getProperties().addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
+			notification.getProperties().addProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
+			notification.getProperties().addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade" + ListItem.DOT + index));
 			NotificationService.commitEdit(notification);
 			
 			item.setUseConditionalRelease(true);
@@ -6761,10 +6761,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			try {
 				Notification notification = NotificationService.getNotification(item.getNotificationId());			
 				if (notification != null) {
-					item.setSubmittedFunctionName(notification.getProperties().getProperty(ResourceProperties.PROP_SUBMITTED_FUNCTION_NAME));
-					item.setSubmittedResourceFilter(notification.getProperties().getProperty(ResourceProperties.PROP_SUBMITTED_RESOURCE_FILTER));
-					item.setSelectedConditionKey(notification.getProperties().getProperty(ResourceProperties.PROP_SELECTED_CONDITION_KEY));
-					item.setConditionArgument(notification.getProperties().getProperty(ResourceProperties.PROP_CONDITIONAL_RELEASE_ARGUMENT));					
+					item.setSubmittedFunctionName(notification.getProperties().getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME));
+					item.setSubmittedResourceFilter(notification.getProperties().getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER));
+					item.setSelectedConditionKey(notification.getProperties().getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY));
+					item.setConditionArgument(notification.getProperties().getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT));					
 				}
 			} catch (NotificationNotDefinedException e) {
 				addAlert(state, rb.getString("notification.load.error"));								
