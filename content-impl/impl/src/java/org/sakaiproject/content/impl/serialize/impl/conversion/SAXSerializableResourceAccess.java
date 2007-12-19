@@ -526,6 +526,14 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 				{
 
 				}
+				else if ("members".equals(qName))
+				{
+					// ignore
+				}
+				else if ("member".equals(qName))
+				{
+					// ignore
+				}
 				else
 				{
 					log.warn("Unexpected Element " + qName);
