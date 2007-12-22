@@ -5,6 +5,7 @@
 #        -j $HOME/.maven/repository/sakaiproject/jars/sakai-content-api-${SAKAI_VERSION}.jar  \
 #          $@
 #
+
 SAKAI_VERSION=2-4-x
 CLASSPATH="$CLASSPATH:$HOME/.maven/repository/commons-logging/jars/commons-logging-1.0.4.jar"
 CLASSPATH="$CLASSPATH:$HOME/.maven/repository/commons-dbcp/jars/commons-dbcp-1.2.1.jar"
@@ -32,7 +33,7 @@ CLASSPATH="$CLASSPATH:$HOME/.maven/repository/mysql/jars/mysql-connector-java-3.
 CLASSPATH="$CLASSPATH:$CATALINA_HOME/common/lib/mysql-connector-java-3.1.14-bin.jar"
 CLASSPATH="$CLASSPATH:$CATALINA_HOME/shared/lib/mysql-connector-java-5.0.5-bin.jar"
 ## ORACLE ##
-CLASSPATH="$CLASSPATH:$CATALINA_HOME/common/lib/ojdbc-14.jar"
+CLASSPATH="$CLASSPATH:/Users/jreng/ojdbc14.jar"
 
 java $JAVA_OPTS  \
       -classpath "$CLASSPATH" \

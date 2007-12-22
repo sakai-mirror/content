@@ -21,9 +21,12 @@
 
 package org.sakaiproject.content.impl.serialize.impl.conversion;
 
+import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,7 +55,23 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 	 */
 	public Object getSource(String id, ResultSet rs) throws SQLException
 	{
-		return rs.getString(1);
+		ResultSetMetaData metadata = rs.getMetaData();
+		String rv = null;
+		switch(metadata.getColumnType(1))
+		{
+		case Types.CLOB:
+			Clob clob = rs.getClob(1);
+			if(clob != null)
+			{
+				rv = clob.getSubString(1L, (int) clob.length());
+			}
+			break;
+		case Types.LONGVARCHAR:
+		case Types.VARCHAR:
+			rv = rs.getString(1);
+			break;
+		}
+		return rv;
 	}
 
 	/*
@@ -98,12 +117,16 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 					context = "~" + context;
 				}
 			}
+			
+			// update TEST_CONTENT_RESOURCE set CONTEXT = ?, FILE_SIZE = ?, XML = NULL, BINARY_ENTITY = ?, 
+			// RESOURCE_TYPE_ID = ? where RESOURCE_ID = ?
 
 			updateRecord.setString(1, context);
 			updateRecord.setLong(2, sax.getSerializableContentLength());
 			updateRecord.setBytes(3, result);
 			updateRecord.setString(4, sax.getSerializableResourceType());
 			updateRecord.setString(5, id);
+			
 			return true;
 		}
 		catch (Exception e)
