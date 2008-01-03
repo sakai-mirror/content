@@ -4266,7 +4266,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// close the edit object
 		((BaseResourceEdit) edit).closeEdit();
 		
-		removeSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			removeSizeCache(edit);
+		}
 
 		((BaseResourceEdit) edit).setRemoved();
 
@@ -5387,7 +5390,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		commitResourceEdit(edit, priority);
 		
-		addSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			addSizeCache(edit);
+		}
 
 	} // commitResource
 
@@ -7791,7 +7797,10 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// complete the edit
 		m_storage.commitResource(edit);
 		
-		addSizeCache(edit);
+		if(! readyToUseFilesizeColumn())
+		{
+			addSizeCache(edit);
+		}
 
 		// track it
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseResourceEdit) edit).getEvent(), edit.getReference(null), true,
@@ -7940,8 +7949,16 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			return false;
 		}
       
-        long size = getCachedBodySizeK((BaseCollectionEdit)collection);
-
+        long size = 0;
+        
+        if(readyToUseFilesizeColumn())
+        {
+        	size = collection.getBodySizeK();
+        }
+        else
+        {
+        	size = getCachedBodySizeK((BaseCollectionEdit)collection);
+        }
 
 		// find the resource being edited
 		ContentResource inThere = null;
