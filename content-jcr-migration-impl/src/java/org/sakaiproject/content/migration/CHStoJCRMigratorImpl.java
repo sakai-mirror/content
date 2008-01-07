@@ -44,7 +44,7 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 
 	private ContentToJCRCopier contentToJCRCopier;
 
-	private MigrationStatusReporter migrationStatusReporter;
+	//private MigrationStatusReporter migrationStatusReporter;
 
 	// End Injected Services
 
@@ -222,7 +222,7 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 	{
 		if ( !jcrService.isEnabled() ) return;
 		this.isCurrentlyMigrating = true;
-		if (!migrationStatusReporter.hasMigrationStarted())
+		if (!hasMigrationStarted())
 		{
 			addOriginalItemsToQueue();
 		}
@@ -366,14 +366,14 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 				 */
 				becomeHackUser();
 				// If there is stuff left, migrate it.
-				while (!migrationStatusReporter.hasMigrationFinished() && isCurrentlyMigrating)
+				while (!hasMigrationFinished() && isCurrentlyMigrating)
 				{
 					migrateSomeItems(1);
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						log.error("Could not sleep.", e);
-					}
+					//try {
+					//	Thread.sleep(1000);
+					//} catch (InterruptedException e) {
+					//	log.error("Could not sleep.", e);
+					//}
 				}
 				//else
 				//{
@@ -437,10 +437,10 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		this.jcrService = jcrService;
 	}
 
-	public void setMigrationStatusReporter(MigrationStatusReporter migrationStatusReporter)
-	{
-		this.migrationStatusReporter = migrationStatusReporter;
-	}
+	//public void setMigrationStatusReporter(MigrationStatusReporter migrationStatusReporter)
+	//{
+	//	this.migrationStatusReporter = migrationStatusReporter;
+	//}
 
 	public void setContentToJCRCopier(ContentToJCRCopier contentToJCRCopier)
 	{
@@ -507,7 +507,7 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		try {
 			numberFinishedRS = countFinishedItemsInQueuePreparedStatement.executeQuery();
 			numberFinishedRS.next();
-			numberFinishedItems = numberTotalItemsRS.getInt(1);
+			numberFinishedItems = numberFinishedRS.getInt(1);
 		//int numberFinishedItems = Integer.parseInt((String) slService.dbRead(
 		//		MigrationSqlQueries.count_finished_content_items_in_queue).get(0));
 		} catch (SQLException e) {
