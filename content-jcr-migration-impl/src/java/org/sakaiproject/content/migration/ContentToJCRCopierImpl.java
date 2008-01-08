@@ -17,15 +17,11 @@ import org.sakaiproject.content.impl.JCRStorageUser;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.jcr.api.JCRService;
-import org.sakaiproject.thread_local.cover.ThreadLocalManager;
-import org.sakaiproject.tool.api.ToolSession;
-
 
 public class ContentToJCRCopierImpl implements ContentToJCRCopier
 {
 	private static Log log = LogFactory.getLog(ContentToJCRCopierImpl.class);
 
-	// private JCRService jcrService;
 	private JCRStorageUser jcrStorageUser;
 
 	private ContentHostingService oldCHSService;
@@ -52,11 +48,8 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 	 */
 	public boolean copyCollectionFromCHStoJCR(Session jcrSession, String abspath)
 	{
-		resetContentHosting();
 		try
 		{
-			// Session jcrSession = jcrService.login();
-
 			// We don't need to convert the root node
 			if (abspath == "/")
 			{
@@ -65,7 +58,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 			}
 
 			ContentCollection collection = oldCHSService.getCollection(abspath);
-			// editCollection(abspath);
 
 			// The parent folder in jcr
 			String collectionIDwithNoSlash = collection.getId();
@@ -90,15 +82,12 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 					((Object) collectionNode));
 
 			parentFolderNode.save();
-			
-			// oldCHSService.cancelCollection(collection);
 			return true;
 		}
 		catch (Exception e)
 		{
 			log.error("Problems migrating collection: " + abspath, e);
 		}
-
 		return false;
 	}
 
@@ -108,13 +97,9 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 	 */
 	public boolean copyResourceFromCHStoJCR(Session jcrSession, String abspath)
 	{
-		resetContentHosting();
 		try
 		{
-			// Session jcrSession = jcrService.login();
-
 			ContentResource resource = oldCHSService.getResource(abspath);
-			// editResource(abspath);
 
 			// See what the mimeType property is
 			String resourceMimeType = resource.getProperties().getProperty(
@@ -128,15 +113,11 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 			Calendar lastModCalendar = GregorianCalendar.getInstance();
 			lastModCalendar.setTimeInMillis(resourceLastMod);
 
-			ContentCollection parent = resource.getContainingCollection();
-			String resourceNodePath = MigrationConstants.jcr_content_prefix
-					+ resource.getId();
-
+			int lastSlashIndex = resource.getId().lastIndexOf("/");
 			String parentNodePath = MigrationConstants.jcr_content_prefix
-					+ parent.getId();
+					+ resource.getId().substring(0, lastSlashIndex);
 			Node parentNode = (Node) jcrSession.getItem(rstripSlash(parentNodePath));
 
-			int lastSlashIndex = resource.getId().lastIndexOf("/");
 			String resourceName = resource.getId().substring(lastSlashIndex + 1,
 					resource.getId().length());
 
@@ -151,7 +132,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 
 			parentNode.save();
 			
-			// oldCHSService.cancelResource(resource);
 			return true;
 		}
 		catch (Exception e)
@@ -160,11 +140,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 		}
 
 		return false;
-	}
-
-	public void setJcrService(JCRService jcrService)
-	{
-		// this.jcrService = jcrService;
 	}
 
 	public void setJcrStorageUser(JCRStorageUser jcrStorageUser)
@@ -179,7 +154,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 
 	public boolean deleteItem(Session session, String abspath)
 	{
-		resetContentHosting();
 		String actualPath = MigrationConstants.jcr_content_prefix + abspath;
 		if (abspath.endsWith("/"))
 		{
@@ -191,7 +165,6 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 			Node node = (Node) session.getItem(actualPath);
 			node.remove();
 			node.save();
-
 		}
 		catch (Exception e)
 		{
@@ -199,37 +172,5 @@ public class ContentToJCRCopierImpl implements ContentToJCRCopier
 		}
 		return false;
 	}
-	
-	protected final static String CURRENT_REMOTE_USER = "org.sakaiproject.util.RequestFilter.remote_user";
-	protected final static String CURRENT_CONTEXT = "org.sakaiproject.util.RequestFilter.context";
-	protected final static String CURRENT_SESSION = "org.sakaiproject.api.kernel.session.current";
-	protected final static String CURRENT_TOOL_SESSION = "org.sakaiproject.api.kernel.session.current.tool";
-	protected final static String CURRENT_HTTP_SESSION = "org.sakaiproject.util.RequestFilter.http_session";
 
-	/*
-	 * ContentHosting still seems unable to operate at a service level without 
-	 * spawning millions of timers that never close down, so we will do the thing
-	 * it will not do, and jerk it's thread locals from the carpet under it.
-	 */
-	private void resetContentHosting() {
-		Object /* Boolean */ currentRemoteUser = false;
-		Object /* String */ currentContext = null;
-		Object /* Session */ currentSession = null;
-		Object /* ToolSession */ currentToolSession = null;
-		Object /* Integer */ currentHttpSession = 0;
-		
-		currentRemoteUser = /* (Boolean) */ ThreadLocalManager.get(CURRENT_REMOTE_USER);
-		currentContext = /* (String) */ ThreadLocalManager.get(CURRENT_CONTEXT);
-		currentSession = /* (Session) */ ThreadLocalManager.get(CURRENT_SESSION);
-		currentToolSession = /* (ToolSession) */ ThreadLocalManager.get(CURRENT_TOOL_SESSION);
-		currentHttpSession = /* (Integer) */ ThreadLocalManager.get(CURRENT_HTTP_SESSION);
-
-		ThreadLocalManager.clear();
-		// restore the current values
-		ThreadLocalManager.set(CURRENT_REMOTE_USER, currentRemoteUser);
-		ThreadLocalManager.set(CURRENT_CONTEXT, currentContext);
-		ThreadLocalManager.set(CURRENT_SESSION, currentSession);
-		ThreadLocalManager.set(CURRENT_TOOL_SESSION, currentToolSession);
-		ThreadLocalManager.set(CURRENT_HTTP_SESSION, currentHttpSession);
-	}
 }

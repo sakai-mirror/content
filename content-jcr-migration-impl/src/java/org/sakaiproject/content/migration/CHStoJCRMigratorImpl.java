@@ -28,7 +28,8 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 
-public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusReporter
+public class CHStoJCRMigratorImpl extends SakaiRequestEmulator 
+	implements CHStoJCRMigrator, MigrationStatusReporter
 {
 
 	private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
@@ -73,10 +74,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 	private String HACKUSER = "admin";
 
 	private UserDirectoryService userDirectoryService;
-
-	private SessionManager sessionManager;
-
-	private AuthzGroupService authzGroupService;
 	
 	private Connection dbConnection;
 
@@ -149,9 +146,7 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 	private void markContentItemFinished(String contentId)
 	{
 		if ( !jcrService.isEnabled() ) return;
-		//Connection conn = null;
 		try {
-			//dbConnection = dataSource.getConnection();
 			finishItemPreparedStatement.clearParameters();
 			finishItemPreparedStatement.setString(1, contentId);
 			finishItemPreparedStatement.executeUpdate();
@@ -159,17 +154,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		catch (SQLException e) {
 			log.error("Error marking the migration content item finished.", e);
 		}
-		//finally {
-			
-			//if (conn != null) {
-			//	try {
-			//		conn.close();
-			//	} catch (SQLException e) {
-			//		log.error("Error closing connection", e);
-			//	}
-			//}
-		//}
-		//slService.dbWrite(MigrationSqlQueries.finish_content_item, contentId);
 	}
 
 	public boolean isCurrentlyMigrating()
@@ -180,42 +164,16 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 	private void addOriginalItemsToQueue()
 	{
 		if ( !jcrService.isEnabled() ) return;
-		
-		//Connection conn = null;
+
 		try
 		{
-			//conn = dataSource.getConnection();
-			
-			//PreparedStatement addOriginalCollectionsStmt = 
-			//	conn.prepareStatement(MigrationSqlQueries.add_original_collections_to_migrate);
-			
 			addOriginalCollPreparedStatement.executeUpdate();
-			//addOriginalCollPreparedStatement.close();
-			
-			//addOriginalResourcesPreparedStatement. = 
-			//	conn.prepareStatement(MigrationSqlQueries.add_original_resources_to_migrate);
-			
 			addOriginalResourcesPreparedStatement.executeUpdate();
-			//addOriginalResourcesPreparedStatement.close();
-			//slService.dbInsert(conn,
-			//		MigrationSqlQueries.add_original_collections_to_migrate, null, "id");
-			//slService.dbInsert(conn,
-			//		MigrationSqlQueries.add_original_resources_to_migrate, null, "id");
-			//slService.returnConnection(conn);
 		}
 		catch (SQLException e)
 		{
 			log.error("Problems adding the original content migration items to the queue.", e);
 		}
-		//finally {
-		//	if (conn != null) {
-		//		try {
-		//			conn.close();
-		//		} catch (SQLException e) {
-		//			log.error("Error closing connection.", e);
-		//		}
-		//	}
-		//}
 	}
 
 	public void startMigrating()
@@ -279,20 +237,15 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 			}
 		}
 		markContentItemFinished(item.contentId);
+		
 	}
 
 	@SuppressWarnings("unchecked")
 	private void migrateSomeItems(int numberToMigrate)
 	{
 		List<ThingToMigrate> thingsToMigrate = new ArrayList<ThingToMigrate>();
-		
-		//Connection conn = null;
-		
+
 		try {
-			//conn = dataSource.getConnection();
-			
-			//PreparedStatement thingsStmt = 
-			//	conn.prepareStatement(MigrationSqlQueries.select_unfinished_items);
 			nextThingsToMigratePreparedStatement.clearParameters();
 			nextThingsToMigratePreparedStatement.setInt(1, numberToMigrate);
 			ResultSet result = nextThingsToMigratePreparedStatement.executeQuery();
@@ -310,81 +263,30 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 			}
 		} catch (SQLException e) {
 			log.error("SQL Error Migrating JCR Items.", e);
-		} //finally {
-		//	if (conn != null) {
-		//		try {
-		//			conn.close();
-		//		} catch (SQLException e) {
-		//			log.error("Error closing connection.", e);
-		//		}
-		//	}
-		//}
-		
-		//List<ThingToMigrate> thingsToMigrate = slService.dbRead(
-		//		MigrationSqlQueries.select_unfinished_items,
-		//		new Object[] { numberToMigrate }, new MigrationTableSqlReader());
+		}
 
-		// try {
-		// javax.jcr.Session session = jcrService.login();
 		for (ThingToMigrate thing : thingsToMigrate)
 		{
 			migrateOneItem(jcrSession, thing);
 		}
-		// session.logout();
-		// jcrService.logout();
-		// }
-		// catch (Exception e) {
-		// log.error("Error Migrating some CHS to JCR items: ", e);
-		// }
 	}
 
 	private void scheduleBatch()
 	{
 		TimerTask batchTask = new TimerTask()
 		{
-
 			public void run()
 			{
-
-				/*
-				 * There seems to be a problem running this permission wise,
-				 * perhaps because it's in it's own thread and the user
-				 * information isn't getting carried over? ERROR: Problems
-				 * migrating collection:
-				 * /group/usedtools/jcr-2.0/docs/javax/jcr/nodetype/ (2007-11-29
-				 * 11:42:06,723
-				 * Timer-17_org.sakaiproject.content.impl.jcr.migration.ContentToJCRCopierImpl)
-				 * org.sakaiproject.exception.PermissionException user=null
-				 * lock=content.revise.any
-				 * resource=/content/group/usedtools/jcr-2.0/docs/javax/jcr/nodetype/
-				 * at
-				 * org.sakaiproject.content.impl.BaseContentService.editCollection(BaseContentService.java:4101)
-				 * at
-				 * org.sakaiproject.content.impl.jcr.migration.ContentToJCRCopierImpl.copyCollectionFromCHStoJCR(ContentToJCRCopierImpl.java:53)
-				 * at
-				 * org.sakaiproject.content.impl.jcr.migration.CHStoJCRMigratorImpl.migrateOneItem(CHStoJCRMigratorImpl.java:94)
-				 */
-				becomeHackUser();
 				// If there is stuff left, migrate it.
+				startEmulatedRequest(SUPER_USER);
 				while (!hasMigrationFinished() && isCurrentlyMigrating)
 				{
-					migrateSomeItems(1);
-					//try {
-					//	Thread.sleep(1000);
-					//} catch (InterruptedException e) {
-					//	log.error("Could not sleep.", e);
-					//}
+					
+					migrateSomeItems(100000);
+					//endEmulatedRequest();
 				}
-				//else
-				//{
-					isCurrentlyMigrating = false;
-					return;
-				//}
-
-				//if (isCurrentlyMigrating)
-				//{
-				//	scheduleBatch();
-				//}
+				isCurrentlyMigrating = false;
+				return;
 			}
 		};
 		if (timer == null) timer = new Timer(false);
@@ -396,8 +298,7 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		{
 			// If there was a problem before, the timer will have been
 			// cancelled.
-			log
-					.info("There was an error previously with the migration, recreating the Migration Timer");
+			log.info("There was an error previously with the migration, recreating the Migration Timer");
 			timer.cancel();
 			timer = new Timer(false);
 			timer.schedule(batchTask, delayBetweenBatchesMilliSeconds);
@@ -437,11 +338,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		this.jcrService = jcrService;
 	}
 
-	//public void setMigrationStatusReporter(MigrationStatusReporter migrationStatusReporter)
-	//{
-	//	this.migrationStatusReporter = migrationStatusReporter;
-	//}
-
 	public void setContentToJCRCopier(ContentToJCRCopier contentToJCRCopier)
 	{
 		this.contentToJCRCopier = contentToJCRCopier;
@@ -452,36 +348,8 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		this.autoDDL = autoDDL;
 	}
 
-	private void becomeHackUser()
-	{
-
-		User u = null;
-		try
-		{
-			u = userDirectoryService.getUserByEid(HACKUSER);
-		}
-		catch (UserNotDefinedException e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		Session s = sessionManager.getCurrentSession();
-
-		s.setUserEid(u.getEid());
-		s.setUserId(u.getId());
-		s.setActive();
-		sessionManager.setCurrentSession(s);
-		authzGroupService.refreshUser(u.getId());
-	}
-	
 	public int[] filesRemaining()
-	{
-		//if ( !enabled ) return new int[] {0,0};
-		//int numberTotalItems = Integer.parseInt((String) slService.dbRead(
-		//		MigrationSqlQueries.count_total_content_items_in_queue).get(0));
-		// = 
-		
+	{	
 		int numberTotalItems = 0, numberFinishedItems = 0;
 		
 		ResultSet numberTotalItemsRS = null;
@@ -508,8 +376,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 			numberFinishedRS = countFinishedItemsInQueuePreparedStatement.executeQuery();
 			numberFinishedRS.next();
 			numberFinishedItems = numberFinishedRS.getInt(1);
-		//int numberFinishedItems = Integer.parseInt((String) slService.dbRead(
-		//		MigrationSqlQueries.count_finished_content_items_in_queue).get(0));
 		} catch (SQLException e) {
 			log.error("Unable to count items in migration queue.", e);
 		} finally {
@@ -532,10 +398,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 	 */
 	public boolean hasMigrationStarted()
 	{
-		//if ( !enabled ) return false;
-		//int totalInQueue = Integer.parseInt((String) slService.dbRead(
-		//		MigrationSqlQueries.count_total_content_items_in_queue).get(0));
-
 		int totalInQueue = filesRemaining()[1];
 		
 		if (totalInQueue > 0)
@@ -550,7 +412,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 
 	public boolean hasMigrationFinished()
 	{
-		//if ( !enabled ) return false;
 		int[] remaining = filesRemaining();
 
 		if (remaining[0] == remaining[1])
@@ -561,46 +422,6 @@ public class CHStoJCRMigratorImpl implements CHStoJCRMigrator, MigrationStatusRe
 		{
 			return false;
 		}
-	}
-
-	/**
-	 * @return the authzGroupService
-	 */
-	public AuthzGroupService getAuthzGroupService()
-	{
-		return authzGroupService;
-	}
-
-	/**
-	 * @param authzGroupService the authzGroupService to set
-	 */
-	public void setAuthzGroupService(AuthzGroupService authzGroupService)
-	{
-		this.authzGroupService = authzGroupService;
-	}
-
-	/**
-	 * @return the sessionManager
-	 */
-	public SessionManager getSessionManager()
-	{
-		return sessionManager;
-	}
-
-	/**
-	 * @param sessionManager the sessionManager to set
-	 */
-	public void setSessionManager(SessionManager sessionManager)
-	{
-		this.sessionManager = sessionManager;
-	}
-
-	/**
-	 * @return the userDirectoryService
-	 */
-	public UserDirectoryService getUserDirectoryService()
-	{
-		return userDirectoryService;
 	}
 
 	/**
