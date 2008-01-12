@@ -21,6 +21,7 @@
 
 package org.sakaiproject.content.impl.serialize.impl.conversion;
 
+import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,6 +60,13 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 		String rv = null;
 		switch(metadata.getColumnType(1))
 		{
+		case Types.BLOB:
+			Blob blob = rs.getBlob(1);
+			if(blob != null)
+			{
+				rv = new String(blob.getBytes(1L, (int) blob.length()));
+			}
+			break;
 		case Types.CLOB:
 			Clob clob = rs.getClob(1);
 			if(clob != null)
@@ -66,11 +74,22 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 				rv = clob.getSubString(1L, (int) clob.length());
 			}
 			break;
+		case Types.CHAR:
 		case Types.LONGVARCHAR:
 		case Types.VARCHAR:
 			rv = rs.getString(1);
 			break;
+		case Types.BINARY:
+		case Types.VARBINARY:
+		case Types.LONGVARBINARY:
+			byte[] bytes = rs.getBytes(1);
+			if(bytes != null)
+			{
+				rv = new String(bytes);
+			}
+			break;
 		}
+		//System.out.println("getSource(" + id + ") \n" + rv + "\n");
 		return rv;
 	}
 
@@ -120,13 +139,16 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 			
 			// update TEST_CONTENT_RESOURCE set CONTEXT = ?, FILE_SIZE = ?, XML = NULL, BINARY_ENTITY = ?, 
 			// RESOURCE_TYPE_ID = ? where RESOURCE_ID = ?
+			//System.out.println("convertSource(" + id + ") result.length == " + result.length + "\n" + new String(result));
 
 			updateRecord.setString(1, context);
 			updateRecord.setLong(2, sax.getSerializableContentLength());
 			updateRecord.setBytes(3, result);
 			updateRecord.setString(4, sax.getSerializableResourceType());
 			updateRecord.setString(5, id);
-			
+
+			// System.out.println("\n\nconvertSource(" + id + ") result.length == " + result.length + " returning true");
+
 			return true;
 		}
 		catch (Exception e)
@@ -162,7 +184,44 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 	 */
 	public Object getValidateSource(String id, ResultSet rs) throws SQLException
 	{
-		return rs.getBytes(1);
+		ResultSetMetaData metadata = rs.getMetaData();
+		byte[] rv = null;
+		switch(metadata.getColumnType(1))
+		{
+		case Types.BLOB:
+			Blob blob = rs.getBlob(1);
+			if(blob != null)
+			{
+				//System.out.println("getValidateSource(" + id + ") blob == " + blob + " blob.length == " + blob.length());
+				rv = blob.getBytes(1L, (int) blob.length());
+			}
+			else
+			{
+				System.out.println("getValidateSource(" + id + ") blob == " + blob );
+			}
+			break;
+		case Types.CLOB:
+			Clob clob = rs.getClob(1);
+			if(clob != null)
+			{
+				rv = clob.getSubString(1L, (int) clob.length()).getBytes();
+			}
+			break;
+		case Types.CHAR:
+		case Types.LONGVARCHAR:
+		case Types.VARCHAR:
+			rv = rs.getString(1).getBytes();
+			break;
+		case Types.BINARY:
+		case Types.VARBINARY:
+		case Types.LONGVARBINARY:
+			rv = rs.getBytes(1);
+			break;
+		}
+		// System.out.println("getValidateSource(" + id + ") \n" + rv + "\n");
+		return rv;
+
+		//return rs.getBytes(1);
 	}
 
 

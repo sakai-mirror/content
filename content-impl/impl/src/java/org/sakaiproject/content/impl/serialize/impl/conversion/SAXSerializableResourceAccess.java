@@ -38,6 +38,7 @@ import javax.xml.parsers.SAXParserFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceTypeRegistry;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.impl.serialize.api.SerializableResourceAccess;
@@ -383,7 +384,15 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 			public void startElement(String uri, String localName, String qName,
 					Attributes attributes) throws SAXException
 			{
-				if ("property".equals(qName))
+				if(qName == null)
+				{
+					// will be ignored
+				}
+				else
+				{
+					qName = qName.trim();
+				}
+				if ("property".equals(qName.toLowerCase()))
 				{
 
 					String name = attributes.getValue("name");
@@ -435,7 +444,7 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 						props.put(name, value);
 					}
 				}
-				else if ("resource".equals(qName))
+				else if ("resource".equals(qName.toLowerCase()))
 				{
 					id = attributes.getValue("id");
 					contentType = StringUtil.trimToNull(attributes
@@ -451,6 +460,11 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 					}
 					resourceType = StringUtil.trimToNull(attributes
 							.getValue("resource-type"));
+					
+					if(resourceType == null)
+					{
+						resourceType = ResourceType.TYPE_UPLOAD;
+					}
 
 					String enc = StringUtil.trimToNull(attributes.getValue("body"));
 					if (enc != null)
@@ -522,21 +536,21 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 					}
 					group.add(attributes.getValue("sakai:group_name"));
 				}
-				else if ("properties".equals(qName))
+				else if ("properties".equals(qName.toLowerCase()))
 				{
 
 				}
-				else if ("members".equals(qName))
+				else if ("members".equals(qName.toLowerCase()))
 				{
 					// ignore
 				}
-				else if ("member".equals(qName))
+				else if ("member".equals(qName.toLowerCase()))
 				{
 					// ignore
 				}
 				else
 				{
-					log.warn("Unexpected Element " + qName);
+					log.warn("Unexpected Element \"" + qName + "\"");
 				}
 
 			}
@@ -595,7 +609,7 @@ public class SAXSerializableResourceAccess implements SerializableResourceAccess
 				|| (resourceType != null && sax2.resourceType == null))
 		{
 			sb.append("     ").append(
-					"ID not equal [" + resourceType + "]!=[" + sax2.resourceType + "]")
+					"resourceType not equal [" + resourceType + "]!=[" + sax2.resourceType + "]")
 					.append("\n");
 		}
 		if ((group == null && sax2.group != null)
