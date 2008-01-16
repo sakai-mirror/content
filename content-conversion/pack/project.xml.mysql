@@ -218,16 +218,6 @@
 			</properties>
 		</dependency>
 
-		<dependency>
-			<groupId>oracle</groupId>
-			<artifactId>ojdbc14</artifactId>
-			<jar>ojdbc14.jar</jar>
-			<type>jar</type>
-			<url>http://download.oracle.com/otn/utilities_drivers/jdbc/10203/ojdbc14.jar</url>
-			<properties>
-				<war.bundle>true</war.bundle>
-			</properties>
-		</dependency>
 
 	</dependencies>
 
