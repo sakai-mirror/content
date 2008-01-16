@@ -236,6 +236,11 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 				contentToJCRCopier.copyResourceFromCHStoJCR(session, item.contentId);
 			}
 		}
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			log.error("Problems while sleeping during CHS->JCR Migration.", e);
+		}
 		markContentItemFinished(item.contentId);
 		
 	}
@@ -284,6 +289,12 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 					
 					migrateSomeItems(100000);
 					//endEmulatedRequest();
+					//try {
+					//	Thread.sleep(20*1000);
+					//} catch (InterruptedException e) {
+					//	isCurrentlyMigrating = false;
+					//	break;
+					//}
 				}
 				isCurrentlyMigrating = false;
 				return;
