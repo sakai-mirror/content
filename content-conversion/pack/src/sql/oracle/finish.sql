@@ -1,0 +1,1 @@
+update CONTENT_RESOURCE set XML = NULL where BINARY_ENTITY is not NULL;
