@@ -9,8 +9,7 @@ SAKAI_VERSION=2-4-x
 export JAVA_HOME=/usr/local/java/jdk1.5.0_10
 
 ## Must provide one (and only one) jdbc connector 
-#CLASSPATH="$CLASSPATH:${LIB}/mysql-connector-java-5.0.5.jar"
-#CLASSPATH="$CLASSPATH:${LIB}/ojdbc14.jar"
+CLASSPATH="$CLASSPATH:${LIB}/ojdbc14.jar"
 
 CLASSPATH="$CLASSPATH:${LIB}/commons-codec-1.3.jar"
 CLASSPATH="$CLASSPATH:${LIB}/commons-collections-3.1.jar"

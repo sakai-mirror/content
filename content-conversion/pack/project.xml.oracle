@@ -227,18 +227,25 @@
 		<resources>
 
 			<resource>
-				<directory>${basedir}/src/shell</directory>
+				<directory>${basedir}/src/shell/oracle</directory>
 				<targetPath></targetPath>
 				<includes>
 					<include>**/*.sh</include>
 				</includes>
 			</resource>
 			<resource>
-				<directory>${basedir}/src/config</directory>
+				<directory>${basedir}/src/config/oracle</directory>
 				<targetPath></targetPath>
 				<includes>
 					<include>**/*.properties</include>
 					<include>**/*.config</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>${basedir}/src/sql/oracle</directory>
+				<targetPath></targetPath>
+				<includes>
+					<include>**/*.sql</include>
 				</includes>
 			</resource>
 

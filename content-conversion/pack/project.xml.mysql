@@ -226,18 +226,25 @@
 		<resources>
 
 			<resource>
-				<directory>${basedir}/src/shell</directory>
+				<directory>${basedir}/src/shell/mysql</directory>
 				<targetPath></targetPath>
 				<includes>
 					<include>**/*.sh</include>
 				</includes>
 			</resource>
 			<resource>
-				<directory>${basedir}/src/config</directory>
+				<directory>${basedir}/src/config/mysql</directory>
 				<targetPath></targetPath>
 				<includes>
 					<include>**/*.properties</include>
 					<include>**/*.config</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>${basedir}/src/sql/mysql</directory>
+				<targetPath></targetPath>
+				<includes>
+					<include>**/*.sql</include>
 				</includes>
 			</resource>
 
