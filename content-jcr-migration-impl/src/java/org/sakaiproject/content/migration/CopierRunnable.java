@@ -1,11 +1,17 @@
 package org.sakaiproject.content.migration;
 
+import javax.jcr.LoginException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.TypeException;
+import org.sakaiproject.jcr.api.JCRService;
 
 public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 	private static Log log = LogFactory.getLog(CopierRunnable.class);
@@ -14,7 +20,8 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 
 	private ContentToJCRCopier copier;
 	private ThingToMigrate thing;
-	private Session jcrSession;
+	private JCRService jcrService;
+	private ContentHostingService oldContentService;
 	
 	public void init() {
 	}
@@ -39,8 +46,30 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 		setTestUser(SUPER_USER);
 		startEmulatedRequest(SUPER_USER);
 		// ContentResources in the Original CHS always end with '/'
+		Session jcrSession = null;
+		try {
+			jcrSession = jcrService.login();
+	} catch (LoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(); }
+	 catch (RepositoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (thing.contentId.endsWith("/"))
-		{
+		{ /*
+			try {
+				oldContentService.getCollection(thing.contentId);
+			} catch (IdUnusedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TypeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (PermissionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} */
 			// This is a ContentCollection
 			if (thing.eventType.equals(ORIGINAL_MIGRATION_EVENT))
 			{
@@ -58,10 +87,24 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 			{
 				copier.copyCollectionFromCHStoJCR(jcrSession, thing.contentId);
 			}
+			
 		}
 		else
-		{
+		{ /*
+			try {
+				oldContentService.getResource(thing.contentId);
+			} catch (PermissionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IdUnusedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TypeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} */
 			// This is a ContentResource
+			
 			if (thing.eventType.equals(ORIGINAL_MIGRATION_EVENT))
 			{
 				copier.copyResourceFromCHStoJCR(jcrSession, thing.contentId);
@@ -77,7 +120,7 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 			else if (thing.eventType.equals(ContentHostingService.EVENT_RESOURCE_WRITE))
 			{
 				copier.copyResourceFromCHStoJCR(jcrSession, thing.contentId);
-			}
+			} 
 		}
 		//try {
 		//	Thread.sleep(1000);
@@ -96,7 +139,11 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 		this.thing = thing;
 	}
 
-	public void setJcrSession(Session jcrSession) {
-		this.jcrSession = jcrSession;
+	public void setJcrService(JCRService jcrService) {
+		this.jcrService = jcrService;
+	}
+
+	public void setOldContentService(ContentHostingService oldContentService) {
+		this.oldContentService = oldContentService;
 	}
 }

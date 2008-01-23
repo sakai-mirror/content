@@ -167,6 +167,8 @@
     <property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
     <property name="copier" ref="org.sakaiproject.content.migration.api.ContentToJCRCopier" />
     <property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
+    <property name="jcrService" ref="org.sakaiproject.jcr.api.JCRService" />
+    <property name="oldContentService" ref="org.sakaiproject.content.api.ContentHostingService.dbservice" />
     <property name="testUser">
       <value>admin</value>
     </property>

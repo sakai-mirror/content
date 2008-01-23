@@ -285,11 +285,11 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 			//});
 			//thread.start();
 			CopierRunnable aCopier = (CopierRunnable) appContext.getBean("CopierRunnable");
-			aCopier.setJcrSession(jcrSession);
+			//aCopier.setJcrSession(jcrSession);
 			aCopier.setThing(thing);
 			Thread thread = new Thread(aCopier);
 			thread.start();
-			if (thread.isAlive()) {
+			while (thread.isAlive()) {
 				System.out.println("SWG Our migrate thing thread is still alive");
 				try {
 					Thread.sleep(1000);
