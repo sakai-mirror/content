@@ -135,6 +135,7 @@
   </bean>
 
   <!-- Used to track CHS Events while we're migrating. -->
+  <!-- 
   <bean id="org.sakaiproject.content.migration.api.ContentToJCRCopier.observer"
   	  class="org.sakaiproject.content.migration.MigrationInProgressObserver"
       init-method="init" destroy-method="destroy">
@@ -142,6 +143,7 @@
     <property name="eventTrackingService" ref="org.sakaiproject.event.api.EventTrackingService" />
     <property name="sqlService" ref="org.sakaiproject.db.api.SqlService" />
   </bean>
+  -->
 
   <!-- The actual Migrator with the algorithm 
        This also is the MigrationStatusReporter. I would use a Spring alias but
@@ -160,6 +162,15 @@
     <property name="autoDDL" ><value>${auto.ddl}</value></property>
   </bean>
 
+  <bean id="CopierRunnable" class="org.sakaiproject.content.migration.CopierRunnable"
+    singleton="false">
+    <property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
+    <property name="copier" ref="org.sakaiproject.content.migration.api.ContentToJCRCopier" />
+    <property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
+    <property name="testUser">
+      <value>admin</value>
+    </property>
+  </bean>
 
 	
 

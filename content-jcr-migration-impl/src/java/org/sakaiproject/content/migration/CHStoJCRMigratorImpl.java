@@ -27,9 +27,12 @@ import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 public class CHStoJCRMigratorImpl extends SakaiRequestEmulator 
-	implements CHStoJCRMigrator, MigrationStatusReporter
+	implements CHStoJCRMigrator, MigrationStatusReporter, ApplicationContextAware
 {
 
 	private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
@@ -195,6 +198,8 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 
 	private void migrateOneItem(javax.jcr.Session session, ThingToMigrate item)
 	{
+		setTestUser(SUPER_USER);
+		startEmulatedRequest(SUPER_USER);
 		// ContentResources in the Original CHS always end with '/'
 		if (item.contentId.endsWith("/"))
 		{
@@ -236,13 +241,13 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 				contentToJCRCopier.copyResourceFromCHStoJCR(session, item.contentId);
 			}
 		}
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			log.error("Problems while sleeping during CHS->JCR Migration.", e);
-		}
+		//try {
+		//	Thread.sleep(1000);
+		//} catch (InterruptedException e) {
+		//	log.error("Problems while sleeping during CHS->JCR Migration.", e);
+		//}
 		markContentItemFinished(item.contentId);
-		
+		endEmulatedRequest();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -272,7 +277,27 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 
 		for (ThingToMigrate thing : thingsToMigrate)
 		{
-			migrateOneItem(jcrSession, thing);
+			final ThingToMigrate thing2 = thing;
+			//Thread thread = new Thread( new Runnable() {
+			//	public void run() {
+			//		migrateOneItem(jcrSession, thing2);
+			//	}
+			//});
+			//thread.start();
+			CopierRunnable aCopier = (CopierRunnable) appContext.getBean("CopierRunnable");
+			aCopier.setJcrSession(jcrSession);
+			aCopier.setThing(thing);
+			Thread thread = new Thread(aCopier);
+			thread.start();
+			if (thread.isAlive()) {
+				System.out.println("SWG Our migrate thing thread is still alive");
+				try {
+					Thread.sleep(1000);
+				} catch (java.lang.InterruptedException e) {
+					log.info("Unable to sleep while checking if the migrate thread is still alive", e);
+				}
+			}
+			markContentItemFinished(thing.contentId);
 		}
 	}
 
@@ -283,9 +308,9 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 			public void run()
 			{
 				// If there is stuff left, migrate it.
-				startEmulatedRequest(SUPER_USER);
-				while (!hasMigrationFinished() && isCurrentlyMigrating)
-				{
+				//startEmulatedRequest(SUPER_USER);
+				//while (!hasMigrationFinished() && isCurrentlyMigrating)
+				//{
 					
 					migrateSomeItems(100000);
 					//endEmulatedRequest();
@@ -295,8 +320,9 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 					//	isCurrentlyMigrating = false;
 					//	break;
 					//}
-				}
+				//}
 				isCurrentlyMigrating = false;
+				//endEmulatedRequest();
 				return;
 			}
 		};
@@ -445,6 +471,11 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
+	}
+
+	private ApplicationContext appContext;
+	public void setApplicationContext(ApplicationContext ctx) throws BeansException {
+		this.appContext = ctx;
 	}
 
 }

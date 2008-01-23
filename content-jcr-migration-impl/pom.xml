@@ -120,7 +120,13 @@
         <scope>provided</scope> <!-- remove when in master -->
     </dependency>
 
-
+<!-- Spring dependency -->
+    <dependency>
+        <groupId>${sakai.spring.groupId}</groupId>
+        <artifactId>${sakai.spring.artifactId}</artifactId>
+        <version>${sakai.spring.version}</version>
+        <scope>provided</scope>
+    </dependency>
 
 
 <!-- end jcr dependencies -->
