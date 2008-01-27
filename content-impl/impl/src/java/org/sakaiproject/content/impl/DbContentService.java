@@ -403,7 +403,7 @@ public class DbContentService extends BaseContentService
 				}
 	
 				M_log.info("init(): tables: " + m_collectionTableName + " " + m_resourceTableName + " " + m_resourceBodyTableName + " "
-						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath);
+						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath + " storage: " + m_storage);
 			}
 			
 		}
@@ -1574,14 +1574,35 @@ public class DbContentService extends BaseContentService
 		{
 			String sql = contentServiceSql.getInsertIndividualDropboxChangeSql();
 			
-			Object[] fields = new Object[5];
+			Object[] fields = null;
+			if("oracle".equalsIgnoreCase(m_sqlService.getVendor()))
+			{
+				fields = new Object[6];
+				fields[0] = individualDropboxId;
+				fields[1] = individualDropboxId;
+				fields[2] = isolateContainingId(individualDropboxId);
+				fields[3] = Long.toString(TimeService.newTime().getTime());
+				fields[4] = isolateContainingId(individualDropboxId);
+				fields[5] = Long.toString(TimeService.newTime().getTime());
+			}
+			else
+			{
+				fields = new Object[5];
 			fields[0] = individualDropboxId;
 			fields[1] = isolateContainingId(individualDropboxId);
 			fields[2] = Long.toString(TimeService.newTime().getTime());
 			fields[3] = isolateContainingId(individualDropboxId);
 			fields[4] = Long.toString(TimeService.newTime().getTime());
+			}
 			
+			try
+			{
 			boolean ok = m_sqlService.dbWrite(sql, fields);
+			}
+			catch(Exception e)
+			{
+				M_log.warn("sql == " + sql, e);
+			}
 			
 		}
 

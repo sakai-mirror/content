@@ -32,4 +32,4 @@ CLASSPATH="$CLASSPATH:${LIB}/sakai-util-${SAKAI_VERSION}.jar"
 CLASSPATH="$CLASSPATH:${LIB}/sakai-util-api-${SAKAI_VERSION}.jar"
 CLASSPATH="$CLASSPATH:${LIB}/sakai-util-log-${SAKAI_VERSION}.jar"
 
-env $JAVA_HOME/bin/java $JAVA_OPTS  -classpath "$CLASSPATH" org.sakaiproject.util.conversion.UpgradeSchema "$@"
+env $JAVA_HOME/bin/java $JAVA_OPTS -classpath "$CLASSPATH" org.sakaiproject.util.conversion.UpgradeSchema "$@"

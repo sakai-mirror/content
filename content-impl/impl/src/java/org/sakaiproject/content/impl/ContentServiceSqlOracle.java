@@ -63,4 +63,12 @@ public class ContentServiceSqlOracle extends ContentServiceSqlDefault
 		return "select column_name from user_tab_columns where table_name = 'CONTENT_RESOURCE' and column_name = 'FILE_SIZE'";
 	}
 
+	/**
+	 * returns the sql statement which inserts the individual-dropbox-id, site-level dropbox-id and last-update fields into the content_dropbox_changes table.
+	 */
+	public String getInsertIndividualDropboxChangeSql() 
+	{
+		return "merge into CONTENT_DROPBOX_CHANGES using dual on (dual.dummy is not null and CONTENT_DROPBOX_CHANGES.DROPBOX_ID = ?) when not matched then insert (DROPBOX_ID, IN_COLLECTION, LAST_UPDATE) values (?, ?, ?) when matched then update set CONTENT_DROPBOX_CHANGES.IN_COLLECTION = ?, LAST_UPDATE = ?";
+	}
+
 }

@@ -653,6 +653,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			// construct a storage helper and read
 			m_storage = newStorage();
 			m_storage.open();
+			
+			M_log.info("Loaded Storage as "+m_storage+" for "+this);
 
 			// make the cache
 			if (m_caching)
@@ -738,7 +740,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 */
 	public void destroy()
 	{
+		if ( m_storage != null ) {
 		m_storage.close();
+		}
 		m_storage = null;
 
 		if ((m_caching) && (m_cache != null))
@@ -2972,7 +2976,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		}
 		catch(OverQuotaException e)
 		{
-			M_log.warn("OverQuotaException " + e);
+			M_log.debug("OverQuotaException " + e);
 			try
 			{
 				removeResource(edit.getId());
@@ -2980,13 +2984,13 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			catch(Exception e1)
 			{
 				// ignore -- no need to remove the resource if it doesn't exist
-				M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+				M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 			}
 			throw e;
 		}
 		catch(ServerOverloadException e)
 		{
-			M_log.warn("ServerOverloadException " + e);
+			M_log.debug("ServerOverloadException " + e);
 			try
 			{
 				removeResource(edit.getId());
@@ -2994,7 +2998,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			catch(Exception e1)
 			{
 				// ignore -- no need to remove the resource if it doesn't exist
-				M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+				M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 			}
 			throw e;
 		}
@@ -3128,7 +3132,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			catch(OverQuotaException e)
 			{
-				M_log.warn("OverQuotaException " + e);
+				M_log.debug("OverQuotaException " + e);
 				try
 				{
 					removeResource(edit.getId());
@@ -3136,13 +3140,13 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch(Exception e1)
 				{
 					// ignore -- no need to remove the resource if it doesn't exist
-					M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+					M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 				}
 				throw e;
 			}
 			catch(ServerOverloadException e)
 			{
-				M_log.warn("ServerOverloadException " + e);
+				M_log.debug("ServerOverloadException " + e);
 				try
 				{
 					removeResource(edit.getId());
@@ -3150,7 +3154,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch(Exception e1)
 				{
 					// ignore -- no need to remove the resource if it doesn't exist
-					M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+					M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 				}
 				throw e;
 			}
@@ -3555,7 +3559,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			}
 			catch(OverQuotaException e)
 			{
-				M_log.warn("OverQuotaException " + e);
+				M_log.debug("OverQuotaException " + e);
 				try
 				{
 					removeResource(edit.getId());
@@ -3563,13 +3567,13 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch(Exception e1)
 				{
 					// ignore -- no need to remove the resource if it doesn't exist
-					M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+					M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 				}
 				throw e;
 			}
 			catch(ServerOverloadException e)
 			{
-				M_log.warn("ServerOverloadException " + e);
+				M_log.debug("ServerOverloadException " + e);
 				try
 				{
 					removeResource(edit.getId());
@@ -3577,7 +3581,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				catch(Exception e1)
 				{
 					// ignore -- no need to remove the resource if it doesn't exist
-					M_log.warn("Unable to remove partially completed resource: " + edit.getId(), e1); 
+					M_log.debug("Unable to remove partially completed resource: " + edit.getId() + "\n" + e1); 
 				}
 				throw e;
 			}
