@@ -3412,7 +3412,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		{
 			id = id.substring(0, id.length() - 1);
 		}
-
+		
 		// check security
 		checkExplicitLock(id);
 		unlock(AUTH_RESOURCE_ADD, id);
@@ -3713,6 +3713,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		String collection = ATTACHMENTS_COLLECTION + IdManager.createUuid() + Entity.SEPARATOR;
 		String id = collection + name;
 
+		if (id.length() > MAXIMUM_RESOURCE_ID_LENGTH)
+		{
+			throw new RuntimeException(ID_LENGTH_EXCEPTION);
+		}
+
 		// add this collection
 		ContentCollectionEdit edit = addCollection(collection);
 		edit.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, name);
@@ -3819,6 +3824,11 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		// form a name based on the attachments collection, a unique folder id, and the given name
 		String collection = toolCollection + IdManager.createUuid() + Entity.SEPARATOR;
 		String id = collection + name;
+		
+		if (id.length() > MAXIMUM_RESOURCE_ID_LENGTH)
+		{
+			throw new RuntimeException(ID_LENGTH_EXCEPTION);
+		}
 
 		// add this collection
 		ContentCollectionEdit edit = addCollection(collection);
