@@ -1,14 +1,26 @@
 --create index CONTENT_RESOURCE_BLOB_IDX on CONTENT_RESOURCE(BINARY_ENTITY, 0);
-update CONTENT_RESOURCE set XML = NULL where BINARY_ENTITY is not NULL;
+--update CONTENT_RESOURCE set XML = NULL where BINARY_ENTITY is not NULL;
 --drop index CONTENT_RESOURCE_BLOB_IDX;
+merge into CONTENT_RESOURCE
+	using dual on (dual.dummy is not null and CONTENT_RESOURCE.BINARY_ENTITY is not NULL)
+		when matched then
+			update set CONTENT_RESOURCE.XML=NULL;
 
 --create index CONTENT_RES_DEL_BLOB_IDX on CONTENT_RESOURCE_DELETE(BINARY_ENTITY, 0);
-update CONTENT_RESOURCE_DELETE set XML = NULL where BINARY_ENTITY is not NULL;
+--update CONTENT_RESOURCE_DELETE set XML = NULL where BINARY_ENTITY is not NULL;
 --drop index CONTENT_RES_DEL_BLOB_IDX;
+merge into CONTENT_RESOURCE_DELETE
+	using dual on (dual.dummy is not null and CONTENT_RESOURCE_DELETE.BINARY_ENTITY is not NULL)
+		when matched then
+			update set CONTENT_RESOURCE_DELETE.XML=NULL;
 
 --create index CONTENT_COLLECTION_BLOB_IDX on CONTENT_COLLECTION(BINARY_ENTITY, 0);
-update CONTENT_COLLECTION set XML = NULL where BINARY_ENTITY is not NULL;
+--update CONTENT_COLLECTION set XML = NULL where BINARY_ENTITY is not NULL;
 -- drop index CONTENT_COLLECTION_BLOB_IDX;
+merge into CONTENT_COLLECTION
+	using dual on (dual.dummy is not null and CONTENT_COLLECTION.BINARY_ENTITY is not NULL)
+		when matched then
+			update set CONTENT_COLLECTION.XML=NULL;
 
 drop table CONTENT_RES_T1REGISTER;
 drop table CONTENT_DEL_T1REGISTER;
