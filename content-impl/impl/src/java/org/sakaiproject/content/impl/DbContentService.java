@@ -584,9 +584,12 @@ public class DbContentService extends BaseContentService
 				if(filesizeColumnCheckNullCount > 0)
 				{
 					filesizeColumnCheckExpires = now + TWENTY_MINUTES;
+					M_log.debug("Conversion of the ContentHostingService database tables is needed to improve performance");
 				}
 				else
 				{
+					String highlight = "\n====================================================\n====================================================\n";
+					M_log.info(highlight + "Conversion of the ContentHostingService database tables is complete.\nUsing new filesize column" + highlight);
 					filesizeColumnReady = true;
 				}
 			}
@@ -628,17 +631,19 @@ public class DbContentService extends BaseContentService
 
 		if (list != null)
 		{
+			Object val = null;
 			int rv = 0;
 			Iterator iter = list.iterator();
 			if (iter.hasNext())
 			{
 				try
 				{
-					Object val = iter.next();
+					val = iter.next();
 					rv = Integer.parseInt((String) val);
 				}
 				catch (Exception ignore)
 				{
+					M_log.warn("Exception parsing integer from count query: " + val);
 				}
 			}
 			return rv;

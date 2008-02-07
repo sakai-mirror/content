@@ -47,3 +47,26 @@ INSERT INTO content_col_T1REGISTER  (id, status)
 --insert into CONTENT_COL_T1REGISTER (id,status) select COLLECTION_ID, 'pending' from CONTENT_COLLECTION where COLLECTION_ID not in (select id from CONTENT_COL_T1REGISTER);
 
 commit;
+
+-----------------------------------------------------------------------------
+-- CONTENT_DROPBOX_CHANGES
+-----------------------------------------------------------------------------
+
+CREATE TABLE CONTENT_DROPBOX_CHANGES 
+(
+    DROPBOX_ID VARCHAR2 (255) NOT NULL,
+    IN_COLLECTION VARCHAR2 (255),
+    LAST_UPDATE VARCHAR2 (24)
+);
+
+CREATE UNIQUE INDEX CONTENT_DROPBOX_CI ON CONTENT_DROPBOX_CHANGES
+(
+	DROPBOX_ID
+);
+
+CREATE INDEX CONTENT_DROPBOX_II ON CONTENT_DROPBOX_CHANGES
+(
+	IN_COLLECTION
+);
+
+
