@@ -5,32 +5,18 @@ alter table CONTENT_RESOURCE add FILE_SIZE NUMBER(18) default null;
 alter table CONTENT_RESOURCE add REsource_table_TYPE_ID VARCHAR2(255) default null;
 alter table CONTENT_RESOURCE add BINARY_ENTITY BLOB;
 
+CREATE INDEX CONTENT_RESOURCE_CI ON CONTENT_RESOURCE (CONTEXT);
+CREATE INDEX CONTENT_RESOURCE_RTI ON CONTENT_RESOURCE (RESOURCE_TYPE_ID);
+
+
 create table CONTENT_RES_T1REGISTER ( id VARCHAR2(1024), status VARCHAR2(99) );
 create unique index CONTENT_RES_T1REGISTER_id_idx on CONTENT_RES_T1REGISTER(id);
 create index CONTENT_RES_T1REGISTER_st_idx on CONTENT_RES_T1REGISTER(status);
 INSERT INTO CONTENT_RES_T1REGISTER  (id, status)
-  SELECT resource_table_id, 'pending'
+  SELECT RESOURCE_ID, 'pending'
        FROM CONTENT_RESOURCE source_table
        WHERE NOT exists (select id
-                  FROM CONTENT_RES_T1REGISTER register_table where source_table.resource_table_id=register_table.id); 
---insert into CONTENT_RES_T1REGISTER (id,status) select REsource_table_ID, 'pending' from CONTENT_RESOURCE where resource_table_id not in (select id from CONTENT_RES_T1REGISTER);
-
-commit;
-
-alter table CONTENT_RESOURCE_DELETE add CONTEXT VARCHAR2(99) default null;
-alter table CONTENT_RESOURCE_DELETE add FILE_SIZE NUMBER(18) default null;
-alter table CONTENT_RESOURCE_DELETE add REsource_table_TYPE_ID VARCHAR2(255) default null;
-alter table CONTENT_RESOURCE_DELETE add BINARY_ENTITY BLOB;
-
-create table CONTENT_DEL_T1REGISTER ( id VARCHAR2(1024), status VARCHAR2(99) );
-create  index CONTENT_DEL_T1REGISTER_id_idx on CONTENT_DEL_T1REGISTER(id);
-create index CONTENT_DEL_T1REGISTER_st_idx on CONTENT_DEL_T1REGISTER(status);
-INSERT INTO CONTENT_DEL_T1REGISTER  (id, status)
-  SELECT resource_table_id, 'pending'
-       FROM CONTENT_RESOURCE_DELETE source_table
-       WHERE NOT exists (select id
-                  FROM CONTENT_DEL_T1REGISTER register_table where source_table.resource_table_id=register_table.id); 
---insert into CONTENT_DEL_T1REGISTER (id,status) select REsource_table_ID, 'pending' from CONTENT_RESOURCE_DELETE where resource_table_id not in (select id from CONTENT_DEL_T1REGISTER);
+                  FROM CONTENT_RES_T1REGISTER register_table where source_table.RESOURCE_ID=register_table.id); 
 
 commit;
 
@@ -39,34 +25,23 @@ alter table CONTENT_COLLECTION add BINARY_ENTITY BLOB;
 create table CONTENT_COL_T1REGISTER ( id VARCHAR2(1024), status VARCHAR2(99) );
 create index CONTENT_COL_T1REGISTER_id_idx on CONTENT_COL_T1REGISTER(id);
 create index CONTENT_COL_T1REGISTER_st_idx on CONTENT_COL_T1REGISTER(status);
-INSERT INTO content_col_T1REGISTER  (id, status)
+INSERT INTO CONTENT_COL_T1REGISTER (id, status)
   SELECT collection_id, 'pending'
-       FROM content_collection source_table
+       FROM CONTENT_COLLECTION source_table
        WHERE NOT exists (select id
-                  FROM content_col_T1REGISTER register_table where source_table.collection_id=register_table.id); 
---insert into CONTENT_COL_T1REGISTER (id,status) select COLLECTION_ID, 'pending' from CONTENT_COLLECTION where COLLECTION_ID not in (select id from CONTENT_COL_T1REGISTER);
+                  FROM CONTENT_COL_T1REGISTER register_table where source_table.collection_id=register_table.id); 
 
 commit;
 
------------------------------------------------------------------------------
--- CONTENT_DROPBOX_CHANGES
------------------------------------------------------------------------------
+CREATE TABLE CONTENT_DROPBOX_CHANGES (DROPBOX_ID VARCHAR2 (255) NOT NULL, IN_COLLECTION VARCHAR2 (255), LAST_UPDATE VARCHAR2 (24));
+CREATE UNIQUE INDEX CONTENT_DROPBOX_CI ON CONTENT_DROPBOX_CHANGES (DROPBOX_ID);
+CREATE INDEX CONTENT_DROPBOX_II ON CONTENT_DROPBOX_CHANGES (IN_COLLECTION);
 
-CREATE TABLE CONTENT_DROPBOX_CHANGES 
-(
-    DROPBOX_ID VARCHAR2 (255) NOT NULL,
-    IN_COLLECTION VARCHAR2 (255),
-    LAST_UPDATE VARCHAR2 (24)
-);
+alter table CONTENT_RESOURCE_DELETE add CONTEXT VARCHAR2(99) default null;
+alter table CONTENT_RESOURCE_DELETE add FILE_SIZE NUMBER(18) default null;
+alter table CONTENT_RESOURCE_DELETE add REsource_table_TYPE_ID VARCHAR2(255) default null;
+alter table CONTENT_RESOURCE_DELETE add BINARY_ENTITY BLOB;
 
-CREATE UNIQUE INDEX CONTENT_DROPBOX_CI ON CONTENT_DROPBOX_CHANGES
-(
-	DROPBOX_ID
-);
-
-CREATE INDEX CONTENT_DROPBOX_II ON CONTENT_DROPBOX_CHANGES
-(
-	IN_COLLECTION
-);
+commit;
 
 
