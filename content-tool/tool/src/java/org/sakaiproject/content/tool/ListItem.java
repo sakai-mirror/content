@@ -1025,19 +1025,21 @@ public class ListItem
         	this.isPubview = contentService.isPubView(id);
         }
 		
-		this.hidden = false;
-		this.useReleaseDate = false;
-		Time releaseDate = TimeService.newTime();
-		this.useRetractDate = false;
-		Time retractDate = TimeService.newTime(defaultRetractTime.getTime());
-		this.isAvailable = parent.isAvailable();
-		
 		String refstr = contentService.getReference(id);
 		this.isSiteCollection = this.siteCollection(refstr);
 
 		boolean isUserSite = isInWorkspace(parent, refstr);
 		setUserSite(isUserSite);
 
+		this.hidden = false;
+		this.useReleaseDate = false;
+		this.useRetractDate = false;
+		if(!isSiteCollection && ! isUserSite)
+		{
+			this.isAvailable = parent.isAvailable();
+			Time retractDate = TimeService.newTime(defaultRetractTime.getTime());
+			Time releaseDate = TimeService.newTime();
+		}
 	}
 
 	/**
@@ -1347,7 +1349,7 @@ public class ListItem
 		this.useRetractDate = use_end_date;
 		if(use_end_date)
 		{
-			int end_year = params.getInt("retract_year" + index);
+			int end_year = params.getInt("retract_year" + index, 3000);
 			int end_month = params.getInt("retract_month" + index);
 			int end_day = params.getInt("retract_day" + index);
 			int end_hour = params.getInt("retract_hour" + index);
@@ -2105,7 +2107,7 @@ public class ListItem
      */
     public Time getRetractDate()
     {
-    	if(this.retractDate == null)
+    	if(this.retractDate == null && ! isSiteCollection && ! isUserSite)
     	{
     		this.retractDate = TimeService.newTime(TimeService.newTime().getTime() + ONE_WEEK);
     	}

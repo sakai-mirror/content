@@ -1384,9 +1384,17 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				catch(RuntimeException e)
 				{
+					if(contentService.ID_LENGTH_EXCEPTION.equals(e.getMessage()))
+					{
+						// couldn't we just truncate the resource-id instead of rejecting the upload?
+						addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{name}));
+					}
+					else
+					{
 					logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
 					addAlert(state, crb.getString("failed"));
 				}
+			}
 			}
 			else
 			{
@@ -1495,8 +1503,16 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		catch(RuntimeException e)
 		{
-			logger.debug("ResourcesAction.doAttachurl ***** Unknown Exception ***** " + e.getMessage());
+			if(contentService.ID_LENGTH_EXCEPTION.equals(e.getMessage()))
+			{
+				// couldn't we just truncate the resource-id instead of rejecting the upload?
+				addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{url}));
+			}
+			else
+			{
+				logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
 			addAlert(state, crb.getString("failed"));
+		}
 		}
 
 		toolSession.setAttribute(STATE_FILEPICKER_MODE, MODE_ATTACHMENT_SELECT_INIT);
@@ -1784,7 +1800,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 						return;
 					}
 				}
-
 				ResourcePropertiesEdit newprops = contentService.newResourceProperties();
 				newprops.set(props);
 
