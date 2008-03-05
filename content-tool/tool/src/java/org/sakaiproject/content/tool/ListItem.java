@@ -1350,10 +1350,10 @@ public class ListItem
 		if(use_end_date)
 		{
 			int end_year = params.getInt("retract_year" + index, 3000);
-			int end_month = params.getInt("retract_month" + index);
-			int end_day = params.getInt("retract_day" + index);
-			int end_hour = params.getInt("retract_hour" + index);
-			int end_min = params.getInt("retract_minute" + index);
+			int end_month = params.getInt("retract_month" + index, 1);
+			int end_day = params.getInt("retract_day" + index, 1);
+			int end_hour = params.getInt("retract_hour" + index, 0);
+			int end_min = params.getInt("retract_minute" + index, 0);
 			String retract_ampm = params.getString("retract_ampm" + index);
 			if("pm".equals(retract_ampm))
 			{
