@@ -456,8 +456,9 @@ public class ListItem
 		}
 
 		ResourceProperties props = entity.getProperties();
-		this.accessUrl = entity.getUrl();
 		this.collection = entity.isCollection();
+		extractAccessUrl(entity);
+		
 		this.id = entity.getId();
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 		if(name == null || name.trim().equals(""))
@@ -790,6 +791,34 @@ public class ListItem
 		}
 		this.isAvailable = entity.isAvailable();
     }
+
+	protected void extractAccessUrl(ContentEntity entity) 
+	{
+		String accessUrl = entity.getUrl();
+		
+		if(accessUrl != null)
+		{
+			StringBuilder buf = new StringBuilder();
+			String[] parts = accessUrl.split("/");
+			buf.append(parts[0]);
+			buf.append("//");
+			buf.append(parts[2]);
+			this.accessUrl = parts[0];
+			for(int i = 3; i < parts.length; i++)
+			{
+				if(parts[i] != null)
+				{
+					buf.append("/");
+					buf.append(Validator.escapeUrl(parts[i]));
+				}
+			}
+			if(this.collection)
+			{
+				buf.append("/");
+			}
+			this.accessUrl = buf.toString();
+		}
+	}
 
 	private void initAllowedAddGroups() 
 	{
