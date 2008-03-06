@@ -456,8 +456,9 @@ public class ListItem
 		}
 
 		ResourceProperties props = entity.getProperties();
-		this.accessUrl = entity.getUrl();
 		this.collection = entity.isCollection();
+		extractAccessUrl(entity);
+		
 		this.id = entity.getId();
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 		if(name == null || name.trim().equals(""))
@@ -791,6 +792,34 @@ public class ListItem
 		this.isAvailable = entity.isAvailable();
     }
 
+	protected void extractAccessUrl(ContentEntity entity) 
+	{
+		String accessUrl = entity.getUrl();
+		
+		if(accessUrl != null)
+		{
+			StringBuilder buf = new StringBuilder();
+			String[] parts = accessUrl.split("/");
+			buf.append(parts[0]);
+			buf.append("//");
+			buf.append(parts[2]);
+			this.accessUrl = parts[0];
+			for(int i = 3; i < parts.length; i++)
+			{
+				if(parts[i] != null)
+				{
+					buf.append("/");
+					buf.append(Validator.escapeUrl(parts[i]));
+				}
+			}
+			if(this.collection)
+			{
+				buf.append("/");
+			}
+			this.accessUrl = buf.toString();
+		}
+	}
+
 	private void initAllowedAddGroups() 
 	{
 		if(this.allowedAddGroups == null)
@@ -1025,19 +1054,21 @@ public class ListItem
         	this.isPubview = contentService.isPubView(id);
         }
 		
-		this.hidden = false;
-		this.useReleaseDate = false;
-		Time releaseDate = TimeService.newTime();
-		this.useRetractDate = false;
-		Time retractDate = TimeService.newTime(defaultRetractTime.getTime());
-		this.isAvailable = parent.isAvailable();
-		
 		String refstr = contentService.getReference(id);
 		this.isSiteCollection = this.siteCollection(refstr);
 
 		boolean isUserSite = isInWorkspace(parent, refstr);
 		setUserSite(isUserSite);
 
+		this.hidden = false;
+		this.useReleaseDate = false;
+		this.useRetractDate = false;
+		if(!isSiteCollection && ! isUserSite)
+		{
+			this.isAvailable = parent.isAvailable();
+			Time retractDate = TimeService.newTime(defaultRetractTime.getTime());
+			Time releaseDate = TimeService.newTime();
+		}
 	}
 
 	/**
@@ -1347,11 +1378,11 @@ public class ListItem
 		this.useRetractDate = use_end_date;
 		if(use_end_date)
 		{
-			int end_year = params.getInt("retract_year" + index);
-			int end_month = params.getInt("retract_month" + index);
-			int end_day = params.getInt("retract_day" + index);
-			int end_hour = params.getInt("retract_hour" + index);
-			int end_min = params.getInt("retract_minute" + index);
+			int end_year = params.getInt("retract_year" + index, 3000);
+			int end_month = params.getInt("retract_month" + index, 1);
+			int end_day = params.getInt("retract_day" + index, 1);
+			int end_hour = params.getInt("retract_hour" + index, 0);
+			int end_min = params.getInt("retract_minute" + index, 0);
 			String retract_ampm = params.getString("retract_ampm" + index);
 			if("pm".equals(retract_ampm))
 			{
@@ -2105,7 +2136,7 @@ public class ListItem
      */
     public Time getRetractDate()
     {
-    	if(this.retractDate == null)
+    	if(this.retractDate == null && ! isSiteCollection && ! isUserSite)
     	{
     		this.retractDate = TimeService.newTime(TimeService.newTime().getTime() + ONE_WEEK);
     	}
