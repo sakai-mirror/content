@@ -6,8 +6,6 @@ alter table CONTENT_RESOURCE add BINARY_ENTITY BLOB;
 create table CONTENT_RES_T1REGISTER ( id varchar(1024), status varchar(99) );
 create unique index CONTENT_RES_T1REGISTER_id_idx on CONTENT_RES_T1REGISTER(id);
 create index CONTENT_RES_T1REGISTER_st_idx on CONTENT_RES_T1REGISTER(status);
-create index content_resource_file_size_idx on CONTENT_RESOURCE(FILE_SIZE);
-
 insert into CONTENT_RES_T1REGISTER (id,status) select RESOURCE_ID, 'pending' from CONTENT_RESOURCE where BINARY_ENTITY is NULL and XML is not null;
 
 

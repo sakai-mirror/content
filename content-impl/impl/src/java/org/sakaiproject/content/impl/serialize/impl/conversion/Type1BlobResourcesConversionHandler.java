@@ -136,12 +136,19 @@ public class Type1BlobResourcesConversionHandler implements SchemaConversionHand
 					context = "~" + context;
 				}
 			}
+			
+			// update TEST_CONTENT_RESOURCE set CONTEXT = ?, FILE_SIZE = ?, XML = NULL, BINARY_ENTITY = ?, 
+			// RESOURCE_TYPE_ID = ? where RESOURCE_ID = ?
+			//System.out.println("convertSource(" + id + ") result.length == " + result.length + "\n" + new String(result));
 
 			updateRecord.setString(1, context);
 			updateRecord.setLong(2, sax.getSerializableContentLength());
 			updateRecord.setBytes(3, result);
 			updateRecord.setString(4, sax.getSerializableResourceType());
 			updateRecord.setString(5, id);
+
+			// System.out.println("\n\nconvertSource(" + id + ") result.length == " + result.length + " returning true");
+
 			return true;
 		}
 		catch (Exception e)

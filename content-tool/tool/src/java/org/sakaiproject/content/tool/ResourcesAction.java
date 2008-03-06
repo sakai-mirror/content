@@ -1389,27 +1389,27 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				catch(OverQuotaException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
-					logger.debug("OverQuotaException " + e);
+					logger.warn("OverQuotaException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 				catch(ServerOverloadException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
-					logger.debug("ServerOverloadException " + e);
+					logger.warn("ServerOverloadException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 			}
@@ -1561,8 +1561,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					expandedCollections.add(collectionId);
 				}
 
+				// reset the copy flag
+				if (((String)state.getAttribute (STATE_MOVE_FLAG)).equals (Boolean.TRUE.toString()))
+				{
 					state.setAttribute (STATE_MOVE_FLAG, Boolean.FALSE.toString());
 				}
+			}
 
 		}
 
@@ -1687,8 +1691,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 
 				// reset the copy flag
+				if (((String)state.getAttribute (STATE_COPY_FLAG)).equals (Boolean.TRUE.toString()))
+				{
 					state.setAttribute (STATE_COPY_FLAG, Boolean.FALSE.toString());
 				}
+			}
 
 		}
 
@@ -1740,27 +1747,27 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				catch(OverQuotaException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
-					logger.debug("OverQuotaException " + e);
+					logger.warn("OverQuotaException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId(), e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 				catch(ServerOverloadException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
-					logger.debug("ServerOverloadException " + e);
+					logger.warn("ServerOverloadException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId(), e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 			}	// if-else
@@ -1834,8 +1841,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 
 			// reset the copy flag
+			if (((String)state.getAttribute (STATE_COPY_FLAG)).equals (Boolean.TRUE.toString()))
+			{
 				state.setAttribute (STATE_COPY_FLAG, Boolean.FALSE.toString());
 			}
+		}
 		return newId;
 	}
 	
@@ -4444,7 +4454,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			
 			String copyFlag = (String) state.getAttribute (STATE_COPY_FLAG);
-			if (Boolean.TRUE.toString().equals(copyFlag))
+			if (copyFlag.equals (Boolean.TRUE.toString()))
 			{
 				context.put ("copyFlag", copyFlag);
 				List copiedItems = (List) state.getAttribute(STATE_COPIED_IDS);
@@ -4454,7 +4464,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 
 			String moveFlag = (String) state.getAttribute (STATE_MOVE_FLAG);
-			if (Boolean.TRUE.toString().equals(moveFlag))
+			if (moveFlag.equals (Boolean.TRUE.toString()))
 			{
 				context.put ("moveFlag", moveFlag);
 				List movedItems = (List) state.getAttribute(STATE_MOVED_IDS);
@@ -4736,10 +4746,6 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			else if(pipe.isActionCompleted())
 			{
 				finishAction(state, toolSession, pipe);
-			}
-			else
-			{
-				toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			}
 			toolSession.removeAttribute(ResourceToolAction.DONE);
 		}
@@ -5055,11 +5061,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		ContentEntity entity = (ContentEntity) ref.getEntity();
 
 		ListItem item = new  ListItem(entity);
-		if(item.getReleaseDate() == null && ! item.isSiteCollection() && ! item.isUserSite())
+		if(item.getReleaseDate() == null)
 		{
 			item.setReleaseDate(TimeService.newTime());
 		}
-		if(item.getRetractDate() == null && ! item.isSiteCollection() && ! item.isUserSite())
+		if(item.getRetractDate() == null)
 		{
 			item.setRetractDate(defaultRetractDate);
 		}
@@ -5633,27 +5639,27 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					catch(OverQuotaException e)
 					{
 						addAlert(trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
-						logger.debug("OverQuotaException " + e);
+						logger.warn("OverQuotaException " + e);
 						try
 						{
 							ContentHostingService.removeResource(resource.getId());
 						}
 						catch(Exception e1)
 						{
-							logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+							logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 						}
 					}
 					catch(ServerOverloadException e)
 					{
 						addAlert(trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
-						logger.debug("ServerOverloadException " + e);
+						logger.warn("ServerOverloadException " + e);
 						try
 						{
 							ContentHostingService.removeResource(resource.getId());
 						}
 						catch(Exception e1)
 						{
-							logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+							logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 						}
 					}
 				}
@@ -8306,27 +8312,27 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				catch(OverQuotaException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
-					logger.debug("OverQuotaException " + e);
+					logger.warn("OverQuotaException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 				catch(ServerOverloadException e)
 				{
 					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
-					logger.debug("ServerOverloadException " + e);
+					logger.warn("ServerOverloadException " + e);
 					try
 					{
 						ContentHostingService.removeResource(resource.getId());
 					}
 					catch(Exception e1)
 					{
-						logger.debug("Unable to remove partially completed resource: " + resource.getId() + "\n" + e); 
+						logger.warn("Unable to remove partially completed resource: " + resource.getId(), e); 
 					}
 				}
 			}

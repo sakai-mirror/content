@@ -28,11 +28,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -2896,9 +2894,9 @@ public class DbContentService extends BaseContentService
 	public class ContextAndFilesizeReader implements SqlReader
 	{
 		protected IdManager uuidManager = (IdManager) ComponentManager.get(IdManager.class);
-		protected Pattern filesizePattern1 = Pattern.compile("\\scontent-length=\"(\\d+)\"\\s");
+		protected Pattern filesizePattern1 = Pattern.compile(" content-length=\"(\\d+)\" ");
 		protected Pattern filesizePattern2 = Pattern.compile("\\s*DAV:getcontentlength\\s+(\\d+)\\s*");
-		protected Pattern typeidPattern1 = Pattern.compile("\\sresource-type=\"([0-9A-Za-z.]+)\"\\s");
+		protected Pattern typeidPattern1 = Pattern.compile(" resource-type=\"(.*)\" ");
 		protected Pattern typeidPattern2 = Pattern.compile("\\s+%(.*)\\s+");
 		protected String table;
 		
@@ -2930,38 +2928,24 @@ public class DbContentService extends BaseContentService
 				Matcher contextMatcher = contextPattern.matcher(resourceId);
 				if(xml == null)
 				{
-				    ResultSetMetaData rsmd = result.getMetaData();
-				    int numberOfColumns = rsmd.getColumnCount();
-
-					if(numberOfColumns > 3)
+					Matcher filesizeMatcher = filesizePattern2.matcher(xml);
+					if(filesizeMatcher.find())
 					{
-						Blob binary_entity = result.getBlob(4);
-						// this is meant to match against the binary-entity value in cases where 
-						// xml is null (meaning xml may have already been converted). 
-//						Matcher filesizeMatcher = filesizePattern2.matcher(xml);
-//						if(filesizeMatcher.find())
-//						{
-//							try
-//							{
-//								filesize = Integer.parseInt(filesizeMatcher.group(1));
-//							}
-//							catch(Exception e)
-//							{
-//								// do nothing
-//							}
-//						}
-//						Matcher typeidMatcher = typeidPattern2.matcher(xml);
-//						if(typeidMatcher.find())
-//						{
-//							resourceType = typeidMatcher.group(1);
-//						}
-						}
-					else
+						try
 						{
-						// Do nothing.  The binary-entity value is not available here.  
-						// Best to skip the record until we provide a query that gets 
-						// the binary-entity value in this context.
+							filesize = Integer.parseInt(filesizeMatcher.group(1));
+						}
+						catch(Exception e)
+						{
+							// do nothing
+						}
 					}
+					Matcher typeidMatcher = typeidPattern2.matcher(xml);
+					if(typeidMatcher.find())
+					{
+						resourceType = typeidMatcher.group(1);
+					}
+					
 				}
 				else
 				{
@@ -3000,7 +2984,7 @@ public class DbContentService extends BaseContentService
 				{
 					// "update " + table + " set CONTEXT = ?, FILE_SIZE = ?, RESOURCE_TYPE_ID = ?, RESOURCE_UUID = ? where RESOURCE_ID = ?"
 					// update the record
-					Object [] fields = new Object[5];
+					Object [] fields = new Object[4];
 					fields[0] = context;
 					fields[1] = new Integer(filesize);
 					fields[2] = resourceType;
@@ -3012,7 +2996,7 @@ public class DbContentService extends BaseContentService
 				{
 					// "update " + table + " set CONTEXT = ?, FILE_SIZE = ?, RESOURCE_TYPE_ID = ? where RESOURCE_UUID = ?"
 					// update the record
-					Object [] fields = new Object[4];
+					Object [] fields = new Object[3];
 					fields[0] = context;
 					fields[1] = new Integer(filesize);
 					fields[2] = resourceType;
@@ -3022,7 +3006,7 @@ public class DbContentService extends BaseContentService
 			}
 			catch(Exception e)
 			{
-				M_log.warn("ContextAndFilesizeReader.readSqlResultRecord() failed. result skipped", e);
+				M_log.warn("ContextAndFilesizeReader.readSqlResultRecord() failed. result skipped");
 			}
 			
 			return null;
