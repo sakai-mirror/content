@@ -4243,6 +4243,22 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		List<ListItem> deleteItems = (List<ListItem>) state.getAttribute(STATE_DELETE_SET);
 		List<ListItem> nonEmptyFolders = (List<ListItem>) state.getAttribute(STATE_NON_EMPTY_DELETE_SET);
+		
+		int minDepth = Integer.MAX_VALUE;
+		for(ListItem deleteItem : deleteItems)
+		{
+			deleteItem.setDepth(deleteItem.getId().split("/").length);
+			if(deleteItem.getDepth() < minDepth)
+			{
+				minDepth = deleteItem.getDepth();
+			}
+			
+		}
+		
+		for(ListItem deleteItem : deleteItems)
+		{
+			deleteItem.setDepth(deleteItem.getDepth() - minDepth);
+		}		
 
 		if(nonEmptyFolders != null && ! nonEmptyFolders.isEmpty())
 		{
@@ -4250,6 +4266,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			while(it.hasNext())
 			{
 				ListItem folder = (ListItem) it.next();
+				folder.setDepth(folder.getId().split("/").length - minDepth);
 				String[] args = { folder.getName() };
 				String msg = rb.getFormattedMessage("folder.notempty", args) + " ";
 				addAlert(state, msg);
@@ -4261,6 +4278,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				ListItem item = stack.pop();
 				if(item.collection)
 				{
+					int childDepth = item.getDepth() + 1;
 					ContentCollection entity = (ContentCollection) item.getEntity();
 					List<ContentEntity> children = entity.getMemberResources();
 					if(children != null && ! children.isEmpty())
@@ -4268,6 +4286,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 						for(ContentEntity child : children)
 						{
 							ListItem childItem = new ListItem(child);
+							childItem.setDepth(childDepth);
 							deleteItems.add(childItem);
 							if(child.isCollection())
 							{
@@ -4280,7 +4299,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 		}
 
+		Collections.sort(deleteItems, new Comparator<ListItem>(){
 
+			public int compare(ListItem arg0, ListItem arg1) 
+			{
+				return arg0.getId().compareTo(arg1.getId());
+			}
+			
+		});
+		
 		context.put ("deleteItems", deleteItems);
 
 		//  %%STATE_MODE_RESOURCES%%
@@ -5293,7 +5320,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void deleteItems(SessionState state, Set deleteIdSet)
 	{
-		List deleteItems = new ArrayList();
+		List<ListItem> deleteItems = new ArrayList<ListItem>();
 		List notDeleteItems = new ArrayList();
 		List nonEmptyFolders = new ArrayList();
 		

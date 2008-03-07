@@ -1,4 +1,5 @@
 <!-- chef_resources_deleteFinish.vm, version: $Revision:  $, use with org.sakaiproject.tool.content.ResourcesAction.java -->
+#set ($unit ="em")
 <div class="portletBody specialLink">
 	#if ($alertMessage)<div class="alertMessage">$tlang.getString("label.alert") $validator.escapeHtml($alertMessage)</div><div style="display:block;clear:both" ></div>#end
 	<div class="alertMessage">$tlang.getString("del.sure")</div><div style="display:block;clear:both" ></div>
@@ -24,8 +25,10 @@
 					</th>
 				</tr>
 				#foreach ($member in $deleteItems)
+					#set ($width = "$!{member.depth}$unit")
 					<tr>
-						<td headers="title">
+						<td headers="title" style="text-indent:$width" >
+							
 							<h4>
 								#if($member.isCollection())
 									<img src = "#imageLink("sakai/dir_closed.gif")" alt="$member.label" />
