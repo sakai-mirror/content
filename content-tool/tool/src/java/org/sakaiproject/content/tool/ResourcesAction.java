@@ -4241,19 +4241,47 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//%%%% FIXME
 		context.put ("collectionPath", state.getAttribute (STATE_COLLECTION_PATH));
 
-		List deleteItems = (List) state.getAttribute(STATE_DELETE_SET);
-		List nonEmptyFolders = (List) state.getAttribute(STATE_NON_EMPTY_DELETE_SET);
+		List<ListItem> deleteItems = (List<ListItem>) state.getAttribute(STATE_DELETE_SET);
+		List<ListItem> nonEmptyFolders = (List<ListItem>) state.getAttribute(STATE_NON_EMPTY_DELETE_SET);
+
+		if(nonEmptyFolders != null && ! nonEmptyFolders.isEmpty())
+		{
+			Iterator it = nonEmptyFolders.iterator();
+			while(it.hasNext())
+			{
+				ListItem folder = (ListItem) it.next();
+				String[] args = { folder.getName() };
+				String msg = rb.getFormattedMessage("folder.notempty", args) + " ";
+				addAlert(state, msg);
+			}
+			Stack<ListItem> stack = new Stack<ListItem>();
+			stack.addAll(nonEmptyFolders);
+			while(! stack.isEmpty())
+			{
+				ListItem item = stack.pop();
+				if(item.collection)
+				{
+					ContentCollection entity = (ContentCollection) item.getEntity();
+					List<ContentEntity> children = entity.getMemberResources();
+					if(children != null && ! children.isEmpty())
+					{
+						for(ContentEntity child : children)
+						{
+							ListItem childItem = new ListItem(child);
+							deleteItems.add(childItem);
+							if(child.isCollection())
+							{
+								stack.push(childItem);
+							}
+						}
+					}
+				}
+			}
+			
+		}
+
 
 		context.put ("deleteItems", deleteItems);
-
-		Iterator it = nonEmptyFolders.iterator();
-		while(it.hasNext())
-		{
-			ListItem folder = (ListItem) it.next();
-			String[] args = { folder.getName() };
-			String msg = rb.getFormattedMessage("folder.notempty", args) + " ";
-			addAlert(state, msg);
-		}
 
 		//  %%STATE_MODE_RESOURCES%%
 		//not show the public option when in dropbox mode
