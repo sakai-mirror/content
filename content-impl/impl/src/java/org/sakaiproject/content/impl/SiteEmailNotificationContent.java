@@ -36,6 +36,7 @@ import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.Notification;
 import org.sakaiproject.event.api.NotificationAction;
+import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.util.EmailNotification;
@@ -53,7 +54,16 @@ import org.sakaiproject.util.FormattedText;
 public class SiteEmailNotificationContent extends SiteEmailNotification
 {
 	private static ResourceBundle rb = ResourceBundle.getBundle("siteemacon");
-	protected Event event;
+	private final String MULTIPART_BOUNDARY = "======sakai-multi-part-boundary======";
+	private final String BOUNDARY_LINE = "\n\n--"+MULTIPART_BOUNDARY+"\n";
+	private final String TERMINATION_LINE = "\n\n--"+MULTIPART_BOUNDARY+"--\n\n";
+
+	private final String MIME_ADVISORY = "This message is for MIME-compliant mail readers.";
+	
+	/** The related site id. */
+	protected String m_siteId = null;
+	protected Event event = null;
+
 	
 	protected String plainTextContent() {
 		return generateContentForType(false);
@@ -267,6 +277,52 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 	}
 
 	/**
+	 * @inheritDoc
+	 */
+	protected String getTag(String newLine, boolean renderHtml)
+	{
+		// We handle this in the bodies of the messages
+		return "";
+	}
+
+	/**
+	 * Get the message for the email.
+	 * 
+	 * @param event
+	 *        The event that matched criteria to cause the notification.
+	 * @return the message for the email.
+	 */
+	protected String getMessage(Event event)
+	{
+		// get a site title: use either the configured site, or if not configured, the site (context) of the resource
+		Reference ref = EntityManager.newReference(event.getResource());
+		String title = (getSite() != null) ? getSite() : ref.getContext();
+		try
+		{
+			Site site = SiteService.getSite(title);
+			title = site.getTitle();
+		}
+		catch (Exception ignore) {}
+
+		StringBuilder message = new StringBuilder();
+		message.append(MIME_ADVISORY);
+		
+		message.append(BOUNDARY_LINE);
+		message.append(plainTextHeaders());
+		message.append(plainTextContent());
+		message.append(getTag(title, false) );
+		
+		message.append(BOUNDARY_LINE);
+		message.append(htmlHeaders());
+		message.append(htmlPreamble());
+		message.append(htmlContent());
+		message.append(getTag(title, true) );
+		message.append(htmlEnd());
+		
+		message.append(TERMINATION_LINE);
+		return message.toString();	}
+
+	/**
 	 * Form a "Bread Crumb" style path showing the folders in which this referenced resource lives.
 	 * 
 	 * @param ref
@@ -375,7 +431,31 @@ public class SiteEmailNotificationContent extends SiteEmailNotification
 		// combine
 		users.addAll(allGroupUsers);
 	}
+
+	protected String plainTextHeaders() {
+		return "Content-Type: text/plain\n\n";
+	}
 	
+	protected String htmlHeaders() {
+		return "Content-Type: text/html\n\n";
+	}
+	
+	protected String htmlPreamble() {
+		StringBuilder buf = new StringBuilder();
+		buf.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\n");
+		buf.append("    \"http://www.w3.org/TR/html4/loose.dtd\">\n");
+		buf.append("<html>");
+		buf.append("  <head><title>");
+		buf.append(getSubject(event));
+		buf.append("</title></head>");
+		buf.append("  <body>");
+		return buf.toString();
+	}
+	
+	protected String htmlEnd() {
+		return "  </body></html>";
+	}
+
 	/**
 	 * Do the notification.
 	 * 
