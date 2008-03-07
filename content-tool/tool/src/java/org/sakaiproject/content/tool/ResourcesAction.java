@@ -565,9 +565,9 @@ public class ResourcesAction
 	private static final String NULL_STRING = "";
 	
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
-		protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
+	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
 
-protected static final String PARAM_PAGESIZE = "collections_per_page";
+	protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	/** string used to represent "public" access mode in UI elements */
 	protected static final String PUBLIC_ACCESS = "public";
@@ -629,7 +629,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	private static final String STATE_DELETE_ITEMS = PREFIX + "delete_items";
 
 	/** The name of the state attribute containing a list of ListItem objects corresponding to nonempty folders selected for deletion */
-	private static final String STATE_DELETE_ITEMS_NOT_EMPTY = PREFIX + "delete_items_not_empty";
+//	private static final String STATE_DELETE_ITEMS_NOT_EMPTY = PREFIX + "delete_items_not_empty";
 
 	protected static final String STATE_DELETE_SET = PREFIX + "delete_set";
 	
@@ -712,7 +712,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	/** The name of the state attribute indicating whether the hierarchical list needs to be expanded */
 	private static final String STATE_NEED_TO_EXPAND_ALL = PREFIX + "need_to_expand_all";
 
-	protected static final String STATE_NON_EMPTY_DELETE_SET = PREFIX + "non-empty_delete_set";
+//	protected static final String STATE_NON_EMPTY_DELETE_SET = PREFIX + "non-empty_delete_set";
 	
 	/** The can-paste flag */
 	private static final String STATE_PASTE_ALLOWED_FLAG = PREFIX + "can_paste_flag";
@@ -4194,17 +4194,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put ("collectionPath", state.getAttribute (STATE_COLLECTION_PATH));
 
 		List deleteItems = (List) state.getAttribute(STATE_DELETE_ITEMS);
-		List nonEmptyFolders = (List) state.getAttribute(STATE_DELETE_ITEMS_NOT_EMPTY);
+//		List nonEmptyFolders = (List) state.getAttribute(STATE_DELETE_ITEMS_NOT_EMPTY);
 
 		context.put ("deleteItems", deleteItems);
 
-		Iterator it = nonEmptyFolders.iterator();
-		while(it.hasNext())
-		{
-			ListItem folder = (ListItem) it.next();
-			String[] args = { folder.getName() };
-			addAlert(state, rb.getFormattedMessage("folder.notempty", args) + " ");
-		}
+//		Iterator it = nonEmptyFolders.iterator();
+//		while(it.hasNext())
+//		{
+//			ListItem folder = (ListItem) it.next();
+//			String[] args = { folder.getName() };
+//			addAlert(state, rb.getFormattedMessage("folder.notempty", args) + " ");
+//		}
 
 		//  %%STATE_MODE_RESOURCES%%
 		//not show the public option when in dropbox mode
@@ -4241,73 +4241,59 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		//%%%% FIXME
 		context.put ("collectionPath", state.getAttribute (STATE_COLLECTION_PATH));
 
-		List<ListItem> deleteItems = (List<ListItem>) state.getAttribute(STATE_DELETE_SET);
-		List<ListItem> nonEmptyFolders = (List<ListItem>) state.getAttribute(STATE_NON_EMPTY_DELETE_SET);
+		Set<ListItem> deleteItems = (Set<ListItem>) state.getAttribute(STATE_DELETE_SET);
+		//List<ListItem> nonEmptyFolders = (List<ListItem>) state.getAttribute(STATE_NON_EMPTY_DELETE_SET);
+		//List<String> nonEmptyFolders = new ArrayList<String>();
 		
-		int minDepth = Integer.MAX_VALUE;
 		for(ListItem deleteItem : deleteItems)
 		{
-			deleteItem.setDepth(deleteItem.getId().split("/").length);
-			if(deleteItem.getDepth() < minDepth)
-			{
-				minDepth = deleteItem.getDepth();
-			}
-			
+			deleteItem.setDepth(0);
 		}
 		
-		for(ListItem deleteItem : deleteItems)
+		Stack<ListItem> stack = new Stack<ListItem>();
+		stack.addAll(deleteItems);
+		while(! stack.isEmpty())
 		{
-			deleteItem.setDepth(deleteItem.getDepth() - minDepth);
-		}		
-
-		if(nonEmptyFolders != null && ! nonEmptyFolders.isEmpty())
-		{
-			Iterator it = nonEmptyFolders.iterator();
-			while(it.hasNext())
+			ListItem item = stack.pop();
+			if(item.collection &&  ((ContentCollection)item.entity).getMemberCount() > 0)
 			{
-				ListItem folder = (ListItem) it.next();
-				folder.setDepth(folder.getId().split("/").length - minDepth);
-				String[] args = { folder.getName() };
+				String[] args = { item.getName() };
 				String msg = rb.getFormattedMessage("folder.notempty", args) + " ";
 				addAlert(state, msg);
-			}
-			Stack<ListItem> stack = new Stack<ListItem>();
-			stack.addAll(nonEmptyFolders);
-			while(! stack.isEmpty())
-			{
-				ListItem item = stack.pop();
-				if(item.collection)
+				
+				int childDepth = item.getDepth() + 1;
+				ContentCollection entity = (ContentCollection) item.getEntity();
+				List<ContentEntity> children = entity.getMemberResources();
+				if(children != null && ! children.isEmpty())
 				{
-					int childDepth = item.getDepth() + 1;
-					ContentCollection entity = (ContentCollection) item.getEntity();
-					List<ContentEntity> children = entity.getMemberResources();
-					if(children != null && ! children.isEmpty())
+					for(ContentEntity child : children)
 					{
-						for(ContentEntity child : children)
+						ListItem childItem = new ListItem(child);
+						childItem.setDepth(childDepth);
+						deleteItems.add(childItem);
+						if(child.isCollection())
 						{
-							ListItem childItem = new ListItem(child);
-							childItem.setDepth(childDepth);
-							deleteItems.add(childItem);
-							if(child.isCollection())
-							{
-								stack.push(childItem);
-							}
+							stack.push(childItem);
 						}
 					}
 				}
 			}
-			
 		}
-
-		Collections.sort(deleteItems, new Comparator<ListItem>(){
-
-			public int compare(ListItem arg0, ListItem arg1) 
-			{
-				return arg0.getId().compareTo(arg1.getId());
-			}
-			
-		});
 		
+		
+//		if(nonEmptyFolders != null && ! nonEmptyFolders.isEmpty())
+//		{
+//			Iterator it = nonEmptyFolders.iterator();
+//			while(it.hasNext())
+//			{
+//				ListItem folder = (ListItem) it.next();
+//				String[] args = { folder.getName() };
+//				String msg = rb.getFormattedMessage("folder.notempty", args) + " ";
+//				addAlert(state, msg);
+//			}
+//			
+//		}
+
 		context.put ("deleteItems", deleteItems);
 
 		//  %%STATE_MODE_RESOURCES%%
@@ -5219,7 +5205,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void deleteItem(SessionState state, String itemId)
 	{
-		List deleteItems = new ArrayList();
+		Set<ListItem> deleteItems = new TreeSet<ListItem>(new Comparator<ListItem>(){
+
+			public int compare(ListItem arg0, ListItem arg1) 
+			{
+				return arg0.getId().compareTo(arg1.getId());
+			}
+
+		});
 		List notDeleteItems = new ArrayList();
 		List nonEmptyFolders = new ArrayList();
 		
@@ -5309,7 +5302,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		if(state.getAttribute(STATE_MESSAGE) == null)
 		{
 			state.setAttribute (STATE_DELETE_SET, deleteItems);
-			state.setAttribute (STATE_NON_EMPTY_DELETE_SET, nonEmptyFolders);
+//			state.setAttribute (STATE_NON_EMPTY_DELETE_SET, nonEmptyFolders);
 		}
 	}
 
@@ -5320,7 +5313,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void deleteItems(SessionState state, Set deleteIdSet)
 	{
-		List<ListItem> deleteItems = new ArrayList<ListItem>();
+		Set<ListItem> deleteItems = new TreeSet<ListItem>(new Comparator<ListItem>(){
+
+			public int compare(ListItem arg0, ListItem arg1) 
+			{
+				return arg0.getId().compareTo(arg1.getId());
+			}
+
+		});
 		List notDeleteItems = new ArrayList();
 		List nonEmptyFolders = new ArrayList();
 		
@@ -5402,7 +5402,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 
 		state.setAttribute (STATE_DELETE_SET, deleteItems);
-		state.setAttribute (STATE_NON_EMPTY_DELETE_SET, nonEmptyFolders);
+//		state.setAttribute (STATE_NON_EMPTY_DELETE_SET, nonEmptyFolders);
 	}
 
 
@@ -6215,7 +6215,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		ParameterParser params = data.getParameters ();
 
-		List items = (List) state.getAttribute(STATE_DELETE_SET);
+		Set<ListItem> items = (Set<ListItem>) state.getAttribute(STATE_DELETE_SET);
 
 		// List deleteIds = (List) state.getAttribute (STATE_DELETE_IDS);
 
@@ -6301,7 +6301,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// delete sucessful
 			state.setAttribute (STATE_MODE, MODE_LIST);
 			state.removeAttribute(STATE_DELETE_SET);
-			state.removeAttribute(STATE_NON_EMPTY_DELETE_SET);
+//			state.removeAttribute(STATE_NON_EMPTY_DELETE_SET);
 
 			if (((String) state.getAttribute (STATE_SELECT_ALL_FLAG)).equals (Boolean.TRUE.toString()))
 			{
