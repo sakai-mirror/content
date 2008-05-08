@@ -8,13 +8,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.exception.TypeException;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.jcr.api.JCRService;
 
-public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
-	private static Log log = LogFactory.getLog(CopierRunnable.class);
+public class CopyRequest extends SakaiRequestEmulator implements Runnable {
+	private static Log log = LogFactory.getLog(CopyRequest.class);
 	
 	private static final String ORIGINAL_MIGRATION_EVENT = "ORIGINAL_MIGRATION";
 
@@ -23,13 +21,17 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 	private JCRService jcrService;
 	private ContentHostingService oldContentService;
 	
+	
 	public void init() {
+		copier = (ContentToJCRCopier) ComponentManager.get("org.sakaiproject.content.migration.api.ContentToJCRCopier");
+		jcrService = (JCRService) ComponentManager.get("org.sakaiproject.jcr.api.JCRService");
+		oldContentService = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService.dbservice");
 	}
 	
 	public void destroy() {
 	}
 	
-	public CopierRunnable() {
+	public CopyRequest() {
 		
 	}
 	
@@ -131,6 +133,7 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 		endEmulatedRequest();
 	}
 
+	/*
 	public void setCopier(ContentToJCRCopier copier) {
 		this.copier = copier;
 	}
@@ -146,4 +149,5 @@ public class CopierRunnable extends SakaiRequestEmulator implements Runnable {
 	public void setOldContentService(ContentHostingService oldContentService) {
 		this.oldContentService = oldContentService;
 	}
+	*/
 }

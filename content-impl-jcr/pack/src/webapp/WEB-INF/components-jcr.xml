@@ -162,6 +162,7 @@
     <property name="autoDDL" ><value>${auto.ddl}</value></property>
   </bean>
 
+<!-- 
   <bean id="CopierRunnable" class="org.sakaiproject.content.migration.CopierRunnable"
     singleton="false">
     <property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
@@ -173,7 +174,7 @@
       <value>admin</value>
     </property>
   </bean>
-
+-->
 	
 
 </beans>

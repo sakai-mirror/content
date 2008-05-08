@@ -179,18 +179,25 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		}
 	}
 
-	public void startMigrating()
+	public synchronized void startMigrating()
 	{
 		if ( !jcrService.isEnabled() ) return;
 		this.isCurrentlyMigrating = true;
-		if (!hasMigrationStarted())
-		{
-			addOriginalItemsToQueue();
-		}
-		scheduleBatch();
+		//while(isCurrentlyMigrating) {
+		//	try {
+		//		
+		//	} catch (InterruptedException ie) {
+		//		
+		//	}
+		//}
+		//if (!hasMigrationStarted())
+		//{
+		//	addOriginalItemsToQueue();
+		//}
+		//scheduleBatch();
 	}
 
-	public void stopMigrating()
+	public synchronized void stopMigrating()
 	{
 		if ( !jcrService.isEnabled() ) return;
 		this.isCurrentlyMigrating = false;
@@ -250,6 +257,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		endEmulatedRequest();
 	}
 
+	/*
 	@SuppressWarnings("unchecked")
 	private void migrateSomeItems(int numberToMigrate)
 	{
@@ -300,47 +308,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 			markContentItemFinished(thing.contentId);
 		}
 	}
-
-	private void scheduleBatch()
-	{
-		TimerTask batchTask = new TimerTask()
-		{
-			public void run()
-			{
-				// If there is stuff left, migrate it.
-				//startEmulatedRequest(SUPER_USER);
-				//while (!hasMigrationFinished() && isCurrentlyMigrating)
-				//{
-					
-					migrateSomeItems(100000);
-					//endEmulatedRequest();
-					//try {
-					//	Thread.sleep(20*1000);
-					//} catch (InterruptedException e) {
-					//	isCurrentlyMigrating = false;
-					//	break;
-					//}
-				//}
-				isCurrentlyMigrating = false;
-				//endEmulatedRequest();
-				return;
-			}
-		};
-		if (timer == null) timer = new Timer(false);
-		try
-		{
-			timer.schedule(batchTask, delayBetweenBatchesMilliSeconds);
-		}
-		catch (IllegalStateException ise)
-		{
-			// If there was a problem before, the timer will have been
-			// cancelled.
-			log.info("There was an error previously with the migration, recreating the Migration Timer");
-			timer.cancel();
-			timer = new Timer(false);
-			timer.schedule(batchTask, delayBetweenBatchesMilliSeconds);
-		}
-	}
+	*/
 
 	public int getBatchSize()
 	{
