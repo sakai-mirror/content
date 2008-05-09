@@ -15,18 +15,13 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.migration.api.CHStoJCRMigrator;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
 import org.sakaiproject.content.migration.api.MigrationStatusReporter;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.jcr.api.JCRService;
-import org.sakaiproject.tool.api.Session;
-import org.sakaiproject.tool.api.SessionManager;
-import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
-import org.sakaiproject.user.api.UserNotDefinedException;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -248,11 +243,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 				contentToJCRCopier.copyResourceFromCHStoJCR(session, item.contentId);
 			}
 		}
-		//try {
-		//	Thread.sleep(1000);
-		//} catch (InterruptedException e) {
-		//	log.error("Problems while sleeping during CHS->JCR Migration.", e);
-		//}
+
 		markContentItemFinished(item.contentId);
 		endEmulatedRequest();
 	}
@@ -429,8 +420,9 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		}
 	}
 
-	/**
-	 * @param userDirectoryService the userDirectoryService to set
+	
+	/*
+	 * Boiler Plate Getters/Setters below
 	 */
 	public void setUserDirectoryService(UserDirectoryService userDirectoryService)
 	{
