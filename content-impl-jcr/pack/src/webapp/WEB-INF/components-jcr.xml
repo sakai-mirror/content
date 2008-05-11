@@ -182,6 +182,9 @@
 		<property name="contentHostingService" ref="org.sakaiproject.content.api.ContentHostingService.dbservice"/>
 		<property name="contentToJCRCopier" ref="org.sakaiproject.content.migration.api.ContentToJCRCopier" />
 		<property name="jcrService" ref="org.sakaiproject.jcr.api.UnboundJCRService" />
+		<property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
+		<property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService" />
+		<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
 	</bean>
 	
 
