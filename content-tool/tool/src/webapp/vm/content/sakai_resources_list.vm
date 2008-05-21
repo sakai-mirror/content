@@ -3,46 +3,79 @@
 <!-- this is the new list template, which uses the resources type registry -->
 <!--[if gt IE 5.0]><![if lt IE 7]>
 <style type="text/css">
-/* that IE 5+ conditional comment makes this only visible in IE 5+ */
-ul.makeMenu li {  /* the behaviour to mimic the li:hover rules in IE 5+ */
-	behavior: url( /library/js/IEmen.htc );
-  }
+/* that IE 5+ conditional comment makes this only visible in IE 5+*/ 
 ul.makeMenu ul {  /* copy of above declaration without the > selector */                                                                      
   display: none; position: absolute; top: 18px; left: 0px; background-image:none; background-color:#ffffff;width: 15em; z-index:3;border:1px solid  #666  	
 }
+ul.makeMenu ul li {display:block}
+
+
 </style>
 <![endif]><![endif]-->
 <!--[if gt IE 6.0]>
 <style type="text/css">
-	 ul.makeMenu ul{top: 10px !important}
-	 .attach{width:auto !important}
+ul.makeMenu li {
+  list-style-type: none; 
+  margin: 0px; 
+  padding:5px; 
+  position: relative;
+  color: #000000;
+  display:inline;
+}
+
+.menuOpen{margin:2px !important;padding:2px !important;background:#fff;width:6em;border-width:1px 1px 1px 0;border-style:solid;border-color: #ccc;}
+	.menuOpen:hover{border-width:1px 1px 1px 0;border-style:solid;border-color: #ccc;;background:#fff}
+	ul.makeMenu{border:none !important;background:#fff;border:1px solid #ccc !important;margin:2px;padding:2px;padding-left:5px;width:3em;}
+	ul.makeMenu:hover{border:1px solid #ccc !important; background:#fff}
+	ul.makeMenu ul{top: 15px !important;left:0}
+	 .attach{width:1em !important;}
+
 </style>
 <![endif]-->
-<style type="text/css">
-    @import "/sakai-content-tool/dojo/dojo-release-0.9.0/dijit/themes/sakadojo/sakadojo.css";
-##    @import "/sakai-content-tool/dojo/dojo-release-0.9.0/dojo/dojo.css";
-</style>
-<script type="text/javascript" src="/sakai-content-tool/dojo/dojo-release-0.9.0/dojo/dojo.js.uncompressed.js" djConfig="parseOnLoad: true"></script>
-<script type="text/javascript" src="/sakai-content-tool/dojo/dojo-release-0.9.0/dijit/dijit.js.uncompressed.js" djConfig="parseOnLoad: true"></script>
-<script type="text/javascript" src="/sakai-content-tool/dojo/dojo-release-0.9.0/dojo/dojo.xd.js" djConfig="parseOnLoad: true"></script>
-<script type="text/javascript">
-	dojo.require("dojo.parser");
-	dojo.require("dijit.form.Button");
-	dojo.require("dijit.Menu");
-</script>
 
+#**#
+<script type ="text/javascript" src ="/library/js/jquery.js">
+<!-- // -->
+</script>
+<script  type ="text/javascript">
+$(document).ready(function() {
+	jQuery('.portletBody').click(function(e) { 
+			
+		if ( e.target.className !='menuOpen' &&e.target.className !='dropdn'  ){
+			$('.makeMenuChild').hide();
+		}
+			else
+			{
+				if( e.target.className =='dropdn' ){
+			targetId=$(e.target).parent('li').attr('id');
+			$('.makeMenuChild').hide();
+			$('#menu-' + targetId).show();
+
+}
+				else{
+			targetId=e.target.id;
+			$('.makeMenuChild').hide();
+			$('#menu-' + targetId).show();
+			}}
+	});
+	});
+
+
+
+</script>
+#**#
 #set($num = 0)
-<div class="portletBody specialLink sakadojo">
+<div class="portletBody specialLink">
 	#set($itemsOnLine = 0)
 	#if ($atHome && $atHome == $TRUE)
 			<div class="navIntraTool">
 				$tlang.getString("list.site")
 				| <a href="#toolLink("ResourcesAction" "doShow_webdav")" title="$tlang.getString('dav.webdav')">$tlang.getString("dav.webdav").trim()</a> 
 				#if($showPermissions)
-				| <a href="#toolLinkParam("ResourcesAction" "doPermissions" "collectionId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.sPerm')">$clang.getString("list.sPerm").trim()</a>
+				<span class="separator">|</span> <a href="#toolLinkParam("ResourcesAction" "doPermissions" "collectionId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.sPerm')">$clang.getString("list.sPerm").trim()</a>
 				#end
 				#if($showOptions)
-				| <a href="#toolLinkParam("ResourcesAction" "doOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.options')">$clang.getString("list.options").trim()</a>
+				<span class="separator">|</span> <a href="#toolLinkParam("ResourcesAction" "doOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.options')">$clang.getString("list.options").trim()</a>
 				#end
 			</div>
 	#end 
@@ -123,7 +156,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 		#set ($actionCount=2000)
 		#set ($actionCount2=1000)
 		######################  Heirarchical list of resource folders/items  ##############
-		<table class="listHier lines" cellspacing="0" border="0"  summary="$clang.getString("sh.listsum")">
+		<table class="listHier lines centerLines" cellspacing="0" border="0"  summary="$clang.getString("sh.listsum")">
 			######################  Column labels, sort controls, expand/collapse all  ##############
 			<caption class="skip"  style="display:none">$clang.getString("sh.listcap")</caption>
 			<tr>
@@ -326,36 +359,68 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					</td>
 					#set ($actionCount=($actionCount - 1))
 					#set ($actionCount2=($actionCount2 - 1))
-					<td headers="actions2"   class="attach sakadojo" style="padding:0">
-						#if($item.addActions && !$item.addActions.isEmpty())
-							<div dojotype="dijit.form.DropDownButton" menuid="$validator.escapeJavascript("addMenu-${item.id}")">
-    							<span>$tlang.getString("button.add")</span>
-					            <div dojotype="dijit.Menu" id="$validator.escapeJavascript("addMenu-${item.id}")" toggle="fade" style="display: none;">
-					            	#foreach($action in $item.addActions)
-						                <div dojotype="dijit.MenuItem" iconclass="dijitEditorIcon dijitEditorIconSave" 
-						                     onclick="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
-						                    $labeler.getLabel($action)
-						                </div>
-					                #end
-					            </div>
-					        </div>
+					<td headers="actions2"   class="attach">
+
+					#if($item.addActions && !$item.addActions.isEmpty())
+							<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';"></a>
+							<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='block';" class="skip">$tlang.getString("button.startadd")</a>
+
+							<ul style="z-index:$actionCount;margin:0;display:block" class="makeMenu">
+
+							<li  class="menuOpen" id="$actionCount">
+									&nbsp;$tlang.getString("button.add") 
+								<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="$tlang.getString("button.add")"  class="dropdn"/> 
+									<ul  id="menu-$actionCount" class="makeMenuChild">
+##										<li class="menuClose">
+##										<a href="#"  onmousedown="document.getElementById('menu-$actionCount').style.display='none';">$tlang.getString("button.closemenu")</a>
+##										</li>
+										#foreach($action in $item.addActions)
+											<li><a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a></li>
+										#end
+										<li style="height:1px;width:1px;display:inline;">
+											<a href="#"  class="skip" onfocus="document.getElementById('menu-$actionCount').style.display='none';document.getElementById('last-$actionCount').focus()" >$tlang.getString("button.endadd")</a>
+										</li>
+									</ul>
+
+									</li>
+
+								</ul>
+
+							<a href="#" id="last-$actionCount" class="skip"></a>							
+
+							#end
+
+						</td>
+					<td headers="actions3"   class="attach">
+
+					#if($item.otherActions && !$item.otherActions.isEmpty())
+						<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';" class="skip"></a>
+						<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='block';" class="skip">$tlang.getString("button.startact")</a>
+							<ul style="z-index:$actionCount2;margin:0;display:block" class="makeMenu">
+								<li class="menuOpen" id="$actionCount2">
+									&nbsp;$tlang.getString("button.actions")
+									<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="$tlang.getString("button.actions")" class="dropdn"/>									
+									<ul  id="menu-$actionCount2"  class="makeMenuChild">
+##										<li class="menuClose">
+##											<a href="#"  onmousedown="document.getElementById('menu-$actionCount2').style.display='none'">$tlang.getString("button.closemenu")</a>
+##										</li>
+										#foreach($action in $item.otherActions)
+											<li>
+												<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
+													$labeler.getLabel($action)
+												</a>
+											</li>
+										#end
+										<li style="height:1px;width:1px;display:inline;">
+											<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0"  class="skip">$tlang.getString("button.endact")</a>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<a href="#" id="last-$actionCount2" class="skip"></a>		
 						#end
-					</td>
-					<td headers="actions3"   class="attach sakadojo"  style="padding:0">
-						#if($item.otherActions && !$item.otherActions.isEmpty())
-							<div dojotype="dijit.form.DropDownButton" menuid="$validator.escapeJavascript("actionMenu-${item.id}")">
-    							<span>$tlang.getString("button.actions")</span>
-					            <div dojotype="dijit.Menu" id="$validator.escapeJavascript("actionMenu-${item.id}")" toggle="fade" style="display: none;">
-					            	#foreach($action in $item.otherActions)
-						                <div dojotype="dijit.MenuItem" iconclass="dijitEditorIcon dijitEditorIconSave" 
-						                     onclick="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
-						                    $labeler.getLabel($action)
-						                </div>
-					                #end
-					            </div>
-					        </div>
-						#end
-					</td>
+
+						</td>
 					#if($item.depth > 0)
 						<td headers="access" title="$item.effectiveGroupsLabel">
 							#if($item.isPubviewInherited() || $item.isPubview())
@@ -557,35 +622,63 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 							</td>
 							#set ($actionCount=($actionCount - 1))
 							#set ($actionCount2=($actionCount2 - 1))
-							<td headers="actions2"   class="attach sakadojo" style="padding:0">
+							<td headers="actions2"   class="attach">
+
 								#if($item.addActions && !$item.addActions.isEmpty())
-									<div dojotype="dijit.form.DropDownButton" menuid="$validator.escapeJavascript("addMenu-${item.id}")">
-			    						<span>$tlang.getString("button.add")</span>
-							            <div dojotype="dijit.Menu" id="$validator.escapeJavascript("addMenu-$!{item.id}")" toggle="fade" style="display: none;">
-							            	#foreach($action in $item.addActions)
-								                <div dojotype="dijit.MenuItem" iconclass="dijitEditorIcon dijitEditorIconSave" 
-								                     onclick="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
-								                    $labeler.getLabel($action)
-								                </div>
-							                #end
-							            </div>
-							        </div>
+									<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';"></a>
+									<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='block';" class="skip">$tlang.getString("button.startadd")</a>
+									<ul style="z-index:$actionCount;margin:0;display:block" class="makeMenu">
+										<li class="menuOpen" id="$actionCount">
+											&nbsp;$tlang.getString("button.add")
+											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="$tlang.getString("button.add")" class="dropdn"/>
+											<ul  id="menu-$actionCount" class="makeMenuChild">
+##												<li class="menuClose">
+##													<a href="#"  onmousedown="document.getElementById('menu-$actionCount').style.display='none';">$tlang.getString("button.closemenu")</a>
+##												</li>
+							    #foreach($action in $item.addActions)
+												<li>
+													<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a>
+												</li>
+							    #end
+										<li style="height:1px;width:1px;display:inline;">
+													<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';document.getElementById('last-$actionCount').focus()" style="height:1px;margin:0;padding:0" class="skip">$tlang.getString("button.endadd")</a>
+												</li>
+											</ul>
+										</li>
+									</ul>
+									<a href="#" id="last-$actionCount" style="height:1px;margin:0;padding:0" class="skip"></a>
 								#end
-							</td>
-							<td headers="actions3"   class="attach  sakadojo" style="padding:0">
-								#if($item.otherActions && !$item.otherActions.isEmpty())
-									<div dojotype="dijit.form.DropDownButton" menuid="$validator.escapeJavascript("actionMenu-${item.id}")">
-		    							<span>$tlang.getString("button.actions")</span>
-							            <div dojotype="dijit.Menu" id="$validator.escapeJavascript("actionMenu-$!{item.id}")" toggle="fade" style="display: none;">
-							            	#foreach($action in $item.otherActions)
-								                <div dojotype="dijit.MenuItem" iconclass="dijitEditorIcon dijitEditorIconSave" 
-								                     onclick="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
-								                    $labeler.getLabel($action)
-								                </div>
-							                #end
-							            </div>
-							        </div>
+
+								</td>
+							<td headers="actions3" class="attach">
+
+							#if($item.otherActions && !$item.otherActions.isEmpty())
+									<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';"></a>
+									<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='block';"  class="skip">$tlang.getString("button.startact")</a>
+									<ul style="z-index:$actionCount2;margin:0;display:block" class="makeMenu" >
+										<li class="menuOpen" id="$actionCount2">
+											&nbsp;$tlang.getString("button.actions")
+											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="$tlang.getString("button.actions")"  class="dropdn"/>
+											<ul  id="menu-$actionCount2" class="makeMenuChild">
+##												<li class="menuClose">
+##													<a href="#" 	 onmousedown="document.getElementById('menu-$actionCount2').style.display='none';">$tlang.getString("button.closemenu")</a>
+##												</li>											
+												#foreach($action in $item.otherActions)
+													<li>
+														<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
+															$labeler.getLabel($action)
+														</a>
+													</li>
+												#end
+										<li style="height:1px;width:1px;display:inline;">
+													<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0" title="Actions menu end" class="skip">tlang.getString("button.endact")</a>
+												</li>
+											</ul>
+								  	</li>
+									</ul>
+									<a href="#" id="last-$actionCount2" ></a>
 								#end
+
 							</td>
 							#if($item.depth > 0)
 								<td headers="access" title="$item.effectiveGroups">
