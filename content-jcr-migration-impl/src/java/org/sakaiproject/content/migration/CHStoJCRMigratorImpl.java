@@ -18,16 +18,17 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.migration.api.CHStoJCRMigrator;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
-import org.sakaiproject.content.migration.api.MigrationStatusReporter;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.jcr.api.JCRService;
+import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
+import org.sakaiproject.user.api.UserNotDefinedException;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 public class CHStoJCRMigratorImpl extends SakaiRequestEmulator 
-	implements CHStoJCRMigrator, MigrationStatusReporter, ApplicationContextAware
+	implements CHStoJCRMigrator, ApplicationContextAware
 {
 
 	private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
@@ -42,8 +43,6 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	private JCRService jcrService;
 
 	private ContentToJCRCopier contentToJCRCopier;
-
-	//private MigrationStatusReporter migrationStatusReporter;
 
 	// End Injected Services
 
@@ -174,22 +173,38 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		}
 	}
 
+	Timer conversionTimer = null;
 	public synchronized void startMigrating()
 	{
+		System.out.println("JCR CHS Migrator.startMigrating.");
 		if ( !jcrService.isEnabled() ) return;
+		
 		this.isCurrentlyMigrating = true;
-		//while(isCurrentlyMigrating) {
-		//	try {
-		//		
-		//	} catch (InterruptedException ie) {
-		//		
-		//	}
-		//}
-		//if (!hasMigrationStarted())
-		//{
-		//	addOriginalItemsToQueue();
-		//}
-		//scheduleBatch();
+		if (!hasMigrationStarted())
+		{
+			addOriginalItemsToQueue();
+		}
+		
+		
+		if (conversionTimer == null) {
+			conversionTimer = new Timer();
+			
+			TimerTask task = new TimerTask() {
+				boolean started = false;
+				
+				public void run() {
+					if (!started) {
+						becomeAdmin();
+						started = true;
+					}
+					
+					if (isCurrentlyMigrating) {
+						migrateSomeItems(1);
+					}
+				}
+			};
+			conversionTimer.schedule(task, 1000, 50);
+		}
 	}
 
 	public synchronized void stopMigrating()
@@ -198,6 +213,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		this.isCurrentlyMigrating = false;
 	}
 
+	/*
 	private void migrateOneItem(javax.jcr.Session session, ThingToMigrate item)
 	{
 		setTestUser(SUPER_USER);
@@ -247,8 +263,8 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		markContentItemFinished(item.contentId);
 		endEmulatedRequest();
 	}
-
-	/*
+	*/
+	
 	@SuppressWarnings("unchecked")
 	private void migrateSomeItems(int numberToMigrate)
 	{
@@ -276,30 +292,37 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 
 		for (ThingToMigrate thing : thingsToMigrate)
 		{
-			final ThingToMigrate thing2 = thing;
+			//final ThingToMigrate thing2 = thing;
 			//Thread thread = new Thread( new Runnable() {
 			//	public void run() {
 			//		migrateOneItem(jcrSession, thing2);
 			//	}
 			//});
 			//thread.start();
-			CopierRunnable aCopier = (CopierRunnable) appContext.getBean("CopierRunnable");
+			//CopierRunnable aCopier = (CopierRunnable) appContext.getBean("CopierRunnable");
 			//aCopier.setJcrSession(jcrSession);
-			aCopier.setThing(thing);
-			Thread thread = new Thread(aCopier);
-			thread.start();
-			while (thread.isAlive()) {
-				System.out.println("SWG Our migrate thing thread is still alive");
-				try {
-					Thread.sleep(1000);
-				} catch (java.lang.InterruptedException e) {
-					log.info("Unable to sleep while checking if the migrate thread is still alive", e);
-				}
+			//aCopier.setThing(thing);
+			//Thread thread = new Thread(aCopier);
+			//thread.start();
+			//while (thread.isAlive()) {
+		//		System.out.println("SWG Our migrate thing thread is still alive");
+		//		try {
+			//		Thread.sleep(1000);
+			//	} catch (java.lang.InterruptedException e) {
+		//			log.info("Unable to sleep while checking if the migrate thread is still alive", e);
+		//		}
+		//	}
+			if (thing.contentId.endsWith("/")) {
+				contentToJCRCopier.copyCollectionFromCHStoJCR(jcrSession, thing.contentId);
 			}
+			else {
+				contentToJCRCopier.copyResourceFromCHStoJCR(jcrSession, thing.contentId);
+			}
+				
 			markContentItemFinished(thing.contentId);
 		}
 	}
-	*/
+	
 
 	public int getBatchSize()
 	{
@@ -321,28 +344,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		this.delayBetweenBatchesMilliSeconds = delayBetweenBatchesMilliSeconds;
 	}
 
-	/*
-	 * Various Injections Below
-	 */
-	public void setSqlService(SqlService sqlService)
-	{
-		this.sqlService = sqlService;
-	}
-
-	public void setJcrService(JCRService jcrService)
-	{
-		this.jcrService = jcrService;
-	}
-
-	public void setContentToJCRCopier(ContentToJCRCopier contentToJCRCopier)
-	{
-		this.contentToJCRCopier = contentToJCRCopier;
-	}
-
-	public void setAutoDDL(boolean autoDDL)
-	{
-		this.autoDDL = autoDDL;
-	}
+	
 
 	public int[] filesRemaining()
 	{	
@@ -419,6 +421,24 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 			return false;
 		}
 	}
+	
+	private void becomeAdmin() {
+        User u = null;
+        try {
+            u = userDirectoryService.getUserByEid("admin");
+        } catch (UserNotDefinedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        org.sakaiproject.tool.api.Session s = sessionManager.getCurrentSession();
+
+        s.setUserEid(u.getEid());
+        s.setUserId(u.getId());
+        s.setActive();
+        sessionManager.setCurrentSession(s);
+        authzGroupService.refreshUser(u.getId());
+    }
 
 	
 	/*
@@ -436,6 +456,26 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	private ApplicationContext appContext;
 	public void setApplicationContext(ApplicationContext ctx) throws BeansException {
 		this.appContext = ctx;
+	}
+	
+	public void setSqlService(SqlService sqlService)
+	{
+		this.sqlService = sqlService;
+	}
+
+	public void setJcrService(JCRService jcrService)
+	{
+		this.jcrService = jcrService;
+	}
+
+	public void setContentToJCRCopier(ContentToJCRCopier contentToJCRCopier)
+	{
+		this.contentToJCRCopier = contentToJCRCopier;
+	}
+
+	public void setAutoDDL(boolean autoDDL)
+	{
+		this.autoDDL = autoDDL;
 	}
 
 }

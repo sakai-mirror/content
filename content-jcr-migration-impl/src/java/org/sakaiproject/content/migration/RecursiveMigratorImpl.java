@@ -13,6 +13,7 @@ import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
+import org.sakaiproject.content.migration.api.RecursiveMigrator;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.exception.TypeException;
@@ -35,7 +36,7 @@ import org.sakaiproject.user.api.UserNotDefinedException;
  * @author sgithens
  *
  */
-public class RecursiveMigration {
+public class RecursiveMigratorImpl implements RecursiveMigrator {
     private ContentHostingService contentHostingService;
     private JCRService jcrService;
     private ContentToJCRCopier contentToJCRCopier;
@@ -47,17 +48,52 @@ public class RecursiveMigration {
     private int progress = 0;
     private Session jcrSession = null;
     private boolean started = false;
+    
+    public void runRecursiveMigration() {
+    	runRecursiveMigration("/");
+    }
 
-    public void runRecursiveMigration() throws IdUnusedException, TypeException, PermissionException, LoginException, RepositoryException {
+    public void runRecursiveMigration(String startDirectory) {
         System.out.println("Running Recursive Migration");
         System.out.println("+ root");
 
-        jcrSession = jcrService.getSession();
+        try {
+			jcrSession = jcrService.getSession();
+		} catch (LoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RepositoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        ContentCollection root = contentHostingService.getCollection("/");
+        ContentCollection root = null;
+		try {
+			root = contentHostingService.getCollection(startDirectory);
+		} catch (IdUnusedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TypeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PermissionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         List<String> children = root.getMembers();
         for (String id: children) {
-            doContentResource(jcrSession, id, 1);
+            try {
+				doContentResource(jcrSession, id, 1);
+			} catch (IdUnusedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TypeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (PermissionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
 
         // Now that we've recursed and created the list of things to migrate,
