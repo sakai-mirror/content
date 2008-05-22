@@ -32,8 +32,19 @@ public interface CHStoJCRMigrator
 	 */
 	public int[] filesRemaining();
 
+	/**
+	 * Details whether the migration has been started. Really, we are just looking
+	 * at the database table that holds the queue to see if it has any rows yet
+	 * (which would mean that we did copy the original files to start and that
+	 * it has started).
+	 */
 	public boolean hasMigrationStarted();
 
+	/**
+	 * Is the migration over?  Are all the items in the queue marked as finished?
+	 * 
+	 * @return
+	 */
 	public boolean hasMigrationFinished();
 
 }

@@ -177,8 +177,8 @@
 -->
 
 	<!-- Recursive Migration Test -->
-	<bean id="org.sakaiproject.content.migration.RecursiveMigration"
-		class="org.sakaiproject.content.migration.RecursiveMigration" >
+	<bean id="org.sakaiproject.content.migration.RecursiveMigrator"
+		class="org.sakaiproject.content.migration.RecursiveMigratorImpl" >
 		<property name="contentHostingService" ref="org.sakaiproject.content.api.ContentHostingService.dbservice"/>
 		<property name="contentToJCRCopier" ref="org.sakaiproject.content.migration.api.ContentToJCRCopier" />
 		<property name="jcrService" ref="org.sakaiproject.jcr.api.UnboundJCRService" />

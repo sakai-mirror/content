@@ -10,5 +10,12 @@ package org.sakaiproject.content.migration.api;
  */
 public interface RecursiveMigrator 
 {
+	
+	/**
+	 * Recursively copy a directory from DB ContentHosting to it's appropriate
+	 * spot in JCR.
+	 * 
+	 * @param startDirectory
+	 */
 	void runRecursiveMigration(String startDirectory); 
 }

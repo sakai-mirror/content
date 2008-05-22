@@ -16,8 +16,10 @@ import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.impl.JCRStorageUser;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
 import org.sakaiproject.entity.api.ResourceProperties;
-import org.sakaiproject.jcr.api.JCRService;
 
+/**
+ * @author sgithens
+ */
 public class ContentToJCRCopierImpl implements ContentToJCRCopier
 {
 	private static Log log = LogFactory.getLog(ContentToJCRCopierImpl.class);

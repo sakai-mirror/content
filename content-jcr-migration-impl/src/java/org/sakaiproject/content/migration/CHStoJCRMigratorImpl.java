@@ -15,20 +15,18 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.migration.api.CHStoJCRMigrator;
 import org.sakaiproject.content.migration.api.ContentToJCRCopier;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.jcr.api.JCRService;
+import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
-public class CHStoJCRMigratorImpl extends SakaiRequestEmulator 
-	implements CHStoJCRMigrator, ApplicationContextAware
+public class CHStoJCRMigratorImpl //extends SakaiRequestEmulator 
+	implements CHStoJCRMigrator
 {
 
 	private static final Log log = LogFactory.getLog(CHStoJCRMigratorImpl.class);
@@ -71,6 +69,10 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	private String HACKUSER = "admin";
 
 	private UserDirectoryService userDirectoryService;
+	
+	private SessionManager sessionManager;
+	
+	private AuthzGroupService authzGroupService;
 	
 	private Connection dbConnection;
 
@@ -176,7 +178,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	Timer conversionTimer = null;
 	public synchronized void startMigrating()
 	{
-		System.out.println("JCR CHS Migrator.startMigrating.");
+		log.info("JCR CHS Migrator.startMigrating.");
 		if ( !jcrService.isEnabled() ) return;
 		
 		this.isCurrentlyMigrating = true;
@@ -292,6 +294,12 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 
 		for (ThingToMigrate thing : thingsToMigrate)
 		{
+			/*
+			 * Leaving this bit of commented out code here for the moment. We
+			 * may need to wrap this is a RequestEmulator to deal with SqlServices
+			 * occasionally outcry of threads.
+			 */
+			
 			//final ThingToMigrate thing2 = thing;
 			//Thread thread = new Thread( new Runnable() {
 			//	public void run() {
@@ -322,30 +330,10 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 			markContentItemFinished(thing.contentId);
 		}
 	}
-	
 
-	public int getBatchSize()
-	{
-		return batchSize;
-	}
-
-	public void setBatchSize(int batchSize)
-	{
-		this.batchSize = batchSize;
-	}
-
-	public int getDelayBetweenBatchesMilliSeconds()
-	{
-		return delayBetweenBatchesMilliSeconds;
-	}
-
-	public void setDelayBetweenBatchesMilliSeconds(int delayBetweenBatchesMilliSeconds)
-	{
-		this.delayBetweenBatchesMilliSeconds = delayBetweenBatchesMilliSeconds;
-	}
-
-	
-
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.migration.api.CHStoJCRMigrator#filesRemaining()
+	 */
 	public int[] filesRemaining()
 	{	
 		int numberTotalItems = 0, numberFinishedItems = 0;
@@ -364,7 +352,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 					numberTotalItemsRS.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("Error getting the remainging migration queue size", e);
 				}
 			}
 		}
@@ -381,8 +369,7 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 				try {
 					numberFinishedRS.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("Error getting the remainging migration queue size", e);
 				}
 			}
 		}
@@ -393,6 +380,9 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	/*
 	 * If we've copied the original Collections and Resources over, then we deem
 	 * that the migration has truly started.
+	 *
+	 * (non-Javadoc)
+	 * @see org.sakaiproject.content.migration.api.CHStoJCRMigrator#hasMigrationStarted()
 	 */
 	public boolean hasMigrationStarted()
 	{
@@ -408,6 +398,9 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.content.migration.api.CHStoJCRMigrator#hasMigrationFinished()
+	 */
 	public boolean hasMigrationFinished()
 	{
 		int[] remaining = filesRemaining();
@@ -422,13 +415,15 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 		}
 	}
 	
+	/**
+	 * Still using this hack.
+	 */
 	private void becomeAdmin() {
         User u = null;
         try {
-            u = userDirectoryService.getUserByEid("admin");
+            u = userDirectoryService.getUserByEid(ADMIN_USER);
         } catch (UserNotDefinedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            log.error("Problems becoming the administrator to do migration.", e1);
         }
 
         org.sakaiproject.tool.api.Session s = sessionManager.getCurrentSession();
@@ -452,11 +447,6 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
-
-	private ApplicationContext appContext;
-	public void setApplicationContext(ApplicationContext ctx) throws BeansException {
-		this.appContext = ctx;
-	}
 	
 	public void setSqlService(SqlService sqlService)
 	{
@@ -476,6 +466,14 @@ public class CHStoJCRMigratorImpl extends SakaiRequestEmulator
 	public void setAutoDDL(boolean autoDDL)
 	{
 		this.autoDDL = autoDDL;
+	}
+
+	public void setSessionManager(SessionManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
+
+	public void setAuthzGroupService(AuthzGroupService authzGroupService) {
+		this.authzGroupService = authzGroupService;
 	}
 
 }

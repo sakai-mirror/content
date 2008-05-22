@@ -9,6 +9,8 @@ import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentHostingService;
@@ -37,6 +39,8 @@ import org.sakaiproject.user.api.UserNotDefinedException;
  *
  */
 public class RecursiveMigratorImpl implements RecursiveMigrator {
+	private static final Log log = LogFactory.getLog(RecursiveMigratorImpl.class);
+	
     private ContentHostingService contentHostingService;
     private JCRService jcrService;
     private ContentToJCRCopier contentToJCRCopier;
@@ -54,8 +58,7 @@ public class RecursiveMigratorImpl implements RecursiveMigrator {
     }
 
     public void runRecursiveMigration(String startDirectory) {
-        System.out.println("Running Recursive Migration");
-        System.out.println("+ root");
+        log.info("Running Recursive Migration");
 
         try {
 			jcrSession = jcrService.getSession();
@@ -110,7 +113,7 @@ public class RecursiveMigratorImpl implements RecursiveMigrator {
                 
                 if (progress < thingsToMigrate.size()) {
                     String migrateMe = thingsToMigrate.get(progress);
-                    System.out.println("Going to migrate: " + migrateMe);
+                    log.info("Going to migrate: " + migrateMe);
                     if (migrateMe.endsWith("/")) {
                         contentToJCRCopier.copyCollectionFromCHStoJCR(jcrSession, migrateMe);
                     }
@@ -120,7 +123,7 @@ public class RecursiveMigratorImpl implements RecursiveMigrator {
                     progress++;
                 }
                 else {
-                    System.out.println("All Done Migrating from the TimerTask");
+                    log.info("All Done Migrating from the TimerTask");
                 }
             }
         };
@@ -170,7 +173,7 @@ public class RecursiveMigratorImpl implements RecursiveMigrator {
             thingsToMigrate.add(path);
         }
 
-        System.out.println(strBuilder.toString());
+        //System.out.println(strBuilder.toString());
     }
 
     /*
