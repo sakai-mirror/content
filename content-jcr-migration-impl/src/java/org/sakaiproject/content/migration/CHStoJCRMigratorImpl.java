@@ -56,17 +56,7 @@ public class CHStoJCRMigratorImpl //extends SakaiRequestEmulator
 	 */
 	private boolean isCurrentlyMigrating = false;
 
-	private int batchSize = 20;
-
-	private int delayBetweenBatchesMilliSeconds = 1000;
-
-	/* Our things to do the work. */
-	private Timer timer = new Timer(false);
-
 	private javax.jcr.Session jcrSession;
-	
-
-	private String HACKUSER = "admin";
 
 	private UserDirectoryService userDirectoryService;
 	
