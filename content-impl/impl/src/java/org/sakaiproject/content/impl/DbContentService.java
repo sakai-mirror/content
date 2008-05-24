@@ -394,7 +394,7 @@ public class DbContentService extends BaseContentService
 				}
 	
 				M_log.info("init(): tables: " + m_collectionTableName + " " + m_resourceTableName + " " + m_resourceBodyTableName + " "
-						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath);
+						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath + " storage: " + m_storage);
 			}
 			
 		}
@@ -575,9 +575,12 @@ public class DbContentService extends BaseContentService
 				if(filesizeColumnCheckNullCount > 0)
 				{
 					filesizeColumnCheckExpires = now + TWENTY_MINUTES;
+					M_log.debug("Conversion of the ContentHostingService database tables is needed to improve performance");
 				}
 				else
 				{
+					String highlight = "\n====================================================\n====================================================\n";
+					M_log.info(highlight + "Conversion of the ContentHostingService database tables is complete.\nUsing new filesize column" + highlight);
 					filesizeColumnReady = true;
 				}
 			}
@@ -619,17 +622,19 @@ public class DbContentService extends BaseContentService
 
 		if (list != null)
 		{
+			Object val = null;
 			int rv = 0;
 			Iterator iter = list.iterator();
 			if (iter.hasNext())
 			{
 				try
 				{
-					Object val = iter.next();
+					val = iter.next();
 					rv = Integer.parseInt((String) val);
 				}
 				catch (Exception ignore)
 				{
+					M_log.warn("Exception parsing integer from count query: " + val);
 				}
 			}
 			return rv;
@@ -1536,7 +1541,7 @@ public class DbContentService extends BaseContentService
 			else
 			{
 				fields = new Object[5];
-				fields[0] = individualDropboxId;
+			fields[0] = individualDropboxId;
 				fields[1] = isolateContainingId(individualDropboxId);
 				fields[2] = Long.toString(TimeService.newTime().getTime());
 				fields[3] = isolateContainingId(individualDropboxId);
