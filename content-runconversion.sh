@@ -23,9 +23,21 @@ else
   m2repository="$HOME"/.m2/repository
 fi
 
+echo HOME:$HOME
+
 bash ../db/db-util/conversion/runconversion.sh \
 	-j "$m2repository"/commons-collections/commons-collections/3.2/commons-collections-3.2.jar \
 	-j "$m2repository"/commons-pool/commons-pool/1.3/commons-pool-1.3.jar \
-	-j "$m2repository"/org/sakaiproject/sakai-db-api/SNAPSHOT/sakai-db-api-SNAPSHOT.jar \
-	-j "$m2repository"/org/sakaiproject/sakai-component-api/SNAPSHOT/sakai-component-api-SNAPSHOT.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-db-api/M2/sakai-db-api-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-component-api/M2/sakai-component-api-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-util/M2/sakai-util-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-util-api/M2/sakai-util-api-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-util-impl/M2/sakai-util-impl-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-entity-api/M2/sakai-entity-api-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-entity-util/M2/sakai-entity-util-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-content-api/M2/sakai-content-api-M2.jar \
+	-j "$m2repository"/org/sakaiproject/sakai-content-impl/M2/sakai-content-impl-M2.jar \
+        -j "$m2repository"/org/sakaiproject/sakai-db-conversion/M2/sakai-db-conversion-M2.jar \
+        -j "$m2repository"/org/sakaiproject/sakai-util-log/M2/sakai-util-log-M2.jar \
+        -j "$m2repository"/log4j/log4j/1.2.9/log4j-1.2.9.jar \
 	$@
