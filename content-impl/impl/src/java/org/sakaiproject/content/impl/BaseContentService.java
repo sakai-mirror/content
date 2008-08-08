@@ -1487,9 +1487,22 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			String creator = entity.getProperties().getProperty(ResourceProperties.PROP_CREATOR);
 			String userId = SessionManager.getCurrentSessionUserId();
 			
-			// available if user is creator
-			available = ( creator != null && userId != null && creator.equals(userId) ) 
-				|| ( creator == null && userId == null );
+			// oncourse
+			// if we are in a roleswapped state, we want to ignore the creator check since it would not necessarily reflect an alternate role
+			String[] refs = StringUtil.split(id, Entity.SEPARATOR);
+			String roleswap = null;
+			for (int i = 0; i < refs.length; i++)
+			{
+				roleswap = (String)SessionManager.getCurrentSession().getAttribute("roleswap/site/" + refs[i]);
+				if (roleswap!=null)
+					break;
+			}
+			if (roleswap==null)
+			{
+				// available if user is creator
+				available = ( creator != null && userId != null && creator.equals(userId) ) 
+					|| ( creator == null && userId == null );
+			}
 			
 			if(! available)
 			{
