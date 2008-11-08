@@ -434,7 +434,7 @@ $(document).ready(function() {
 							#end
 						</td>
 						<td headers="creator">
-							$item.createdBy
+							$validator.escapeHtml($item.createdBy)
 						</td>
 						<td headers="modified">
 							$item.ModifiedTime
@@ -693,7 +693,7 @@ $(document).ready(function() {
 									#end
 								</td>
 								<td headers="creator">
-									$item.createdBy
+									$validator.escapeHtml($item.createdBy)
 								</td>
 								<td headers="modified">
 									$item.ModifiedTime
