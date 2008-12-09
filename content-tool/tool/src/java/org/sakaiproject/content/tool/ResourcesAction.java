@@ -1322,23 +1322,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				ContentResourceEdit resource = ContentHostingService.addResource(collectionId,Validator.escapeResourceName(basename),Validator.escapeResourceName(extension),MAXIMUM_ATTEMPTS_FOR_UNIQUENESS);
 				
-				byte[] content = fp.getRevisedContent();
-				if(content == null)
-				{
-					InputStream stream = fp.getRevisedContentStream();
-					if(stream == null)
-					{
-						logger.warn("pipe with null content and null stream: " + pipe.getFileName());
-					}
-					else
-					{
-						resource.setContent(stream);
-					}
-				}
-				else
-				{
-					resource.setContent(content);
-				}
+				extractContent(fp, resource);
+//			    byte[] content = fp.getRevisedContent();
+//			    if(content == null)
+//			    {
+//			    	InputStream stream = fp.getRevisedContentStream();
+//			    	if(stream == null)
+//			    	{
+//			    		logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+//			    	}
+//			    	else
+//			    	{
+//			    		resource.setContent(stream);
+//			    	}
+//			    }
+//			    else
+//			    {
+//			    	resource.setContent(content);
+//			    }
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
@@ -1452,6 +1453,30 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		return (item_added ? new_resources : null);
 	}
+	
+	/**
+     * Utility method to get revised content either from a byte array or a stream.
+     */
+    protected static void extractContent(ResourceToolActionPipe pipe, ContentResourceEdit resource)
+    {
+	    byte[] content = pipe.getRevisedContent();
+	    if(content == null)
+	    {
+	    	InputStream stream = pipe.getRevisedContentStream();
+	    	if(stream == null)
+	    	{
+	    		logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+	    	}
+	    	else
+	    	{
+	    		resource.setContent(stream);
+	    	}
+	    }
+	    else
+	    {
+	    	resource.setContent(content);
+	    }
+    }
 	
 	/**
 	* Paste the item(s) selected to be moved
@@ -3668,23 +3693,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			ContentResourceEdit edit = ContentHostingService.editResource(entity.getId());
 			ResourcePropertiesEdit props = edit.getPropertiesEdit();
 			// update content
-			byte[] content = pipe.getRevisedContent();
-			if(content == null)
-			{
-				InputStream stream = pipe.getRevisedContentStream();
-				if(stream == null)
-				{
-					logger.warn("pipe with null content and null stream: " + pipe.getFileName());
-				}
-				else
-				{
-					edit.setContent(stream);
-				}
-			}
-			else
-			{
-				edit.setContent(content);
-			}
+			extractContent(pipe, edit);
+//			byte[] content = pipe.getRevisedContent();
+//			if(content == null)
+//			{
+//				InputStream stream = pipe.getRevisedContentStream();
+//				if(stream == null)
+//				{
+//					logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+//				}
+//				else
+//				{
+//					edit.setContent(stream);
+//				}
+//			}
+//			else
+//			{
+//				edit.setContent(content);
+//			}
 			// update properties
 			if(action instanceof InteractionAction)
 			{
@@ -5557,23 +5583,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				
 				item.updateContentResourceEdit(resource);
 				
-				byte[] content = pipe.getRevisedContent();
-				if(content == null)
-				{
-					InputStream stream = pipe.getRevisedContentStream();
-					if(stream == null)
-					{
-						logger.warn("pipe with null content and null stream: " + pipe.getFileName());
-					}
-					else
-					{
-						resource.setContent(stream);
-					}
-				}
-				else
-				{
-					resource.setContent(content);
-				}
+				extractContent(pipe, resource);
+//				byte[] content = pipe.getRevisedContent();
+//				if(content == null)
+//				{
+//					InputStream stream = pipe.getRevisedContentStream();
+//					if(stream == null)
+//					{
+//						logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+//					}
+//					else
+//					{
+//						resource.setContent(stream);
+//					}
+//				}
+//				else
+//				{
+//					resource.setContent(content);
+//				}
 
 				resource.setContentType(pipe.getRevisedMimeType());
 				
@@ -7267,23 +7294,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			ContentResourceEdit edit = ContentHostingService.editResource(entity.getId());
 			ResourcePropertiesEdit props = edit.getPropertiesEdit();
 			// update content
-			byte[] content = pipe.getRevisedContent();
-			if(content == null)
-			{
-				InputStream stream = pipe.getRevisedContentStream();
-				if(stream == null)
-				{
-					logger.warn("pipe with null content and null stream: " + pipe.getFileName());
-				}
-				else
-				{
-					edit.setContent(stream);
-				}
-			}
-			else
-			{
-				edit.setContent(content);
-			}
+			extractContent(pipe, edit);
+//			byte[] content = pipe.getRevisedContent();
+//			if(content == null)
+//			{
+//				InputStream stream = pipe.getRevisedContentStream();
+//				if(stream == null)
+//				{
+//					logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+//				}
+//				else
+//				{
+//					edit.setContent(stream);
+//				}
+//			}
+//			else
+//			{
+//				edit.setContent(content);
+//			}
 			
 			// update properties
 			if(action instanceof InteractionAction)
@@ -8252,23 +8280,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				ContentResourceEdit resource = ContentHostingService.addResource(collectionId,Validator.escapeResourceName(basename),Validator.escapeResourceName(extension),MAXIMUM_ATTEMPTS_FOR_UNIQUENESS);
 				
-				byte[] content = fp.getRevisedContent();
-				if(content == null)
-				{
-					InputStream stream = fp.getRevisedContentStream();
-					if(stream == null)
-					{
-						logger.warn("pipe with null content and null stream: " + pipe.getFileName());
-					}
-					else
-					{
-						resource.setContent(stream);
-					}
-				}
-				else
-				{
-					resource.setContent(content);
-				}
+				extractContent(fp, resource);
+//				byte[] content = fp.getRevisedContent();
+//				if(content == null)
+//				{
+//					InputStream stream = fp.getRevisedContentStream();
+//					if(stream == null)
+//					{
+//						logger.debug("pipe with null content and null stream: " + pipe.getFileName());
+//					}
+//					else
+//					{
+//						resource.setContent(stream);
+//					}
+//				}
+//				else
+//				{
+//					resource.setContent(content);
+//				}
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
