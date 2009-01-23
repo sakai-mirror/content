@@ -1,7 +1,10 @@
 <projectDescription>
   <name>sakai-content-tool</name>
   <comment/>
-  <projects/>
+  <projects>
+    <project>sakai-velocity-tool</project>
+    <project>sakai-velocity-tool-api</project>
+  </projects>
   <buildSpec>
     <buildCommand>
       <name>org.eclipse.jdt.core.javabuilder</name>
