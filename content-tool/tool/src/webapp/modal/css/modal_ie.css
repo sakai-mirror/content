@@ -1,0 +1,71 @@
+/*
+* SimpleModal Basic Modal Dialog
+* http://www.ericmmartin.com/projects/simplemodal/
+* http://code.google.com/p/simplemodal/
+*
+* Copyright (c) 2008 Eric Martin - http://ericmmartin.com
+*
+* Licensed under the MIT license:
+*   http://www.opensource.org/licenses/mit-license.php
+*
+* Revision: $Id: basic_ie.css 162 2008-12-01 23:36:58Z emartin24 $
+*
+*/
+/* IE 6 hacks*/ #simplemodal-container a.modalCloseImg {
+	background: none;
+	right: -14px;
+	width: 22px;
+	height: 26px;
+	filter: progid:
+DXImageTransform.Microsoft.AlphaImageLoader(src='img/basic/x.png',sizingMethod='scale');
+}
+
+/* needed for use of OCW content in modal dialog*/
+#licenseIcons {
+}
+ #license-setter table td {
+	vertical-align: top;
+}
+ #license-setter table td.icon {
+	vertical-align: middle !important;
+	padding: .3em;
+	width: 90px;
+	height: auto;
+}
+ #license-setter table td.icon input {
+	display: none;
+}
+ #license-setter table td.label {
+	vertical-align: middle !important;
+	width: 18em;
+}
+ #license-setter table td#helpercont {
+	vertical-align: top;
+	padding: 0;
+	width: auto;
+	font-size: 11px;
+}
+ #helper p {
+	margin: 0;
+}
+ #helper h4 {
+	margin: 5px 0;
+}
+ .choices {
+	list-style: none;
+	margin: 0;
+}
+ .helpercont, #helpmelink {
+}
+ .helpercont {
+	padding: 5px !important;
+	background: #eee;
+}
+ #helpmelink {
+	text-align: right;
+	padding-right: 2em !important;
+}
+ .selectedLic {
+	background: #ccc;
+}
+
