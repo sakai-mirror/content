@@ -34,13 +34,8 @@ ul.makeMenu li {
 </style>
 <![endif]-->
 
-## use <script /> below if there  is no OCW integration (standard library/js/jquery is not 
-## compatible with modal 
-
-## <script type ="text/javascript" src ="/library/js/jquery.js">
-## </script>
-
-## begin OCW integration script and css loads for modal dialog 
+## begin OCW integration script and css loads for modal dialog
+#if($usingCreativeCommons) 
 ## omit based on server setting)
 	<script type ="text/javascript" src ="/sakai-content-tool/modal/js/jquery.js">
 	<!-- // -->
@@ -57,6 +52,13 @@ ul.makeMenu li {
 	<link type='text/css' href='/sakai-content-tool/modal/css/modal.css' rel='stylesheet' media='screen' />
 
 ## end OCW integration script and css loads for modal dialog 
+#else
+
+## use <script /> below if there  is no OCW integration (standard library/js/jquery is not 
+## compatible with modal 
+<script type ="text/javascript" src ="/library/js/jquery.js">
+</script>
+#end
 
 <script  type ="text/javascript"> 
 $(document).ready(function() {
@@ -151,12 +153,15 @@ $(document).ready(function() {
 								
 								#set ($itemsOnLine = $itemsOnLine + 1)
 							#end
-## begin OCW integration block - input to launch modal picker after checkbox selection
-								|
+							## begin OCW integration block - input to launch modal picker after checkbox selection
+							#if($usingCreativeCommons)
+								#if($itemsOnLine > 0)|#end
 								<input id="set-license-button" type="button" value="Set license"
 									class="enabled"
 									alt="$!action.id" />
-## end OCW integration block - input to launch modal picker after checkbox selection
+								#set ($itemsOnLine = $itemsOnLine + 1)
+							#end
+							## end OCW integration block - input to launch modal picker after checkbox selection
 						</span>
 					#end
 				</div>
@@ -175,190 +180,191 @@ $(document).ready(function() {
 				#end
 			</div>	
 		#end
-## begin OCW integration block - modal dialog content framework
-		<div id="basicModalContent" style="display:none" class="specialLink">
-			<div id="license-setter">
-				<h3>Set licenses</h3>
-				<table border="0" cellpadding="0" cellspacing="0">
-					<tr>
-						<td style="padding:0 5px;text-align:right" id="helpmelink">
-							<span id="holder" />
-							<a href="#">Help me decide</a>
-						</td>
-						<td rowspan="7" id="helpercont">
-							<div id="licenseInfo" style="display:none">
-								<ul>
-									<li id="help-attr">Explanation: Attribution</li>
-									<li id="help-attr_share">Explanation: Attribution Share Alike</li>
-									<li id="help-attr_noder">Explanation: Attribution No Derivatives</li>	
-									<li id="help-attr_nocom">Explanation: Attribution Non-Commercial</li>
-									<li id="help-attr_nocom_share">Explanation: Attribution Non-Commercial Share Alike</li>
-									<li id="help-attr_nocom_noder">Explanation: Attribution Non-Commercial No Derivatives</li>
-								</ul>
-							</div>
-							<div id="helper" style="display:none">
-								<h4>Allow commercial uses of your work?</h4>
-								<ul class="choices">
-									<li>
-										<input checked="checked" name="field_commercial" value="y" id="comm_y" type="radio" />
-										<label for="comm_y">
+		## begin OCW integration block - modal dialog content framework
+		#if($usingCreativeCommons) 
+			<div id="basicModalContent" style="display:none" class="specialLink">
+				<div id="license-setter">
+					<h3>Set licenses</h3>
+					<table border="0" cellpadding="0" cellspacing="0">
+						<tr>
+							<td style="padding:0 5px;text-align:right" id="helpmelink">
+								<span id="holder" />
+								<a href="#">Help me decide</a>
+							</td>
+							<td rowspan="7" id="helpercont">
+								<div id="licenseInfo" style="display:none">
+									<ul>
+										<li id="help-attr">Explanation: Attribution</li>
+										<li id="help-attr_share">Explanation: Attribution Share Alike</li>
+										<li id="help-attr_noder">Explanation: Attribution No Derivatives</li>	
+										<li id="help-attr_nocom">Explanation: Attribution Non-Commercial</li>
+										<li id="help-attr_nocom_share">Explanation: Attribution Non-Commercial Share Alike</li>
+										<li id="help-attr_nocom_noder">Explanation: Attribution Non-Commercial No Derivatives</li>
+									</ul>
+								</div>
+								<div id="helper" style="display:none">
+									<h4>Allow commercial uses of your work?</h4>
+									<ul class="choices">
+										<li>
+											<input checked="checked" name="field_commercial" value="y" id="comm_y" type="radio" />
+											<label for="comm_y">
 												Yes
 											</label>
-									</li>
-									<li>
-										<input name="field_commercial" value="n" id="comm_n" type="radio" />
-										<label for="comm_n">
+										</li>
+										<li>
+											<input name="field_commercial" value="n" id="comm_n" type="radio" />
+											<label for="comm_n">
 												No
 											</label>
-									</li>
-								</ul>
-								<h4>Allow modifications of your work?</h4>
-								<ul class="choices">
-									<li>
-										<input checked="checked" name="field_derivatives" value="der-y" id="der_y" type="radio" />
-										<label for="der_y">
+										</li>
+									</ul>
+									<h4>Allow modifications of your work?</h4>
+									<ul class="choices">
+										<li>
+											<input checked="checked" name="field_derivatives" value="der-y" id="der_y" type="radio" />
+											<label for="der_y">
 												Yes
 											</label>
-									</li>
-									<li>
-										<input name="field_derivatives" value="sa" id="der_s" type="radio" />
-										<label for="der_s">
-											<span>Yes, as long as others share alike</span>
-										</label>
-									</li>
-									<li>
-										<input name="field_derivatives" value="n" id="der_n" type="radio" />
-										<label for="der_n">
+										</li>
+										<li>
+											<input name="field_derivatives" value="sa" id="der_s" type="radio" />
+											<label for="der_s">
+												<span>Yes, as long as others share alike</span>
+											</label>
+										</li>
+										<li>
+											<input name="field_derivatives" value="n" id="der_n" type="radio" />
+											<label for="der_n">
 												No
 											</label>
-									</li>
-								</ul>
-								<h4>Jurisdiction of your license</h4>
-								<select name="field_jurisdiction">
-									<option value="">Unported</option>
-									<option value="ar">Argentina</option>
-									<option value="at">Austria</option>
-									<option value="au">Australia</option>
-									<option value="be">Belgium</option>
-									<option value="bg">Bulgaria</option>
-									<option value="br">Brazil</option>
-									<option value="ca">Canada</option>
-									<option value="ch">Switzerland</option>
-									<option value="cl">Chile</option>
-									<option value="cn">China Mainland</option>
-									<option value="co">Colombia</option>
-									<option value="de">Germany</option>
-									<option value="dk">Denmark</option>
-									<option value="ec">Ecuador</option>
-									<option value="es">Spain</option>
-									<option value="fi">Finland</option>
-									<option value="fr">France</option>
-									<option value="gr">Greece</option>
-									<option value="gt">Guatemala</option>
-									<option value="hk">Hong Kong</option>
-									<option value="hr">Croatia</option>
-									<option value="hu">Hungary</option>
-									<option value="il">Israel</option>
-									<option value="in">India</option>
-									<option value="it">Italy</option>
-									<option value="jp">Japan</option>
-									<option value="kr">Korea</option>
-									<option value="lu">Luxembourg</option>
-									<option value="mk">Macedonia</option>
-									<option value="mt">Malta</option>
-									<option value="mx">Mexico</option>
-									<option value="my">Malaysia</option>
-									<option value="nl">Netherlands</option>
-									<option value="no">Norway</option>
-									<option value="nz">New Zealand</option>
-									<option value="pe">Peru</option>
-									<option value="ph">Philippines</option>
-									<option value="pl">Poland</option>
-									<option value="pr">Puerto Rico</option>
-									<option value="pt">Portugal</option>
-									<option value="ro">Romania</option>
-									<option value="rs">Serbia</option>
-									<option value="scotland">UK: Scotland</option>
-									<option value="se">Sweden</option>
-									<option value="sg">Singapore</option>
-									<option value="si">Slovenia</option>
-									<option value="tw">Taiwan</option>
-									<option value="uk">UK: England &amp; Wales</option>
-									<option value="us" selected="selected">United States</option>
-									<option value="za">South Africa</option>
-								</select>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<table id="licenseIcons" border="0" cellpadding="0" cellspacing="0">
-								<tr id="attr">
-									<td class="icon">
-										<img src="/sakai-content-tool/images/attr.png" />
-										<input type="radio" name="license" id="attr-s" />
-									</td>
-									<td class="label">
-										<label for="xxattr-s">Attribution</label>
-									</td>
-								</tr>
-								<tr id="attr_share">
-									<td class="icon">
-										<img src="/sakai-content-tool/images/attr_share.png" />
-										<input type="radio" name="license" id="attr_share-s" />
-									</td>
-									<td class="label">
-										<label for="xxattr-share-s">Attribution Share Alike</label>
-									</td>
-								</tr>
+										</li>
+									</ul>
+									<h4>Jurisdiction of your license</h4>
+									<select name="field_jurisdiction">
+										<option value="">Unported</option>
+										<option value="ar">Argentina</option>
+										<option value="at">Austria</option>
+										<option value="au">Australia</option>
+										<option value="be">Belgium</option>
+										<option value="bg">Bulgaria</option>
+										<option value="br">Brazil</option>
+										<option value="ca">Canada</option>
+										<option value="ch">Switzerland</option>
+										<option value="cl">Chile</option>
+										<option value="cn">China Mainland</option>
+										<option value="co">Colombia</option>
+										<option value="de">Germany</option>
+										<option value="dk">Denmark</option>
+										<option value="ec">Ecuador</option>
+										<option value="es">Spain</option>
+										<option value="fi">Finland</option>
+										<option value="fr">France</option>
+										<option value="gr">Greece</option>
+										<option value="gt">Guatemala</option>
+										<option value="hk">Hong Kong</option>
+										<option value="hr">Croatia</option>
+										<option value="hu">Hungary</option>
+										<option value="il">Israel</option>
+										<option value="in">India</option>
+										<option value="it">Italy</option>
+										<option value="jp">Japan</option>
+										<option value="kr">Korea</option>
+										<option value="lu">Luxembourg</option>
+										<option value="mk">Macedonia</option>
+										<option value="mt">Malta</option>
+										<option value="mx">Mexico</option>
+										<option value="my">Malaysia</option>
+										<option value="nl">Netherlands</option>
+										<option value="no">Norway</option>
+										<option value="nz">New Zealand</option>
+										<option value="pe">Peru</option>
+										<option value="ph">Philippines</option>
+										<option value="pl">Poland</option>
+										<option value="pr">Puerto Rico</option>
+										<option value="pt">Portugal</option>
+										<option value="ro">Romania</option>
+										<option value="rs">Serbia</option>
+										<option value="scotland">UK: Scotland</option>
+										<option value="se">Sweden</option>
+										<option value="sg">Singapore</option>
+										<option value="si">Slovenia</option>
+										<option value="tw">Taiwan</option>
+										<option value="uk">UK: England &amp; Wales</option>
+										<option value="us" selected="selected">United States</option>
+										<option value="za">South Africa</option>
+									</select>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<table id="licenseIcons" border="0" cellpadding="0" cellspacing="0">
+									<tr id="attr">
+										<td class="icon">
+											<img src="/sakai-content-tool/images/attr.png" />
+											<input type="radio" name="license" id="attr-s" />
+										</td>
+										<td class="label">
+											<label for="xxattr-s">Attribution</label>
+										</td>
+									</tr>
+									<tr id="attr_share">
+										<td class="icon">
+											<img src="/sakai-content-tool/images/attr_share.png" />
+											<input type="radio" name="license" id="attr_share-s" />
+										</td>
+										<td class="label">
+											<label for="xxattr-share-s">Attribution Share Alike</label>
+										</td>
+									</tr>
 									<tr id="attr_noder">	
-											<td class="icon">	
-												<img src="/sakai-content-tool/images/attr_noder.png" />	
-												<input type="radio" name="license" id="attr_noder-s" />	
-											</td>	
-											<td class="label">	
-												<label for="xxattr-noder-s">Attribution No Derivatives</label>	
-											</td>	
-										</tr>	
-										<tr id="attr_nocom">	
-											<td class="icon">	
-												<img src="/sakai-content-tool/images/attr_nocom.png" />	
-												<input type="radio" name="license" id="attr_nocom-s" />	
-											</td>	
-											<td class="label">	
-												<label for="xxattr-nocom-s">Attribution Non-Commercial</label>
-											</td>	
-										</tr>	
-										<tr id="attr_nocom_share">	
-											<td class="icon">	
-												<img src="/sakai-content-tool/images/attr_nocom_share.png" />	
-												<input type="radio" name="license" id="attr_nocom_share-s" />	
-											</td>	
-											<td class="label">	
-												<label for="xxattr-nocom-share-s">Attribution Non-Commercial Share Alike</label>
-											</td>	
-										</tr>	
-										<tr id="attr_nocom_noder">	
-											<td class="icon">	
-												<img src="/sakai-content-tool/images/attr_nocom_noder.png" />	
-												<input type="radio" name="license" id="attr_nocom_noder-s" />	
-											</td>	
-											<td class="label">	
-												<label for="xxattr-nocom-noder-s">Attribution Non-Commercial No Derivatives</label>
-											</td>	
-										</tr>	
-									</table>	
-								</td>	
-							</tr>	
-						</table>	
-					</div>	
-					<p>	
-						<input type="button" value="Done" id="setLicense" class="simplemodal-close" disabled=s/>	
-						<input type="button" value="Cancel"  class="simplemodal-close"/>	
-					</p>	
-				</div>
-				License pick: <span id="licenseHolder" class="highlight"></span>	## debug - value set in modal dialog	
-
+										<td class="icon">	
+											<img src="/sakai-content-tool/images/attr_noder.png" />	
+											<input type="radio" name="license" id="attr_noder-s" />	
+										</td>	
+										<td class="label">	
+											<label for="xxattr-noder-s">Attribution No Derivatives</label>	
+										</td>	
+									</tr>	
+									<tr id="attr_nocom">	
+										<td class="icon">	
+											<img src="/sakai-content-tool/images/attr_nocom.png" />	
+											<input type="radio" name="license" id="attr_nocom-s" />	
+										</td>	
+										<td class="label">	
+											<label for="xxattr-nocom-s">Attribution Non-Commercial</label>
+										</td>	
+									</tr>	
+									<tr id="attr_nocom_share">	
+										<td class="icon">	
+											<img src="/sakai-content-tool/images/attr_nocom_share.png" />	
+											<input type="radio" name="license" id="attr_nocom_share-s" />	
+										</td>	
+										<td class="label">	
+											<label for="xxattr-nocom-share-s">Attribution Non-Commercial Share Alike</label>
+										</td>	
+									</tr>	
+									<tr id="attr_nocom_noder">	
+										<td class="icon">	
+											<img src="/sakai-content-tool/images/attr_nocom_noder.png" />	
+											<input type="radio" name="license" id="attr_nocom_noder-s" />	
+										</td>	
+										<td class="label">	
+											<label for="xxattr-nocom-noder-s">Attribution Non-Commercial No Derivatives</label>
+										</td>	
+									</tr>	
+								</table>	
+							</td>	
+						</tr>	
+					</table>	
+				</div>	
+				<p>	
+					<input type="button" value="Done" id="setLicense" class="simplemodal-close" disabled=s/>	
+					<input type="button" value="Cancel"  class="simplemodal-close"/>	
+				</p>	
+			</div>
+			License pick: <span id="licenseHolder" class="highlight"></span>	## debug - value set in modal dialog	
+		#end
 		#set ($actionCount=2000)
 		#set ($actionCount2=1000)
 		######################  Heirarchical list of resource folders/items  ##############
@@ -613,13 +619,15 @@ $(document).ready(function() {
 											</li>
 										#end
 										
-## begin OCW menu item										
-										#if(!$item.isCollection())							
-											<li>
-												<a href="#" class="setLicenseMenu">Set License</a>
-											</li>
-										#end 			
-## end OCW menu item
+										## begin OCW menu item	
+										#if($usingCreativeCommons) 								
+											#if(!$item.isCollection())							
+												<li>
+													<a href="#" class="setLicenseMenu">Set License</a>
+												</li>
+											#end
+										#end
+										## end OCW menu item
 										<li style="height:1px;width:1px;display:inline;">
 											<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0"  class="skip">$tlang.getString("button.endact")</a>
 										</li>
@@ -878,14 +886,16 @@ $(document).ready(function() {
 														</a>
 													</li>
 												#end
-## begin OCW menu item												
-												#if(!$item.isCollection())							
-													<li>
-														<a href="#" class="setLicenseMenu">Set License</a>
-													</li>
+												## begin OCW menu item	
+												#if($usingCreativeCommons) 											
+													#if(!$item.isCollection())							
+														<li>
+															<a href="#" class="setLicenseMenu">Set License</a>
+														</li>
+													#end
 												#end 			
-## end OCW menu item
-										<li style="height:1px;width:1px;display:inline;">
+												## end OCW menu item
+												<li style="height:1px;width:1px;display:inline;">
 													<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0" title="Actions menu end" class="skip">tlang.getString("button.endact")</a>
 												</li>
 											</ul>

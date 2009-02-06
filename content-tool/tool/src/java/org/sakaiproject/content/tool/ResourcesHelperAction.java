@@ -547,6 +547,12 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		String upload_limit = rb.getFormattedMessage("upload.limit", new String[]{ max_file_size_mb });
 		context.put("upload_limit", upload_limit);
 		
+		String usingCreativeCommons = (String) state.getAttribute(STATE_USING_CREATIVE_COMMONS);
+		if(usingCreativeCommons != null && usingCreativeCommons.equals(Boolean.TRUE.toString()))
+		{
+			context.put("usingCreativeCommons", Boolean.TRUE);
+		}
+		
 //		int max_bytes = 1024 * 1024;
 //		try
 //		{
@@ -1337,10 +1343,12 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			if( usingCreativeCommons != null && usingCreativeCommons.equalsIgnoreCase(Boolean.TRUE.toString()))
 			{
 				state.setAttribute(STATE_USING_CREATIVE_COMMONS, Boolean.TRUE.toString());
+				ListItem.setUsingCreativeCommons(true);
 			}
 			else
 			{
 				state.setAttribute(STATE_USING_CREATIVE_COMMONS, Boolean.FALSE.toString());
+				ListItem.setUsingCreativeCommons(false);
 			}
 		}
 

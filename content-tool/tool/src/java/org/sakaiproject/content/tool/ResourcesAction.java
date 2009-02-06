@@ -573,10 +573,13 @@ public class ResourcesAction
 	private static final String NULL_STRING = "";
 	
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
-		protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
+	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
 
-protected static final String PARAM_PAGESIZE = "collections_per_page";
-	
+	protected static final String PARAM_PAGESIZE = "collections_per_page";
+
+	/** The name of a property defining a Creative Commons License for a resource */
+	public static final String PROP_CC_LICENSE = "http://creativecommons.org/ns#License";
+
 	/** string used to represent "public" access mode in UI elements */
 	protected static final String PUBLIC_ACCESS = "public";
 
@@ -4298,6 +4301,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			//context.put("dropboxMode", Boolean.FALSE);
 		}
 		
+		boolean usingCreativeCommons = state.getAttribute(STATE_USING_CREATIVE_COMMONS) != null && state.getAttribute(STATE_USING_CREATIVE_COMMONS).equals(Boolean.TRUE.toString());		
+		if(usingCreativeCommons)
+		{
+			context.put("usingCreativeCommons", Boolean.TRUE);
+		}
+		
 		// make sure the channedId is set
 		String collectionId = (String) state.getAttribute (STATE_COLLECTION_ID);
 		context.put ("collectionId", collectionId);
@@ -7676,10 +7685,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			if( usingCreativeCommons != null && usingCreativeCommons.equalsIgnoreCase(Boolean.TRUE.toString()))
 			{
 				state.setAttribute(STATE_USING_CREATIVE_COMMONS, Boolean.TRUE.toString());
+				ListItem.setUsingCreativeCommons(true);
 			}
 			else
 			{
 				state.setAttribute(STATE_USING_CREATIVE_COMMONS, Boolean.FALSE.toString());
+				ListItem.setUsingCreativeCommons(false);
 			}
 		}
 

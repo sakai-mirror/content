@@ -116,6 +116,24 @@ public class ListItem
 	
 	/** A long representing the number of milliseconds in one week.  Used for date calculations */
 	public static final long ONE_WEEK = 7L * ONE_DAY;
+	
+	protected static boolean usingCreativeCommons = false;
+
+	/**
+	 * @return the usingCreativeCommons
+	 */
+	public static boolean isUsingCreativeCommons() 
+	{
+		return usingCreativeCommons;
+	}
+
+	/**
+	 * @param usingCreativeCommons the usingCreativeCommons to set
+	 */
+	public static void setUsingCreativeCommons(boolean usingCreativeCommons) 
+	{
+		ListItem.usingCreativeCommons = usingCreativeCommons;
+	}
 
 	/** 
 	 ** Comparator for sorting Group objects
@@ -358,6 +376,7 @@ public class ListItem
 	protected String modifiedBy;
 	protected String modifiedTime;
 	protected int depth;
+	protected String ccLicense;
 
 	protected String chhmountpoint; // Content Hosting Handler bean name
 
@@ -729,6 +748,12 @@ public class ListItem
 			catch (EntityPropertyTypeException e) 
 			{
 				this.copyrightAlert = false;
+			}
+			
+			if(ListItem.isUsingCreativeCommons())
+			{
+				this.ccLicense = props.getProperty(ResourcesAction.PROP_CC_LICENSE);
+				logger.info(this + "set(" + entity.getId() + ") ccLicense == " + this.ccLicense);
 			}
 		}
 		
@@ -1437,6 +1462,10 @@ public class ListItem
 			
 			boolean copyrightAlert = params.getBoolean("copyrightAlert" + index);
 			this.copyrightAlert = copyrightAlert;
+		}
+		if(ListItem.isUsingCreativeCommons())
+		{
+			this.ccLicense = params.getString("licenseVal" + index);
 		}
 	}
 
@@ -2910,7 +2939,17 @@ public class ListItem
 		{
 			props.removeProperty (ResourceProperties.PROP_COPYRIGHT_ALERT);
 		}
-		
+		if(ListItem.isUsingCreativeCommons())
+		{
+			if(this.ccLicense == null || this.ccLicense.trim().equals(""))
+			{
+				props.removeProperty(ResourcesAction.PROP_CC_LICENSE);
+			}
+			else
+			{
+				props.addProperty(ResourcesAction.PROP_CC_LICENSE,this.ccLicense);
+			}
+		}
 	}
 
 	protected void setAccessOnEntity(GroupAwareEdit edit) 
@@ -3701,6 +3740,22 @@ public class ListItem
 	public void setCourseSite(boolean isCourseSite) 
 	{
 		this.isCourseSite = isCourseSite;
+	}
+
+	/**
+	 * @return the ccLicense
+	 */
+	public String getCcLicense() 
+	{
+		return ccLicense;
+	}
+
+	/**
+	 * @param ccLicense the ccLicense to set
+	 */
+	public void setCcLicense(String ccLicense) 
+	{
+		this.ccLicense = ccLicense;
 	}
 	
 }
