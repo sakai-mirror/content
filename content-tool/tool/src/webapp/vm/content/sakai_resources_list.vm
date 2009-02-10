@@ -553,6 +553,11 @@ $(document).ready(function() {
 									&#169;
 								#end
 							#end
+							#if($item.hasCcLicense())
+								<a href="$item.ccLicenseUrl" target="_blank" title="$item.ccLicenseDescription">
+									<img src="/sakai-content-tool/images/cc.gif" />
+								</a>
+							#end
 						</h$headerDepth>	
 					</td>
 					<td headers="actions1"  style="white-space:nowrap;vertical-align:middle"  class="attach">
@@ -823,6 +828,9 @@ $(document).ready(function() {
 										#if ($item.hasCopyrightAlert())
 											&#169;
 										#end
+									#end
+									#if($item.hasCcLicense())
+										<a href="$item.ccLicenseUrl" target="_blank" title="$item.ccLicenseDescription">CC</a>
 									#end
 								</h$headerDepth>	
 							</td>

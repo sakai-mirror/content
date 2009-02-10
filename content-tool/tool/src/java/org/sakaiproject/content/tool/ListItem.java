@@ -3758,5 +3758,23 @@ public class ListItem
 		this.ccLicense = ccLicense;
 	}
 	
+	/**
+	 * @return true if this item has a Creative Commons license
+	 */
+	public boolean hasCcLicense()
+	{
+		return ListItem.isUsingCreativeCommons() && this.ccLicense != null && ! this.ccLicense.trim().equals("");
+	}
+	
+	public String getCcLicenseUrl()
+	{
+		return "http://creativecommons.org/licenses/";
+	}
+	
+	public String getCcLicenseDescription()
+	{
+		return "You must attribute the work in the manner specified by the author or licensor (but not in any way that suggests that they endorse you or your use of the work).";
+	}
+	
 }
 
