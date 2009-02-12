@@ -26,7 +26,7 @@ body {
 
 /* Container */
 #simplemodal-container {
-	height: 370px;
+	height: 400px;
 	width: 600px;
 	background-color: #fff;
 	border: 3px solid #ccc;
@@ -92,14 +92,25 @@ body {
 #helper p {
 	margin: 0;
 }
+.choices li {
+	border:1px solid #ffd;
+	vertical-align:middle;
+	padding:0
+}
+.choices li.highlight {
+	border:1px solid #eee;
+	background:#fff;
+	font-weight:bold;
+}
 
-#helper h4 {
-	margin: 5px 0;
+.choices h4 {
+	margin: 3px 0;
 }
 
 .choices {
 	list-style: none;
 	margin: 0;
+	padding:0 1em
 }
 
 .helpercont, #helpmelink{
@@ -131,6 +142,7 @@ body {
 }
 
 #licenseInfo ul {
-	padding:5px;margin:2em 0 0 0;list-style:none;outline:1px solid #ccc;
+	background:#fff;
+	padding:5px;margin:0;list-style:none;outline:1px solid #ccc;
 	width:20em
 }
