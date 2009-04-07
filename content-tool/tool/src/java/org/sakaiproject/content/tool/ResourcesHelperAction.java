@@ -168,6 +168,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
+
 		//Reference reference = (Reference) toolSession.getAttribute(ResourceToolAction.COLLECTION_REFERENCE);
 		String typeId = pipe.getAction().getTypeId();
 
@@ -272,6 +274,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		{
 			return null;
 		}
+		
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
 
 		String actionId = pipe.getAction().getId();
 		
@@ -321,6 +325,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
+
 		List<ResourceToolActionPipe> pipes = pipe.getPipes();
 		
 		Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
@@ -375,6 +381,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
+
 		List<ResourceToolActionPipe> pipes = pipe.getPipes();
 
 		Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
@@ -426,7 +434,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
-		
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
+
 		Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 		if(preventPublicDisplay == null)
 		{
@@ -453,6 +462,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
 
 		//Reference reference = (Reference) toolSession.getAttribute(ResourceToolAction.COLLECTION_REFERENCE);
 		String typeId = pipe.getAction().getTypeId();
@@ -537,6 +548,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		
+		context.put(ResourcesAction.PIPE_INIT_ID, pipe.getInitializationId());
+
 		List<ResourceToolActionPipe> pipes = pipe.getPipes();
 		
 		Time defaultRetractDate = (Time) state.getAttribute(STATE_DEFAULT_RETRACT_TIME);
@@ -599,11 +612,27 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		//toolSession.removeAttribute(tool.getId() + Tool.HELPER_DONE_URL);
 		
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
-		pipe.setActionCanceled(true);
-		pipe.setErrorEncountered(false);
-		pipe.setActionCompleted(true);
 
-		toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+		if(pipe != null)
+		{
+			String pipe_init_id = pipe.getInitializationId();
+			String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+			if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+			{
+				pipe.setErrorEncountered(true);
+				pipe.setActionCanceled(false);
+			}
+			else
+			{
+				pipe.setErrorEncountered(false);
+				pipe.setActionCanceled(true);
+			}
+			
+			pipe.setActionCompleted(false);
+	
+			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+		
+		}
 		
 		
 	}
@@ -626,6 +655,23 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 //		toolSession.removeAttribute(tool.getId() + Tool.HELPER_DONE_URL);
 
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			return;
+		}
+		
+		String pipe_init_id = pipe.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+		
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			pipe.setErrorMessage(rb.getString("alert.try-again"));
+			pipe.setActionCanceled(false);
+			pipe.setErrorEncountered(true);
+			pipe.setActionCompleted(false);
+			return;
+		}
 		
 		String resourceType = pipe.getAction().getTypeId();
 		String mimetype = pipe.getMimeType();
@@ -716,8 +762,25 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		
 		MultiFileUploadPipe pipe = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			return;
+		}
 		
-		String resourceType = pipe.getAction().getTypeId();
+		String pipe_init_id = pipe.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+		
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			pipe.setErrorMessage(rb.getString("alert.try-again"));
+			pipe.setActionCanceled(false);
+			pipe.setErrorEncountered(true);
+			pipe.setActionCompleted(false);
+			return;
+		}
+		
+	String resourceType = pipe.getAction().getTypeId();
 		
 		int count = params.getInt("fileCount");
 		pipe.setFileCount(count);
@@ -817,8 +880,24 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			return;
+		}
 		
+		String pipe_init_id = pipe.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
 			
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			pipe.setErrorMessage(rb.getString("alert.try-again"));
+			pipe.setActionCanceled(false);
+			pipe.setErrorEncountered(true);
+			pipe.setActionCompleted(false);
+			return;
+		}
+		
 		FileItem fileitem = null;
 		try
 		{
@@ -934,6 +1013,23 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(mfp == null)
+		{
+			return;
+		}
+		
+		String pipe_init_id = mfp.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+	
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			mfp.setErrorMessage(rb.getString("alert.try-again"));
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(true);
+			mfp.setActionCompleted(false);
+			return;
+		}
 		
 		int count = params.getInt("fileCount");
 		mfp.setFileCount(count);
@@ -1093,6 +1189,24 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(mfp == null)
+		{
+			return;
+		}
+		
+		String pipe_init_id = mfp.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+		
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			mfp.setErrorMessage(rb.getString("alert.try-again"));
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(true);
+			mfp.setActionCompleted(false);
+			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+			return;
+		}
 		
 		int count = params.getInt("fileCount");
 		mfp.setFileCount(count);

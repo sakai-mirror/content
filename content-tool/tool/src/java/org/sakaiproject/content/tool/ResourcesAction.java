@@ -128,6 +128,8 @@ import org.w3c.dom.Element;
 public class ResourcesAction 
 	extends PagedResourceHelperAction // VelocityPortletPaneledAction
 {
+	public static final String PIPE_INIT_ID = "pipe-init-id";
+
 	/**
 	 * Action
 	 *
@@ -1750,7 +1752,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
+					addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
 					logger.debug("OverQuotaException " + e);
 					try
 					{
@@ -1763,7 +1765,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
+					addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
 					logger.debug("ServerOverloadException " + e);
 					try
 					{
@@ -4034,6 +4036,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		String template = "content/sakai_resources_cwiz_finish";
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		
 		if(pipe == null)
 		{
 			// go back to list view
@@ -4041,14 +4044,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		else if(pipe.isActionCanceled())
 		{
 			// go back to list view
+			state.setAttribute(STATE_MODE, MODE_LIST);
+			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 		}
 		else if(pipe.isErrorEncountered())
 		{
-			// report the error?
-			// go back to list view
+			String msg = pipe.getErrorMessage();
+			if(msg == null || msg.trim().equals(""))
+			{
+				msg = rb.getString("alert.unknown");
+			}
+			addAlert(state, msg);
+			state.setAttribute(STATE_MODE, MODE_LIST);
+			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 		}
 		else
 		{
+			context.put(PIPE_INIT_ID, pipe.getInitializationId());
+			
 			// complete the create wizard
 			String defaultCopyrightStatus = (String) state.getAttribute(STATE_DEFAULT_COPYRIGHT);
 			if(defaultCopyrightStatus == null || defaultCopyrightStatus.trim().equals(""))
@@ -4669,6 +4682,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		if(pipe != null)
 		{
+			context.put(PIPE_INIT_ID, pipe.getInitializationId());
 			if(pipe.isActionCanceled())
 			{
 				state.setAttribute(STATE_MODE, MODE_LIST);
@@ -4677,10 +4691,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			else if(pipe.isErrorEncountered())
 			{
 				String msg = pipe.getErrorMessage();
-				if(msg != null && ! msg.trim().equals(""))
+				if(msg == null || msg.trim().equals(""))
 				{
-					addAlert(state, msg);
+					msg = rb.getString("alert.unknown");
 				}
+				addAlert(state, msg);
 				state.setAttribute(STATE_MODE, MODE_LIST);
 				toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			}
@@ -4694,6 +4709,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			toolSession.removeAttribute(ResourceToolAction.DONE);
 		}
+		
+		checkMessageList(state);
 		
 		String template = null;
 		
@@ -5414,6 +5431,23 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			return;
+		}
+		
+		String pipe_init_id = pipe.getInitializationId();
+		String response_init_id = params.getString(PIPE_INIT_ID);
+
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			pipe.setErrorMessage(rb.getString("alert.try-again"));
+			pipe.setActionCanceled(false);
+			pipe.setErrorEncountered(true);
+			pipe.setActionCompleted(false);
+			return;
+		}
 		
 		if(user_action == null)
 		{
@@ -5569,7 +5603,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 					catch(OverQuotaException e)
 					{
-						addAlert(trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
+						addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
 						logger.debug("OverQuotaException " + e);
 						try
 						{
@@ -5582,7 +5616,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 					catch(ServerOverloadException e)
 					{
-						addAlert(trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
+						addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
 						logger.debug("ServerOverloadException " + e);
 						try
 						{
@@ -5616,12 +5650,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			} 
 			catch (ServerOverloadException e) 
 			{
-				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 				logger.warn("ServerOverloadException" + e);
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.overquota", new Object[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.overquota", new Object[]{name}));
 				logger.warn("OverQuotaException " + e);
 			}
             catch (IdUniquenessException e)
@@ -7102,7 +7136,18 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void finishAction(SessionState state, ToolSession toolSession, ResourceToolActionPipe pipe)
 	{
+		if(pipe.isErrorEncountered())
+		{
+			String msg = pipe.getErrorMessage();
+			if(msg == null || msg.trim().equals(""))
+			{
+				msg = rb.getString("alert.unknown");
+			}
+			addAlert(state, msg);
+		}
+		
 		ResourceToolAction action = pipe.getAction();
+
 		// use ActionType for this 
 		switch(action.getActionType())
 		{
@@ -7148,31 +7193,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			break;
 		case REVISE_CONTENT:
 			reviseContent(pipe);
-			if(pipe.isErrorEncountered())
-			{
-				String msg = pipe.getErrorMessage();
-				if(msg == null || msg.trim().equals(""))
-				{
-					msg = rb.getString("alert.unknown");
-				}
-				addAlert(state, msg);
-			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case REPLACE_CONTENT:
 			replaceContent(pipe);
-			if(pipe.isErrorEncountered())
-			{
-				String msg = pipe.getErrorMessage();
-				if(msg == null || msg.trim().equals(""))
-				{
-					msg = rb.getString("alert.unknown");
-				}
-				addAlert(state, msg);
-				toolSession.removeAttribute(ResourceToolAction.DONE);
-				return;
-			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
@@ -8244,7 +8269,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+					addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{name}));
 					logger.debug("OverQuotaException " + e);
 					try
 					{
@@ -8257,7 +8282,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+					addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 					logger.debug("ServerOverloadException " + e);
 					try
 					{
@@ -8294,12 +8319,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{name}));
 				logger.warn("OverQuotaException ", e);
 			}
 			catch (ServerOverloadException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 				logger.warn("ServerOverloadException ", e);
 			}
 		}
@@ -8317,6 +8342,21 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			toolSession.setAttribute(STATE_MESSAGE_LIST, errorMessages);
 		}
 		errorMessages.add(message);
+	}
+	
+	public static void checkMessageList(SessionState state)
+	{
+		ToolSession toolSession = SessionManager.getCurrentToolSession();
+		Collection<String> errorMessages = (Collection<String>) toolSession.getAttribute(STATE_MESSAGE_LIST);
+		if(errorMessages == null)
+		{
+			return;
+		}
+		String message = "";
+		for(String msg : errorMessages)
+		{
+			addAlert(state, msg);
+		}
 	}
 	
 }	// ResourcesAction
