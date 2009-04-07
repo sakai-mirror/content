@@ -39,6 +39,7 @@ import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.ResourceToolAction.ActionType;
+import org.sakaiproject.content.util.BaseInteractionAction;
 import org.sakaiproject.content.util.BaseResourceType;
 import org.sakaiproject.content.types.FileUploadType.FileUploadAccessAction;
 import org.sakaiproject.content.types.FileUploadType.FileUploadCopyAction;
@@ -117,7 +118,7 @@ public class HtmlDocumentType extends BaseResourceType
 
 		public String initializeAction(Reference reference) 
 		{
-			return null;
+			return BaseInteractionAction.getInitializationId(reference.getReference(), this.getTypeId(), this.getId());
 		}
 	}
 	
@@ -368,7 +369,7 @@ public class HtmlDocumentType extends BaseResourceType
         
 		public String initializeAction(Reference reference) 
 		{
-			return null;
+			return BaseInteractionAction.getInitializationId(reference.getReference(), this.getTypeId(), this.getId());
 		}
 
 		public void cancelAction(Reference reference, String initializationId) 
@@ -634,7 +635,7 @@ public class HtmlDocumentType extends BaseResourceType
 
 		public String initializeAction(Reference reference) 
 		{
-			return null;
+			return BaseInteractionAction.getInitializationId(reference.getReference(), this.getTypeId(), this.getId());
 		}
 
 		public void cancelAction(Reference reference, String initializationId) 
@@ -698,7 +699,7 @@ public class HtmlDocumentType extends BaseResourceType
 
 		public String initializeAction(Reference reference) 
 		{
-			return null;
+			return BaseInteractionAction.getInitializationId(reference.getReference(), this.getTypeId(), this.getId());
 		}
 
 		public void cancelAction(Reference reference, String initializationId) 
