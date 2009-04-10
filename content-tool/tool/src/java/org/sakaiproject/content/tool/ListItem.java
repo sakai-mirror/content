@@ -3,18 +3,18 @@
  * $Id$
  ***********************************************************************************
  *
- * Copyright (c) 2007 The Sakai Foundation.
- * 
- * Licensed under the Educational Community License, Version 1.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
+ * Copyright (c) 2007, 2008, 2009 The Sakai Foundation
+ *
+ * Licensed under the Educational Community License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *      http://www.opensource.org/licenses/ecl1.php
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ *       http://www.osedu.org/licenses/ECL-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  *
  **********************************************************************************/
@@ -527,7 +527,12 @@ public class ListItem
 		this.resourceType = entity.getResourceType();
 		ResourceType typeDef = registry.getType(resourceType);
 		this.hoverText = this.name;
-		if(typeDef != null)
+		
+		if(typeDef == null)
+		{
+			
+		}
+		else
 		{
 			this.hoverText = typeDef.getLocalizedHoverText(entity);
 			this.iconLocation = typeDef.getIconLocation(entity);
@@ -543,7 +548,11 @@ public class ListItem
 		if(this.collection)
 		{
 			ContentCollection collection = (ContentCollection) entity;
-			String shortSizeStr = typeDef.getSizeLabel(entity);
+			String shortSizeStr = null;
+			if(typeDef != null)
+			{
+				shortSizeStr = typeDef.getSizeLabel(entity);
+			}
         	int collection_size = collection.getMemberCount();
 			if(shortSizeStr == null)
 			{
@@ -563,7 +572,11 @@ public class ListItem
 			}
 			setIsEmpty(collection_size < 1);
 			setSize(shortSizeStr);
-			String longSizeStr = typeDef.getLongSizeLabel(entity);
+			String longSizeStr = null;
+			if(typeDef != null)
+			{
+				longSizeStr = typeDef.getLongSizeLabel(entity);
+			}
 			if(longSizeStr == null)
 			{
 				longSizeStr = shortSizeStr;
@@ -616,8 +629,14 @@ public class ListItem
 			{
 				this.iconLocation = ContentTypeImageService.getContentTypeImage(this.mimetype);
 			}
-			String size = typeDef.getSizeLabel(entity);
-			String sizzle = typeDef.getLongSizeLabel(entity);
+			
+			String size = null;
+			String sizzle = null;
+			if(typeDef != null)
+			{
+				size = typeDef.getSizeLabel(entity);
+				sizzle = typeDef.getLongSizeLabel(entity);
+			}
 			if((size == null || sizzle == null) && props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
 			{
 				long size_long = 0;
