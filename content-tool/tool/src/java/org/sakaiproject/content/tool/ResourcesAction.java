@@ -8458,7 +8458,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 	}
 	
-	public static int preserveRequestState(SessionState state)
+	public static int preserveRequestState(SessionState state, String[] prefixes)
 	{
 		Map requestState = new HashMap();
 		
@@ -8471,9 +8471,13 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		List<String> attrNames = state.getAttributeNames();
 		for(String attrName : attrNames)
 		{
-			if(attrName.startsWith(PREFIX + REQUEST))
+			for(String prefix : prefixes)
 			{
-				requestState.put(attrName,state.getAttribute(attrName));
+				if(attrName.startsWith(prefix))
+				{
+					requestState.put(attrName,state.getAttribute(attrName));
+					break;
+				}
 			}
 		}
 		
@@ -8495,7 +8499,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		return requestStateId;
 	}
 	
-	public static void restoreRequestState(SessionState state, int requestStateId)
+	public static void restoreRequestState(SessionState state, String[] prefixes, int requestStateId)
 	{
 		Map requestState = (Map) state.removeAttribute(PREFIX + SYS + requestStateId);
 		logger.debug("restoreRequestState() requestStateId == " + requestStateId + "\n" + requestState);
@@ -8504,9 +8508,13 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			List<String> attrNames = state.getAttributeNames();
 			for(String attrName : attrNames)
 			{
-				if(attrName.startsWith(PREFIX + REQUEST))
+				for(String prefix : prefixes)
 				{
-					state.removeAttribute(attrName);
+					if(attrName.startsWith(prefix))
+					{
+						state.removeAttribute(attrName);
+						break;
+					}
 				}
 			}
 			
