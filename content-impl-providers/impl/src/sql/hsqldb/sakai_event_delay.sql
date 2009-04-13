@@ -1,15 +1,15 @@
------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 -- SAKAI_EVENT
------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 CREATE TABLE SAKAI_EVENT_DELAY
 (
 	EVENT_DELAY_ID INT,
 	EVENT VARCHAR (32),
-	RESOURCE VARCHAR (255),
+	REF VARCHAR (255),
 	USER_ID VARCHAR (99),
-	MODIFY VARCHAR (1),
-	PRIORITY INT,
+	EVENT_CODE VARCHAR (1),
+	PRIORITY SMALLINT,
 	PRIMARY KEY (EVENT_DELAY_ID)
 );
 
