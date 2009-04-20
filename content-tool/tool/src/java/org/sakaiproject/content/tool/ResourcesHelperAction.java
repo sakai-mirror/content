@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,6 +66,8 @@ import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.rights.api.CreativeCommonsLicense;
+import org.sakaiproject.rights.api.CreativeCommonsLicenseManager;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
@@ -87,6 +92,8 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	 
 	/** Resource bundle using current language locale */
 	private static ResourceLoader rb = new ResourceLoader("types");
+	
+	protected CreativeCommonsLicenseManager creativeCommonsManager = null;
 	
 	protected  static final String ACCESS_HTML_TEMPLATE = "resources/sakai_access_html";
 
@@ -551,6 +558,18 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		if(usingCreativeCommons != null && usingCreativeCommons.equals(Boolean.TRUE.toString()))
 		{
 			context.put("usingCreativeCommons", Boolean.TRUE);
+			
+			if(this.creativeCommonsManager == null)
+			{
+				this.creativeCommonsManager = (CreativeCommonsLicenseManager) ComponentManager.get(CreativeCommonsLicenseManager.class);
+			}
+			
+			//String version, String jurisdiction, Set<String> permits, Set<String> prohibits, Set<String> requires
+			Collection<CreativeCommonsLicense> licenses = this.creativeCommonsManager.getLicenses(CreativeCommonsLicenseManager.LATEST_VERSION, CreativeCommonsLicenseManager.DEFAULT_JURISDICTION, null, null, null);
+
+			SortedSet<CreativeCommonsLicense> licenseSet = new TreeSet<CreativeCommonsLicense>(licenses);
+			
+			context.put("creativeCommonsLicenses", licenseSet);
 		}
 		
 //		int max_bytes = 1024 * 1024;
