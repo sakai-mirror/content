@@ -106,6 +106,7 @@ import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
@@ -128,6 +129,8 @@ import org.w3c.dom.Element;
 public class ResourcesAction 
 	extends PagedResourceHelperAction // VelocityPortletPaneledAction
 {
+	public static final String PIPE_INIT_ID = "pipe-init-id";
+
 	/**
 	 * Action
 	 *
@@ -448,6 +451,8 @@ public class ResourcesAction
 	static final Log logger = LogFactory.getLog(ResourcesAction.class);
 
 	public static final String PREFIX = "resources.";
+	public static final String SYS = "sys.";
+	public static final String REQUEST = "request.";
 	
 	public static final List<ActionType> ACTIONS_ON_FOLDERS = new ArrayList<ActionType>();
 	public static final List<ActionType> ACTIONS_ON_MULTIPLE_ITEMS = new ArrayList<ActionType>();
@@ -470,19 +475,18 @@ public class ResourcesAction
 	/** copyright path -- MUST have same value as AccessServlet.COPYRIGHT_PATH */
 	public static final String COPYRIGHT_PATH = Entity.SEPARATOR + "copyright";
 
+	private static final String STATE_DEFAULT_COPYRIGHT = PREFIX + SYS + "default_copyright";
 
-	private static final String STATE_DEFAULT_COPYRIGHT = PREFIX + "default_copyright";
+	private static final String STATE_DEFAULT_COPYRIGHT_ALERT = PREFIX + SYS + "default_copyright_alert";
 
-	private static final String STATE_DEFAULT_COPYRIGHT_ALERT = PREFIX + "default_copyright_alert";
-	
 	private static final String COPYRIGHT_ALERT_URL = ServerConfigurationService.getAccessUrl() + COPYRIGHT_PATH;
 
-	private static final String STATE_COPYRIGHT_FAIRUSE_URL = PREFIX + "copyright_fairuse_url";
+	private static final String STATE_COPYRIGHT_FAIRUSE_URL = PREFIX + SYS + "copyright_fairuse_url";
 	
-	private static final String STATE_COPYRIGHT_NEW_COPYRIGHT = PREFIX + "new_copyright";
+	private static final String STATE_COPYRIGHT_NEW_COPYRIGHT = PREFIX + SYS + "new_copyright";
 	
 	/** copyright related info */
-	private static final String STATE_COPYRIGHT_TYPES = PREFIX + "copyright_types";
+	private static final String STATE_COPYRIGHT_TYPES = PREFIX + SYS + "copyright_types";
 	
 	private static final int CREATE_MAX_ITEMS = 10;
     
@@ -509,28 +513,28 @@ public class ResourcesAction
 	
 	public static final String MIME_TYPE_STRUCTOBJ = "application/x-osp";
 
-	public static final String MODE_ATTACHMENT_CONFIRM = "resources.attachment_confirm";
+	public static final String MODE_ATTACHMENT_CONFIRM = PREFIX + "attachment_confirm";
 
-	public static final String MODE_ATTACHMENT_CONFIRM_INIT = "resources.attachment_confirm_initialized";
+	public static final String MODE_ATTACHMENT_CONFIRM_INIT = PREFIX + "attachment_confirm_initialized";
 
-	public static final String MODE_ATTACHMENT_CREATE = "resources.attachment_create";
+	public static final String MODE_ATTACHMENT_CREATE = PREFIX + "attachment_create";
 
-	public static final String MODE_ATTACHMENT_CREATE_INIT = "resources.attachment_create_initialized";
+	public static final String MODE_ATTACHMENT_CREATE_INIT = PREFIX + "attachment_create_initialized";
 
-	public static final String MODE_ATTACHMENT_DONE = "resources.attachment_done";
+	public static final String MODE_ATTACHMENT_DONE = PREFIX + "attachment_done";
 
-	public static final String MODE_ATTACHMENT_EDIT_ITEM = "resources.attachment_edit_item";
+	public static final String MODE_ATTACHMENT_EDIT_ITEM = PREFIX + "attachment_edit_item";
 
-	public static final String MODE_ATTACHMENT_EDIT_ITEM_INIT = "resources.attachment_edit_item_initialized";
+	public static final String MODE_ATTACHMENT_EDIT_ITEM_INIT = PREFIX + "attachment_edit_item_initialized";
 
-	public static final String MODE_ATTACHMENT_NEW_ITEM = "resources.attachment_new_item";
+	public static final String MODE_ATTACHMENT_NEW_ITEM = PREFIX + "attachment_new_item";
 
-	public static final String MODE_ATTACHMENT_NEW_ITEM_INIT = "resources.attachment_new_item_initialized";
+	public static final String MODE_ATTACHMENT_NEW_ITEM_INIT = PREFIX + "attachment_new_item_initialized";
 
 	/** modes for attachment helper */
-	public static final String MODE_ATTACHMENT_SELECT = "resources.attachment_select";
+	public static final String MODE_ATTACHMENT_SELECT = PREFIX + "attachment_select";
 
-	public static final String MODE_ATTACHMENT_SELECT_INIT = "resources.attachment_select_initialized";
+	public static final String MODE_ATTACHMENT_SELECT_INIT = PREFIX + "attachment_select_initialized";
 
 	private static final String MODE_CREATE_WIZARD = "createWizard";
 
@@ -554,7 +558,7 @@ public class ResourcesAction
 	
 	protected static final String MODE_REVISE_METADATA = "revise_metadata";
 
-	private static final String STATE_NEW_COPYRIGHT_INPUT = PREFIX + "new_copyright_input";
+	private static final String STATE_NEW_COPYRIGHT_INPUT = PREFIX + REQUEST + "new_copyright_input";
 
 	/** The null/empty string */
 	private static final String NULL_STRING = "";
@@ -581,209 +585,209 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	/** The default value for whether to show all sites in resources tool (used if global value can't be read from server config service) */
 	private static final boolean SHOW_ALL_SITES_IN_RESOURCES = false;
 	/** The collection id being browsed. */
-	private static final String STATE_COLLECTION_ID = PREFIX + "collection_id";
+	private static final String STATE_COLLECTION_ID = PREFIX + REQUEST + "collection_id";
 	
 	
 	/** The collection id path */
-	private static final String STATE_COLLECTION_PATH = PREFIX + "collection_path";
+	private static final String STATE_COLLECTION_PATH = PREFIX + REQUEST + "collection_path";
 	
 	/** The name of the state attribute containing BrowseItems for all content collections the user has access to */
-	private static final String STATE_COLLECTION_ROOTS = PREFIX + "collection_rootie_tooties";
+	private static final String STATE_COLLECTION_ROOTS = PREFIX + REQUEST + "collection_rootie_tooties";
 	
-	public static final String STATE_COLUMN_ITEM_ID = PREFIX + "state_column_item_id";
+	public static final String STATE_COLUMN_ITEM_ID = PREFIX + REQUEST + "state_column_item_id";
 
 	/** The content hosting service in the State. */
-	private static final String STATE_CONTENT_SERVICE = PREFIX + "content_service";
+	private static final String STATE_CONTENT_SERVICE = PREFIX + SYS + "content_service";
 	
 	/** The content type image lookup service in the State. */
-	private static final String STATE_CONTENT_TYPE_IMAGE_SERVICE = PREFIX + "content_type_image_service";
+	private static final String STATE_CONTENT_TYPE_IMAGE_SERVICE = PREFIX + SYS + "content_type_image_service";
 	
 	/** The copied item ids */
-	private static final String STATE_COPIED_IDS = PREFIX + "revise_copied_ids";
+	private static final String STATE_COPIED_IDS = PREFIX + REQUEST + "revise_copied_ids";
 	
 	/** The copy flag */
-	private static final String STATE_COPY_FLAG = PREFIX + "copy_flag";
+	private static final String STATE_COPY_FLAG = PREFIX + REQUEST + "copy_flag";
 	
-	//	public static final String STATE_CREATE_TYPE = PREFIX + "create_type";
-	public static final String STATE_CREATE_COLLECTION_ID = PREFIX + "create_collection_id";
+	//	public static final String STATE_CREATE_TYPE = PREFIX + REQUEST + "create_type";
+	public static final String STATE_CREATE_COLLECTION_ID = PREFIX + REQUEST + "create_collection_id";
 
-	protected static final String STATE_CREATE_MESSAGE = PREFIX + "create_message";
+	protected static final String STATE_CREATE_MESSAGE = PREFIX + REQUEST + "create_message";
 
-	public static final String STATE_CREATE_NUMBER = PREFIX + "create_number";
+	public static final String STATE_CREATE_NUMBER = PREFIX + REQUEST + "create_number";
 
-	protected static final String STATE_CREATE_WIZARD_ACTION = PREFIX + "create_wizard_action";
+	protected static final String STATE_CREATE_WIZARD_ACTION = PREFIX + REQUEST + "create_wizard_action";
 
-	protected static final String STATE_CREATE_WIZARD_COLLECTION_ID = PREFIX + "create_wizard_collection_id";
+	protected static final String STATE_CREATE_WIZARD_COLLECTION_ID = PREFIX + REQUEST + "create_wizard_collection_id";
 
-	protected static final String STATE_CREATE_WIZARD_ITEM = PREFIX + "create_wizard_item";
+	protected static final String STATE_CREATE_WIZARD_ITEM = PREFIX + REQUEST + "create_wizard_item";
 
 	/** name of state attribute for the default retract time */
-	protected static final String STATE_DEFAULT_RETRACT_TIME = PREFIX + "default_retract_time";
+	protected static final String STATE_DEFAULT_RETRACT_TIME = PREFIX + SYS + "default_retract_time";
 
 	/** The name of the state attribute containing a list of ListItem objects corresponding to resources selected for deletion */
-	private static final String STATE_DELETE_ITEMS = PREFIX + "delete_items";
+	private static final String STATE_DELETE_ITEMS = PREFIX + REQUEST + "delete_items";
 
 	/** The name of the state attribute containing a list of ListItem objects corresponding to nonempty folders selected for deletion */
-	private static final String STATE_DELETE_ITEMS_NOT_EMPTY = PREFIX + "delete_items_not_empty";
+	private static final String STATE_DELETE_ITEMS_NOT_EMPTY = PREFIX + REQUEST + "delete_items_not_empty";
 
-	protected static final String STATE_DELETE_SET = PREFIX + "delete_set";
+	protected static final String STATE_DELETE_SET = PREFIX + REQUEST + "delete_set";
 	
-	protected static final String STATE_DROPBOX_HIGHLIGHT = PREFIX + "dropbox_highlight";
+	protected static final String STATE_DROPBOX_HIGHLIGHT = PREFIX + REQUEST + "dropbox_highlight";
 
 	/** The name of the state attribute indicating whether the hierarchical list is expanded */
-	private static final String STATE_EXPAND_ALL_FLAG = PREFIX + "expand_all_flag";
+	private static final String STATE_EXPAND_ALL_FLAG = PREFIX + REQUEST + "expand_all_flag";
 
 	/** Name of state attribute indicating number of members for a collection at which this tool should refuse to expand the collection. */
-	private static final String STATE_EXPANDABLE_FOLDER_SIZE_LIMIT = PREFIX + "expandable_folder_size_limit";
+	private static final String STATE_EXPANDABLE_FOLDER_SIZE_LIMIT = PREFIX + SYS + "expandable_folder_size_limit";
 
 	/** Name of state attribute containing a list of opened/expanded collections */
-	private static final String STATE_EXPANDED_COLLECTIONS = PREFIX + "expanded_collections";
+	private static final String STATE_EXPANDED_COLLECTIONS = PREFIX + REQUEST + "expanded_collections";
 	
-	protected static final String STATE_EXPANDED_FOLDER_SORT_MAP = PREFIX + "expanded_folder_sort_map";
+	protected static final String STATE_EXPANDED_FOLDER_SORT_MAP = PREFIX + REQUEST + "expanded_folder_sort_map";
 	
 	/** state attribute for the maximum size for file upload */
-	static final String STATE_FILE_UPLOAD_MAX_SIZE = PREFIX + "file_upload_max_size";
+	static final String STATE_FILE_UPLOAD_MAX_SIZE = PREFIX + SYS + "file_upload_max_size";
 	
 	/** The from state name */
-	private static final String STATE_FROM = PREFIX + "from";
+	private static final String STATE_FROM = PREFIX + REQUEST + "from";
 	
 	/** State attribute for where there is at least one attachment before invoking attachment tool */
-	public static final String STATE_HAS_ATTACHMENT_BEFORE = PREFIX + "has_attachment_before";
+	public static final String STATE_HAS_ATTACHMENT_BEFORE = PREFIX + REQUEST + "has_attachment_before";
 	
 	/**
 	 *  the name of the state attribute indicating that the user canceled out of the helper.  Is set only if the user canceled out of the helper. 
 	 */
-	public static final String STATE_HELPER_CANCELED_BY_USER = PREFIX + "state_attach_canceled_by_user";
+	public static final String STATE_HELPER_CANCELED_BY_USER = PREFIX + REQUEST + "state_attach_canceled_by_user";
 
-	protected static final String STATE_HIGHLIGHTED_ITEMS = PREFIX + "highlighted_items";
+	protected static final String STATE_HIGHLIGHTED_ITEMS = PREFIX + REQUEST + "highlighted_items";
 	
 	/** The display name of the "home" collection (can't go up from here.) */
-	private static final String STATE_HOME_COLLECTION_DISPLAY_NAME = PREFIX + "collection_home_display_name";
+	private static final String STATE_HOME_COLLECTION_DISPLAY_NAME = PREFIX + REQUEST + "collection_home_display_name";
 	
 	/** The id of the "home" collection (can't go up from here.) */
-	private static final String STATE_HOME_COLLECTION_ID = PREFIX + "collection_home";
+	private static final String STATE_HOME_COLLECTION_ID = PREFIX + REQUEST + "collection_home";
 
 	/** Name of state attribute for status of initialization.  */
-	private static final String STATE_INITIALIZED = PREFIX + "initialized";
+	private static final String STATE_INITIALIZED = PREFIX + REQUEST + "initialized";
 	
-	protected static final String STATE_ITEMS_TO_BE_COPIED = PREFIX + "items_to_be_copied";
+	protected static final String STATE_ITEMS_TO_BE_COPIED = PREFIX + REQUEST + "items_to_be_copied";
 	
-	protected static final String STATE_ITEMS_TO_BE_MOVED = PREFIX + "items_to_be_moved";
+	protected static final String STATE_ITEMS_TO_BE_MOVED = PREFIX + REQUEST + "items_to_be_moved";
 
-	private static final String STATE_LIST_PREFERENCE = PREFIX + "state_list_preference";
+	private static final String STATE_LIST_PREFERENCE = PREFIX + REQUEST + "state_list_preference";
 	
 	/** The name of the state attribute containing a java.util.Set with the id's of selected items */
-	private static final String STATE_LIST_SELECTIONS = PREFIX + "ignore_delete_selections";
+	private static final String STATE_LIST_SELECTIONS = PREFIX + REQUEST + "ignore_delete_selections";
 	
-	protected static final String STATE_LIST_VIEW_SORT = PREFIX + "list_view_sort";
+	protected static final String STATE_LIST_VIEW_SORT = PREFIX + REQUEST + "list_view_sort";
 
-	private static final String STATE_MESSAGE_LIST = PREFIX + "message_list";
+	private static final String STATE_MESSAGE_LIST = PREFIX + REQUEST + "message_list";
 
 	/** The resources, helper or dropbox mode. */
-	public static final String STATE_MODE_RESOURCES = PREFIX + "resources_mode";
+	public static final String STATE_MODE_RESOURCES = PREFIX + REQUEST + "resources_mode";
 	
 	/** The more collection id */
-	private static final String STATE_MORE_COLLECTION_ID = PREFIX + "more_collection_id";
+	private static final String STATE_MORE_COLLECTION_ID = PREFIX + REQUEST + "more_collection_id";
 	
 	/** The more id */
-	private static final String STATE_MORE_ID = PREFIX + "more_id";
+	private static final String STATE_MORE_ID = PREFIX + REQUEST + "more_id";
 	
-	private static final String STATE_MORE_ACTION = PREFIX + "more_action";
+	private static final String STATE_MORE_ACTION = PREFIX + REQUEST + "more_action";
 	
-	private static final String STATE_MORE_ITEM = PREFIX + "more_item";
+	private static final String STATE_MORE_ITEM = PREFIX + REQUEST + "more_item";
 	
 	/** The move flag */
-	private static final String STATE_MOVE_FLAG = PREFIX + "move_flag";
+	private static final String STATE_MOVE_FLAG = PREFIX + REQUEST + "move_flag";
 	
 	/** The copied item ids */
-	private static final String STATE_MOVED_IDS = PREFIX + "revise_moved_ids";
+	private static final String STATE_MOVED_IDS = PREFIX + REQUEST + "revise_moved_ids";
 	
 	/** The user copyright string */
-	private static final String	STATE_MY_COPYRIGHT = PREFIX + "mycopyright";
+	private static final String	STATE_MY_COPYRIGHT = PREFIX + REQUEST + "mycopyright";
 	
 	/** The root of the navigation breadcrumbs for a folder, either the home or another site the user belongs to */
-	private static final String STATE_NAVIGATION_ROOT = PREFIX + "navigation_root";
+	private static final String STATE_NAVIGATION_ROOT = PREFIX + REQUEST + "navigation_root";
 
 	/** The name of the state attribute indicating whether the hierarchical list needs to be expanded */
-	private static final String STATE_NEED_TO_EXPAND_ALL = PREFIX + "need_to_expand_all";
+	private static final String STATE_NEED_TO_EXPAND_ALL = PREFIX + REQUEST + "need_to_expand_all";
 
-	protected static final String STATE_NON_EMPTY_DELETE_SET = PREFIX + "non-empty_delete_set";
+	protected static final String STATE_NON_EMPTY_DELETE_SET = PREFIX + REQUEST + "non-empty_delete_set";
 	
 	/** The can-paste flag */
-	private static final String STATE_PASTE_ALLOWED_FLAG = PREFIX + "can_paste_flag";
+	private static final String STATE_PASTE_ALLOWED_FLAG = PREFIX + REQUEST + "can_paste_flag";
 	
 	/** state attribute indicating whether users in current site should be denied option of making resources public */
-	private static final String STATE_PREVENT_PUBLIC_DISPLAY = PREFIX + "prevent_public_display";
+	private static final String STATE_PREVENT_PUBLIC_DISPLAY = PREFIX + REQUEST + "prevent_public_display";
 	
-	protected static final String STATE_REMOVED_ATTACHMENTS = PREFIX + "removed_attachments";
+	protected static final String STATE_REMOVED_ATTACHMENTS = PREFIX + REQUEST + "removed_attachments";
 
-	protected static final String STATE_REORDER_FOLDER = PREFIX + "reorder_folder_id";
+	protected static final String STATE_REORDER_FOLDER = PREFIX + REQUEST + "reorder_folder_id";
 
-	protected static final String STATE_REORDER_SORT = PREFIX + "reorder_sort";
+	protected static final String STATE_REORDER_SORT = PREFIX + REQUEST + "reorder_sort";
 	
 	/** The sort ascending or decending for the reorder context */
-	protected static final String STATE_REORDER_SORT_ASC = PREFIX + "sort_asc";
+	protected static final String STATE_REORDER_SORT_ASC = PREFIX + REQUEST + "sort_asc";
 
 	/** The property (column) to sort by in the reorder context */
-	protected static final String STATE_REORDER_SORT_BY = PREFIX + "reorder_sort_by";
+	protected static final String STATE_REORDER_SORT_BY = PREFIX + REQUEST + "reorder_sort_by";
 
 	/** The resources, helper or dropbox mode. */
-	public static final String STATE_RESOURCES_HELPER_MODE = PREFIX + "resources_helper_mode";
+	public static final String STATE_RESOURCES_HELPER_MODE = PREFIX + REQUEST + "resources_helper_mode";
 	
-	private static final String STATE_RESOURCES_TYPE_REGISTRY = PREFIX + "type_registry";
+	private static final String STATE_RESOURCES_TYPE_REGISTRY = PREFIX + SYS + "type_registry";
 	
-	protected static final String STATE_REVISE_PROPERTIES_ACTION = PREFIX + "revise_properties_action";
+	protected static final String STATE_REVISE_PROPERTIES_ACTION = PREFIX + REQUEST + "revise_properties_action";
 	
-	protected static final String STATE_REVISE_PROPERTIES_ENTITY_ID = PREFIX + "revise_properties_entity_id";
+	protected static final String STATE_REVISE_PROPERTIES_ENTITY_ID = PREFIX + REQUEST + "revise_properties_entity_id";
 	
-	protected static final String STATE_REVISE_PROPERTIES_ITEM = PREFIX + "revise_properties_item";
+	protected static final String STATE_REVISE_PROPERTIES_ITEM = PREFIX + REQUEST + "revise_properties_item";
 	
 	/** The select all flag */
-	private static final String STATE_SELECT_ALL_FLAG = PREFIX + "select_all_flag";
+	private static final String STATE_SELECT_ALL_FLAG = PREFIX + REQUEST + "select_all_flag";
 	
 	/** The name of a state attribute indicating whether the resources tool/helper is allowed to show all sites the user has access to */
-	public static final String STATE_SHOW_ALL_SITES = PREFIX + "allow_user_to_see_all_sites";
+	public static final String STATE_SHOW_ALL_SITES = PREFIX + SYS + "allow_user_to_see_all_sites";
 	
-	protected static final String STATE_SHOW_COPY_ACTION = PREFIX + "show_copy_action";
+	protected static final String STATE_SHOW_COPY_ACTION = PREFIX + REQUEST + "show_copy_action";
 	
-	private static final String STATE_SHOW_FORM_ITEMS = PREFIX + "show_form_items";
+	private static final String STATE_SHOW_FORM_ITEMS = PREFIX + SYS + "show_form_items";
 	
-	protected static final String STATE_SHOW_MOVE_ACTION = PREFIX + "show_move_action";
+	protected static final String STATE_SHOW_MOVE_ACTION = PREFIX + REQUEST + "show_move_action";
 
 	/** The name of a state attribute indicating whether the wants to see other sites if that is enabled */
-	public static final String STATE_SHOW_OTHER_SITES = PREFIX + "user_chooses_to_see_other_sites";
+	public static final String STATE_SHOW_OTHER_SITES = PREFIX + REQUEST + "user_chooses_to_see_other_sites";
 
-	protected static final String STATE_SHOW_REMOVE_ACTION = PREFIX + "show_remove_action";
+	protected static final String STATE_SHOW_REMOVE_ACTION = PREFIX + REQUEST + "show_remove_action";
 
 	/** the site title */
-	private static final String STATE_SITE_TITLE = PREFIX + "site_title";
+	private static final String STATE_SITE_TITLE = PREFIX + REQUEST + "site_title";
 
 	/** The sort ascending or decending */
-	private static final String STATE_SORT_ASC = PREFIX + "sort_asc";
+	private static final String STATE_SORT_ASC = PREFIX + REQUEST + "sort_asc";
 
 	/** The sort by */
-	private static final String STATE_SORT_BY = PREFIX + "sort_by";
+	private static final String STATE_SORT_BY = PREFIX + REQUEST + "sort_by";
 
-	public static final String STATE_STACK_CREATE_COLLECTION_ID = PREFIX + "stack_create_collection_id";
+	public static final String STATE_STACK_CREATE_COLLECTION_ID = PREFIX + REQUEST + "stack_create_collection_id";
 
-	public static final String STATE_STACK_CREATE_NUMBER = PREFIX + "stack_create_number";
+	public static final String STATE_STACK_CREATE_NUMBER = PREFIX + REQUEST + "stack_create_number";
 
-	public static final String STATE_STACK_CREATE_TYPE = PREFIX + "stack_create_type";
+	public static final String STATE_STACK_CREATE_TYPE = PREFIX + REQUEST + "stack_create_type";
 
-	public static final String STATE_STACK_EDIT_COLLECTION_ID = PREFIX + "stack_edit_collection_id";
+	public static final String STATE_STACK_EDIT_COLLECTION_ID = PREFIX + REQUEST + "stack_edit_collection_id";
 
-	public static final String STATE_STACK_EDIT_ID = PREFIX + "stack_edit_id";
+	public static final String STATE_STACK_EDIT_ID = PREFIX + REQUEST + "stack_edit_id";
 
-	public static final String STATE_STACK_STRUCTOBJ_TYPE = PREFIX + "stack_create_structured_object_type";
+	public static final String STATE_STACK_STRUCTOBJ_TYPE = PREFIX + REQUEST + "stack_create_structured_object_type";
 
-	public static final String STATE_SUSPENDED_OPERATIONS_STACK = PREFIX + "suspended_operations_stack";
+	public static final String STATE_SUSPENDED_OPERATIONS_STACK = PREFIX + REQUEST + "suspended_operations_stack";
 
-	public static final String STATE_SUSPENDED_OPERATIONS_STACK_DEPTH = PREFIX + "suspended_operations_stack_depth";
+	public static final String STATE_SUSPENDED_OPERATIONS_STACK_DEPTH = PREFIX + REQUEST + "suspended_operations_stack_depth";
 
-	protected static final String STATE_TOP_MESSAGE_INDEX = PREFIX + "top_message_index";
+	protected static final String STATE_TOP_MESSAGE_INDEX = PREFIX + REQUEST + "top_message_index";
 
 	/** state attribute indicating whether we're using the Creative Commons dialog instead of the "old" copyright dialog */
-	protected static final String STATE_USING_CREATIVE_COMMONS = PREFIX + "usingCreativeCommons";
+	protected static final String STATE_USING_CREATIVE_COMMONS = PREFIX + SYS + "usingCreativeCommons";
 
 	/** vm files for each mode. */
 	private static final String TEMPLATE_DAV = "content/chef_resources_webdav";
@@ -881,6 +885,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static void addObservingPattern(String pattern, SessionState state)
 	{
+		logger.debug("ResourcesAction.addObservingPattern()");
 //		// get the observer and add the pattern
 //		ContentObservingCourier o = (ContentObservingCourier) state.getAttribute(STATE_OBSERVER);
 //		o.addResourcePattern(ContentHostingService.getReference(pattern));
@@ -898,6 +903,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 									RunData data,
 									SessionState state)
 	{
+		logger.debug("ResourcesAction.buildMoreContext()");
 		context.put("tlang",rb);
 		
 		// find the ContentTypeImage service
@@ -1079,6 +1085,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public static void copyrightChoicesIntoContext(SessionState state, Context context)
 	{
+		logger.debug("ResourcesAction.copyrightChoicesIntoContext()");
 		boolean usingCreativeCommons = state.getAttribute(STATE_USING_CREATIVE_COMMONS) != null && state.getAttribute(STATE_USING_CREATIVE_COMMONS).equals(Boolean.TRUE.toString());		
 		
 		if(usingCreativeCommons)
@@ -1172,6 +1179,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	public static void publicDisplayChoicesIntoContext(SessionState state, Context context)
 	{
+		logger.debug("ResourcesAction.publicDisplayChoicesIntoContext()");
 		Boolean preventPublicDisplay = (Boolean) state.getAttribute(STATE_PREVENT_PUBLIC_DISPLAY);
 		if(preventPublicDisplay == null)
 		{
@@ -1187,6 +1195,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public static List<ContentCollection> createFolders(SessionState state, ResourceToolActionPipe pipe)
 	{
+		logger.debug("ResourcesAction.createFolders()");
 		List<ContentCollection> new_collections = new ArrayList<ContentCollection>();
 		String collectionId = pipe.getContentEntity().getId();
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) pipe;
@@ -1276,6 +1285,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public static List<ContentResource> createResources(ResourceToolActionPipe pipe)
 	{
+		logger.debug("ResourcesAction.createResources()");
 		ToolSession toolSession = null;
 		boolean item_added = false;
 		String collectionId = null;
@@ -1449,6 +1459,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static void extractContent(ResourceToolActionPipe pipe, ContentResourceEdit resource)
     {
+		logger.debug("ResourcesAction.extractContent()");
 	    byte[] content = pipe.getRevisedContent();
 	    if(content == null)
 	    {
@@ -1473,6 +1484,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public static void doMoveitems ( RunData data)
 	{
+		logger.debug("ResourcesAction.doMoveItems()");
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -1586,6 +1598,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public static void doPasteitem ( RunData data)
 	{
+		logger.debug("ResourcesAction.doPasteItem()");
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -1604,6 +1617,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public static void doPasteitems ( RunData data)
 	{
+		logger.debug("ResourcesAction.doPasteItems()");
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -1714,6 +1728,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected static String duplicateItem(SessionState state, String itemId, String collectionId)
 	{
+		logger.debug("ResourcesAction.duplicateItem()");
 		String originalDisplayName = NULL_STRING;
 
 		String newId = null;
@@ -1752,7 +1767,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
+					addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{displayName}));
 					logger.debug("OverQuotaException " + e);
 					try
 					{
@@ -1765,7 +1780,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
+					addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{displayName}));
 					logger.debug("ServerOverloadException " + e);
 					try
 					{
@@ -1860,10 +1875,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static List<ResourceToolAction> getActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry)
     {
+		logger.debug("ResourcesAction.getActions()");
 	    Reference ref = EntityManager.newReference(selectedItem.getReference());
 	    List<ResourceToolAction> actions = new ArrayList<ResourceToolAction>();
 	    
 	    ResourceType typeDef = getResourceType(selectedItem, registry);
+	    if(typeDef == null)
+	    {
+	    	return actions;
+	    }
 	    
 	    // if user has content.read, user can view content, view metadata and/or copy
 	    if(permissions.contains(ContentPermissions.READ))
@@ -1943,6 +1963,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static ResourceType getResourceType(ContentEntity selectedItem, ResourceTypeRegistry registry)
     {
+		logger.debug("ResourcesAction.getResourceType()");
 	    String resourceType = selectedItem.getResourceType();
 	    if(resourceType == null)
 	    {
@@ -1963,6 +1984,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
     public static List<ResourceToolAction> getPasteActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry, List<String> items_to_be_moved, List<String> items_to_be_copied)
     {
+		logger.debug("ResourcesAction.getPasteActions()");
 	    List<ResourceToolAction> actions = new ArrayList<ResourceToolAction>();
 	    
 	    // if nothing to paste, just return an empty list
@@ -2075,6 +2097,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected static List<ResourceToolAction> getAddActions(ContentEntity selectedItem, Set<ContentPermissions> permissions, ResourceTypeRegistry registry)
     {
+		logger.debug("ResourcesAction.getAddActions()");
 	    Reference ref = EntityManager.newReference(selectedItem.getReference());
 	    
 	    List<ResourceToolAction> actions = new ArrayList<ResourceToolAction>();
@@ -2084,7 +2107,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	    if(permissions.contains(ContentPermissions.CREATE))
 	    {		    
 		    // certain actions are defined elsewhere but pertain only to ExpandableResourceTypes (collections)
-		    if(typeDef.isExpandable())
+		    if(typeDef != null && typeDef.isExpandable())
 		    {
 		    	ExpandableResourceType expTypeDef = (ExpandableResourceType) typeDef;
 		    	
@@ -2137,6 +2160,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public static List getCollectionPath(SessionState state)
 	{
+		logger.debug("ResourcesAction.getCollectionPath()");
 		org.sakaiproject.content.api.ContentHostingService contentService = (org.sakaiproject.content.api.ContentHostingService) state.getAttribute (STATE_CONTENT_SERVICE);
 		// make sure the channedId is set
 		String currentCollectionId = (String) state.getAttribute (STATE_COLLECTION_ID);
@@ -2237,6 +2261,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	public static ResourcesEditItem getEditItem(String id, String collectionId, RunData data)
 	{
+		logger.debug("ResourcesAction.getEditItem()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		Stack operations_stack = (Stack) state.getAttribute(STATE_SUSPENDED_OPERATIONS_STACK);
@@ -2708,7 +2733,9 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 * @param rl 
 	 * @return
 	 */
-	public static String getFileSizeString(long size_long, ResourceLoader rl) {
+	public static String getFileSizeString(long size_long, ResourceLoader rl) 
+	{
+		logger.debug("ResourcesAction.getFileSizeString()");
 		String size;
 		NumberFormat formatter = NumberFormat.getInstance(rl.getLocale());
 		formatter.setMaximumFractionDigits(1);
@@ -2748,6 +2775,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected static List getListView(String collectionId, Set highlightedItems, ResourcesBrowseItem parent, boolean isLocal, SessionState state)
 	{
+		logger.debug("ResourcesAction.getListView()");
 		// find the ContentHosting service
 		org.sakaiproject.content.api.ContentHostingService contentService = (org.sakaiproject.content.api.ContentHostingService) state.getAttribute (STATE_CONTENT_SERVICE);
 
@@ -3270,6 +3298,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected static Collection<ContentPermissions> getPermissions(String id, Collection<ContentPermissions> inheritedPermissions)
 	{
+		logger.debug("ResourcesAction.getPermissions()");
 		Collection<ContentPermissions> permissions = new ArrayList<ContentPermissions>();
 		if(ContentHostingService.isCollection(id))
 		{
@@ -3325,6 +3354,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	protected static User getUserProperty(ResourceProperties props, String name)
 	{
+		logger.debug("ResourcesAction.getUserProperty()");
 		String id = props.getProperty(name);
 		if (id != null)
 		{
@@ -3345,6 +3375,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	private static void initCopyContext (SessionState state)
 	{
+		logger.debug("ResourcesAction.initCopyContext()");
 		state.setAttribute (STATE_COPIED_IDS, new ArrayList ());
 
 		state.setAttribute (STATE_COPY_FLAG, Boolean.FALSE.toString());
@@ -3356,6 +3387,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	private static void initMoveContext (SessionState state)
 	{
+		logger.debug("ResourcesAction.initMoveContext()");
 		state.setAttribute (STATE_MOVED_IDS, new ArrayList ());
 
 		state.setAttribute (STATE_MOVE_FLAG, Boolean.FALSE.toString());
@@ -3371,6 +3403,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected static String isolateName(String id)
 	{
+		logger.debug("ResourcesAction.isolateName()");
 		if (id == null) return null;
 		if (id.length() == 0) return null;
 
@@ -3387,6 +3420,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static boolean isStackEmpty(SessionState state)
 	{
+		logger.debug("ResourcesAction.isStackEmpty()");
 		Stack operations_stack = (Stack) state.getAttribute(STATE_SUSPENDED_OPERATIONS_STACK);
 		if(operations_stack == null)
 		{
@@ -3399,6 +3433,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	protected static List newEditItems(String collectionId, String itemtype, String encoding, String defaultCopyrightStatus, boolean preventPublicDisplay, Time defaultRetractDate, int number)
 	{
+		logger.debug("ResourcesAction.newEditItems()");
 		List new_items = new ArrayList();
 		
 		ContentCollection collection = null;
@@ -3553,6 +3588,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static Map peekAtStack(SessionState state)
 	{
+		logger.debug("ResourcesAction.peekAtStack()");
 		Map current_stack_frame = null;
 		Stack operations_stack = (Stack) state.getAttribute(STATE_SUSPENDED_OPERATIONS_STACK);
 		if(operations_stack == null)
@@ -3575,6 +3611,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static Map popFromStack(SessionState state)
 	{
+		logger.debug("ResourcesAction.popFromStack()");
 		Map current_stack_frame = null;
 		Stack operations_stack = (Stack) state.getAttribute(STATE_SUSPENDED_OPERATIONS_STACK);
 		if(operations_stack == null)
@@ -3605,6 +3642,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static Map pushOnStack(SessionState state)
 	{
+		logger.debug("ResourcesAction.pushOnStack()");
 		Map current_stack_frame = null;
 		Stack operations_stack = (Stack) state.getAttribute(STATE_SUSPENDED_OPERATIONS_STACK);
 		if(operations_stack == null)
@@ -3633,6 +3671,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static void removeObservingPattern(String pattern, SessionState state)
 	{
+		logger.debug("ResourcesAction.removeObservingPattern()");
 //		// get the observer and remove the pattern
 //		ContentObservingCourier o = (ContentObservingCourier) state.getAttribute(STATE_OBSERVER);
 //		o.removeResourcePattern(ContentHostingService.getReference(pattern));
@@ -3650,6 +3689,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static boolean replaceable(ResourceProperties p)
 	{
+		logger.debug("ResourcesAction.replaceable()");
 		boolean rv = true;
 
 		if (p.getPropertyFormatted (ResourceProperties.PROP_IS_COLLECTION).equals (Boolean.TRUE.toString()))
@@ -3676,6 +3716,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public static void reviseContent(ResourceToolActionPipe pipe)
 	{
+		logger.debug("ResourcesAction.reviseContent()");
 		ResourceToolAction action = pipe.getAction();
 		ContentEntity entity = pipe.getContentEntity();
 		try
@@ -3770,6 +3811,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private static void saveMetadata(ResourcePropertiesEdit pedit, List metadataGroups, ResourcesEditItem item)
 	{
+		logger.debug("ResourcesAction.saveMetadata()");
 		if(metadataGroups != null && !metadataGroups.isEmpty())
 		{
 			MetadataGroup group = null;
@@ -3808,6 +3850,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected static String validateURL(String url) throws MalformedURLException
 	{
+		logger.debug("ResourcesAction.validateURL()");
 		if (url.equals (NULL_STRING))
 		{
 			// ignore the empty url field
@@ -3862,6 +3905,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected  boolean addInstance(String field, List properties)
 	{
+		logger.debug(this + ".addInstance()");
 		Iterator propIt = properties.iterator();
 		boolean found = false;
 		while(!found && propIt.hasNext())
@@ -3881,6 +3925,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public String buildColumnsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) 
 	{
+		logger.debug(this + ".buildColumnsContext()");
 		context.put("tlang",trb);
 		
 		// need to check permissions
@@ -4029,6 +4074,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public String buildCreateWizardContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) 
 	{
+		logger.debug(this + ".buildCreateWizardContext()");
 		context.put("tlang",trb);
 		
 		context.put("DETAILS_FORM_NAME", "detailsForm");
@@ -4036,6 +4082,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		String template = "content/sakai_resources_cwiz_finish";
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		
 		if(pipe == null)
 		{
 			// go back to list view
@@ -4043,14 +4090,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		else if(pipe.isActionCanceled())
 		{
 			// go back to list view
+			state.setAttribute(STATE_MODE, MODE_LIST);
+			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 		}
 		else if(pipe.isErrorEncountered())
 		{
-			// report the error?
-			// go back to list view
+			String msg = pipe.getErrorMessage();
+			if(msg == null || msg.trim().equals(""))
+			{
+				msg = rb.getString("alert.unknown");
+			}
+			addAlert(state, msg);
+			state.setAttribute(STATE_MODE, MODE_LIST);
+			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 		}
 		else
 		{
+			context.put(PIPE_INIT_ID, pipe.getInitializationId());
+			
 			// complete the create wizard
 			String defaultCopyrightStatus = (String) state.getAttribute(STATE_DEFAULT_COPYRIGHT);
 			if(defaultCopyrightStatus == null || defaultCopyrightStatus.trim().equals(""))
@@ -4128,6 +4185,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 											RunData data,
 											SessionState state)
 	{
+		logger.debug(this + ".buildDeleteConfirmContext()");
 		context.put("tlang",rb);
 		// find the ContentTypeImage service
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
@@ -4178,6 +4236,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public String buildDeleteFinishContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	{
+		logger.debug(this + ".buildDeleteFinishContext()");
 		context.put("tlang",trb);
 		context.put ("collectionId", state.getAttribute (STATE_COLLECTION_ID) );
 
@@ -4226,6 +4285,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 										RunData data,
 										SessionState state)
 	{
+		logger.debug(this + ".buildListContext()");
 		context.put("clang",rb);
 		context.put("tlang",trb);
 		
@@ -4650,6 +4710,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 											RunData data,
 											SessionState state)
 	{
+		logger.debug(this + ".buildMainPanelContext()");
 		// find the ContentTypeImage service
 		
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
@@ -4671,6 +4732,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		if(pipe != null)
 		{
+			context.put(PIPE_INIT_ID, pipe.getInitializationId());
 			if(pipe.isActionCanceled())
 			{
 				state.setAttribute(STATE_MODE, MODE_LIST);
@@ -4679,10 +4741,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			else if(pipe.isErrorEncountered())
 			{
 				String msg = pipe.getErrorMessage();
-				if(msg != null && ! msg.trim().equals(""))
+				if(msg == null || msg.trim().equals(""))
 				{
-					addAlert(state, msg);
+					msg = rb.getString("alert.unknown");
 				}
+				addAlert(state, msg);
 				state.setAttribute(STATE_MODE, MODE_LIST);
 				toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			}
@@ -4696,6 +4759,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			toolSession.removeAttribute(ResourceToolAction.DONE);
 		}
+		
+		checkMessageList(state);
 		
 		String template = null;
 		
@@ -4764,6 +4829,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 											RunData data,
 											SessionState state)
 	{
+		logger.debug(this + ".buildOptionsPanelContext()");
 		context.put("tlang",trb);
 		String home = (String) state.getAttribute(STATE_HOME_COLLECTION_ID);
 		Reference ref = EntityManager.newReference(ContentHostingService.getReference(home));
@@ -4806,6 +4872,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public String buildReorderContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) 
 	{
+		logger.debug(this + ".buildReorderContext()");
 		context.put("tlang",rb);
 		
 		String folderId = (String) state.getAttribute(STATE_REORDER_FOLDER);
@@ -4893,6 +4960,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public String buildReviseMetadataContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	{
+		logger.debug(this + ".buildReviseMetadataContext()");
 		context.put("tlang", trb);
 		
 		context.put("DETAILS_FORM_NAME", "detailsForm");
@@ -4959,6 +5027,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
      */
     protected ListItem getListItem(SessionState state)
     {
+		logger.debug(this + ".getListItem()");
 	    // complete the create wizard
 		String defaultCopyrightStatus = (String) state.getAttribute(STATE_DEFAULT_COPYRIGHT);
 		if(defaultCopyrightStatus == null || defaultCopyrightStatus.trim().equals(""))
@@ -5007,6 +5076,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 										RunData data,
 										SessionState state)
 	{
+		logger.debug(this + ".buildWebdavContext()");
 		context.put("tlang",rb);
 		// find the ContentTypeImage service
 		context.put ("contentTypeImageService", state.getAttribute (STATE_CONTENT_TYPE_IMAGE_SERVICE));
@@ -5078,6 +5148,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void cleanup(ToolSession toolSession, String prefix) 
 	{
+		logger.debug(this + ".cleanup()");
 		Enumeration attributeNames = toolSession.getAttributeNames();
 		while(attributeNames.hasMoreElements())
 		{
@@ -5096,6 +5167,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void deleteItem(SessionState state, String itemId)
 	{
+		logger.debug(this + ".deleteItem()");
 		List deleteItems = new ArrayList();
 		List notDeleteItems = new ArrayList();
 		List nonEmptyFolders = new ArrayList();
@@ -5197,6 +5269,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void deleteItems(SessionState state, Set deleteIdSet)
 	{
+		logger.debug(this + ".deleteItems()");
 		List deleteItems = new ArrayList();
 		List notDeleteItems = new ArrayList();
 		List nonEmptyFolders = new ArrayList();
@@ -5288,6 +5361,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doCancel ( RunData data)
 	{
+		logger.debug(this + ".doCancel()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
@@ -5311,6 +5385,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doCollapse_collection(RunData data)
 	{
+		logger.debug(this + ".doCollapse_collection()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		SortedSet expandedItems = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
 		if(expandedItems == null)
@@ -5396,6 +5471,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doColumns(RunData data)
 	{
+		logger.debug(this + ".doColumns()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		state.setAttribute(STATE_LIST_PREFERENCE, LIST_COLUMNS);
 	}
@@ -5405,6 +5481,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doCompleteCreateWizard(RunData data)
 	{
+		logger.debug(this + ".doCompleteCreateWizard()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		ListItem item = (ListItem) state.getAttribute(STATE_CREATE_WIZARD_ITEM);
@@ -5416,12 +5493,30 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		ResourceToolActionPipe pipe = (ResourceToolActionPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe == null)
+		{
+			return;
+		}
+		
+		String pipe_init_id = pipe.getInitializationId();
+		String response_init_id = params.getString(PIPE_INIT_ID);
+
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			pipe.setErrorMessage(rb.getString("alert.try-again"));
+			pipe.setActionCanceled(false);
+			pipe.setErrorEncountered(true);
+			pipe.setActionCompleted(false);
+			return;
+		}
 		
 		if(user_action == null)
 		{
-			
+			user_action = pipe.getAction().getId();
 		}
-		else if(user_action.equals("save"))
+		
+		if(user_action.equals("save"))
 		{
 			item.captureProperties(params, ListItem.DOT + "0");
 			String name = params.getString("name" + ListItem.DOT + "0");
@@ -5571,7 +5666,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 					catch(OverQuotaException e)
 					{
-						addAlert(trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
+						addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{resource.getId()}));
 						logger.debug("OverQuotaException " + e);
 						try
 						{
@@ -5584,7 +5679,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					}
 					catch(ServerOverloadException e)
 					{
-						addAlert(trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
+						addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{resource.getId()}));
 						logger.debug("ServerOverloadException " + e);
 						try
 						{
@@ -5618,12 +5713,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			} 
 			catch (ServerOverloadException e) 
 			{
-				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 				logger.warn("ServerOverloadException" + e);
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.overquota", new Object[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.overquota", new Object[]{name}));
 				logger.warn("OverQuotaException " + e);
 			}
             catch (IdUniquenessException e)
@@ -5666,6 +5761,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doCopy ( RunData data )
 	{
+		logger.debug(this + ".doCopy()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -5738,6 +5834,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doDeleteconfirm ( RunData data)
 	{
+		logger.debug(this + ".doDeleteconfirm()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		// cancel copy if there is one in progress
@@ -5776,6 +5873,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doDispatchAction(RunData data)
 	{
+		logger.debug(this + ".doDispatchAction()");
 		try
 		{
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -5973,6 +6071,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doSetHotDropbox(RunData data)
 	{
+		logger.debug(this + ".doSetHotDropbox()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		//get the ParameterParser from RunData
@@ -5991,6 +6090,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doExpand_collection(RunData data) throws IdUnusedException, TypeException, PermissionException
 	{
+		logger.debug(this + ".doExpand_collection()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		SortedSet expandedItems = (SortedSet) state.getAttribute(STATE_EXPANDED_COLLECTIONS);
 		if(expandedItems == null)
@@ -6051,6 +6151,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doExpandall ( RunData data)
 	{
+		logger.debug(this + ".doExpandall()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -6077,6 +6178,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doFinalizeDelete( RunData data)
 	{
+		logger.debug(this + ".doFinalizeDelete()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		// cancel copy if there is one in progress
@@ -6223,6 +6325,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doHideOtherSites(RunData data)
 	{
+		logger.debug(this + ".doHideOtherSites()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_SHOW_OTHER_SITES, Boolean.FALSE.toString());
@@ -6244,6 +6347,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doHierarchy(RunData data)
 	{
+		logger.debug(this + ".doHierarchy()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		state.setAttribute(STATE_LIST_PREFERENCE, LIST_HIERARCHY);
 	}
@@ -6279,6 +6383,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doList ( RunData data)
 	{
+		logger.debug(this + ".doList()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -6291,6 +6396,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doMove ( RunData data )
 	{
+		logger.debug(this + ".doMove()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -6364,6 +6470,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	public void doMultiItemDispatch ( RunData data )
 	{
+		logger.debug(this + ".doMultiItemDispatch()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		ParameterParser params = data.getParameters();
@@ -6410,6 +6517,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doNavigate ( RunData data )
 	{
+		logger.debug(this + ".doNavigate()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		if (state.getAttribute (STATE_SELECT_ALL_FLAG)!=null && state.getAttribute (STATE_SELECT_ALL_FLAG).equals (Boolean.TRUE.toString()))
@@ -6506,6 +6614,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doPermissions(RunData data, Context context)
 	{
+		logger.debug(this + ".doPermissions()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState(((JetspeedRunData)data).getJs_peid());
 
 		// cancel copy if there is one in progress
@@ -6548,6 +6657,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doReorder ( RunData data)
 	{
+		logger.debug(this + ".doReorder()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -6589,6 +6699,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doReviseProperties(RunData data)
 	{
+		logger.debug(this + ".doReviseProperties()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
@@ -6708,6 +6819,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doSaveOrder ( RunData data)
 	{
+		logger.debug(this + ".doSaveOrder()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -6826,6 +6938,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doShow_webdav ( RunData data )
 	{
+		logger.debug(this + ".doShow_webdav()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
@@ -6851,6 +6964,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doShowMembers(RunData data)
 	{
+		logger.debug(this + ".doShowMembers()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
@@ -6871,6 +6985,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doShowOtherSites(RunData data)
 	{
+		logger.debug(this + ".doShowOtherSites()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -6893,6 +7008,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doSort ( RunData data)
 	{
+		logger.debug(this + ".doSort()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -6990,6 +7106,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doUnexpandall ( RunData data)
 	{
+		logger.debug(this + ".doUnexpandall()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -7021,6 +7138,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doUpdateOptions(RunData data)
 	{
+		logger.debug(this + ".doUpdateOptions()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -7071,6 +7189,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doCancelOptions(RunData data)
 	{
+		logger.debug(this + ".doCancelOptions()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -7086,6 +7205,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	protected int findResourceInList(List resources, String id)
 	{
+		logger.debug(this + ".findResourceInList()");
 		for (int i = 0; i < resources.size(); i++)
 		{
 			// if this is the one, return this index
@@ -7104,7 +7224,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void finishAction(SessionState state, ToolSession toolSession, ResourceToolActionPipe pipe)
 	{
+		logger.debug(this + ".finishAction()");
+		if(pipe.isErrorEncountered())
+		{
+			String msg = pipe.getErrorMessage();
+			if(msg == null || msg.trim().equals(""))
+			{
+				msg = rb.getString("alert.unknown");
+			}
+			addAlert(state, msg);
+		}
+		
 		ResourceToolAction action = pipe.getAction();
+
 		// use ActionType for this 
 		switch(action.getActionType())
 		{
@@ -7150,31 +7282,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			break;
 		case REVISE_CONTENT:
 			reviseContent(pipe);
-			if(pipe.isErrorEncountered())
-			{
-				String msg = pipe.getErrorMessage();
-				if(msg == null || msg.trim().equals(""))
-				{
-					msg = rb.getString("alert.unknown");
-				}
-				addAlert(state, msg);
-			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
 		case REPLACE_CONTENT:
 			replaceContent(pipe);
-			if(pipe.isErrorEncountered())
-			{
-				String msg = pipe.getErrorMessage();
-				if(msg == null || msg.trim().equals(""))
-				{
-					msg = rb.getString("alert.unknown");
-				}
-				addAlert(state, msg);
-				toolSession.removeAttribute(ResourceToolAction.DONE);
-				return;
-			}
 			toolSession.removeAttribute(ResourceToolAction.ACTION_PIPE);
 			state.setAttribute(STATE_MODE, MODE_LIST);
 			break;
@@ -7195,6 +7307,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	protected void replaceContent(ResourceToolActionPipe pipe) 
 	{
+		logger.debug(this + ".replaceContent()");
 		ResourceToolAction action = pipe.getAction();
 		ContentEntity entity = pipe.getContentEntity();
 		try
@@ -7298,6 +7411,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	protected void initState(SessionState state, VelocityPortlet portlet, JetspeedRunData data)
 	{
+		logger.debug(this + ".initState()");
 		super.initState(state, portlet, data);
 		
 		if(state.getAttribute(STATE_INITIALIZED) == null)
@@ -7312,6 +7426,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void initStateAttributes(SessionState state, VelocityPortlet portlet)
 	{
+		logger.debug(this + ".initStateAttributes()");
 		if (state.getAttribute (STATE_INITIALIZED) != null) return;
 
 		if (state.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE) == null)
@@ -7622,6 +7737,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	protected boolean notificationEnabled(SessionState state)
 	{
+		logger.debug(this + ".notificationEnabled()");
 		return true;
 
 	}	// notificationEnabled
@@ -7631,6 +7747,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	protected void pasteItem(SessionState state, String collectionId)
 	{
+		logger.debug(this + ".pasteItem()");
 		boolean moving = true;
 		boolean copying = false;
 		List<String> items_to_be_pasted = (List<String>) state.removeAttribute(STATE_ITEMS_TO_BE_MOVED);
@@ -7775,6 +7892,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	protected List<ListItem> prepPage(SessionState state)
 	{
+		logger.debug(this + ".prepPage()");
 		List<ListItem> rv = new ArrayList<ListItem>();
 
 		// access the page size
@@ -8006,6 +8124,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	private String processHtmlDocumentFromBrowser(SessionState state, String strFromBrowser)
 	{
+		logger.debug(this + ".processHtmlDocumentFromBrowser()");
 		StringBuilder alertMsg = new StringBuilder();
 		String text = FormattedText.processHtmlDocument(strFromBrowser, alertMsg);
 		if (alertMsg.length() > 0) addAlert(state, alertMsg.toString());
@@ -8018,6 +8137,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	protected List<ListItem> readAllResources(SessionState state)
 	{
+		logger.debug(this + ".readAllResources()");
 		ResourceTypeRegistry registry = (ResourceTypeRegistry) state.getAttribute(STATE_RESOURCES_TYPE_REGISTRY);
 		if(registry == null)
 		{
@@ -8144,6 +8264,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
  	*/
  	private void updateObservation(SessionState state, String peid)
  	{
+		logger.debug(this + ".updateObservation()");
 // 		ContentObservingCourier observer = (ContentObservingCourier) state.getAttribute(STATE_OBSERVER);
 //
 // 		// the delivery location for this tool
@@ -8153,6 +8274,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public static List<ContentResource> createUrls(SessionState state, ResourceToolActionPipe pipe)
     {
+		logger.debug("ResourcesAction.createUrls()");
 		boolean item_added = false;
 		String collectionId = null;
 		List<ContentResource> new_resources = new ArrayList<ContentResource>();
@@ -8246,7 +8368,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+					addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{name}));
 					logger.debug("OverQuotaException " + e);
 					try
 					{
@@ -8259,7 +8381,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 				catch(ServerOverloadException e)
 				{
-					addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+					addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 					logger.debug("ServerOverloadException " + e);
 					try
 					{
@@ -8296,12 +8418,12 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.overquota", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.overquota", new String[]{name}));
 				logger.warn("OverQuotaException ", e);
 			}
 			catch (ServerOverloadException e)
 			{
-				addAlert(trb.getFormattedMessage("alert.unable1", new String[]{name}));
+				addAlert(state, trb.getFormattedMessage("alert.unable1", new String[]{name}));
 				logger.warn("ServerOverloadException ", e);
 			}
 		}
@@ -8311,6 +8433,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public static void addAlert(String message)
 	{
+		logger.debug("ResourcesAction.addAlert()");
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 		Collection<String> errorMessages = (Collection<String>) toolSession.getAttribute(STATE_MESSAGE_LIST);
 		if(errorMessages == null)
@@ -8319,6 +8442,90 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			toolSession.setAttribute(STATE_MESSAGE_LIST, errorMessages);
 		}
 		errorMessages.add(message);
+	}
+	
+	public static void checkMessageList(SessionState state)
+	{
+		logger.debug("ResourcesAction.checkMessageList()");
+		ToolSession toolSession = SessionManager.getCurrentToolSession();
+		Collection<String> errorMessages = (Collection<String>) toolSession.getAttribute(STATE_MESSAGE_LIST);
+		if(errorMessages == null)
+		{
+			return;
+		}
+		String message = "";
+		for(String msg : errorMessages)
+		{
+			addAlert(state, msg);
+		}
+	}
+	
+	public static int preserveRequestState(SessionState state, String[] prefixes)
+	{
+		Map requestState = new HashMap();
+		
+		int requestStateId = 0;
+		while(requestStateId == 0)
+		{
+			requestStateId = (int) (Math.random() * Integer.MAX_VALUE);
+		}
+		
+		List<String> attrNames = state.getAttributeNames();
+		for(String attrName : attrNames)
+		{
+			for(String prefix : prefixes)
+			{
+				if(attrName.startsWith(prefix))
+				{
+					requestState.put(attrName,state.getAttribute(attrName));
+					break;
+				}
+			}
+		}
+		
+		Object pipe = state.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(pipe != null)
+		{
+			requestState.put(ResourceToolAction.ACTION_PIPE, pipe);
+		}
+		
+		Tool tool = ToolManager.getCurrentTool();
+		Object url = state.getAttribute(tool.getId() + Tool.HELPER_DONE_URL);
+		if( url != null)
+		{
+			requestState.put(tool.getId() + Tool.HELPER_DONE_URL, url);
+		}
+
+		state.setAttribute(PREFIX + SYS + requestStateId, requestState);
+		logger.debug("preserveRequestState() requestStateId == " + requestStateId + "\n" + requestState);
+		return requestStateId;
+	}
+	
+	public static void restoreRequestState(SessionState state, String[] prefixes, int requestStateId)
+	{
+		Map requestState = (Map) state.removeAttribute(PREFIX + SYS + requestStateId);
+		logger.debug("restoreRequestState() requestStateId == " + requestStateId + "\n" + requestState);
+		if(requestState != null)
+		{
+			List<String> attrNames = state.getAttributeNames();
+			for(String attrName : attrNames)
+			{
+				for(String prefix : prefixes)
+				{
+					if(attrName.startsWith(prefix))
+					{
+						state.removeAttribute(attrName);
+						break;
+					}
+				}
+			}
+			
+			for(String attrName : (Set<String>) requestState.keySet())
+			{
+				state.setAttribute(attrName, requestState.get(attrName));
+			}
+		}
+		
 	}
 	
 }	// ResourcesAction
