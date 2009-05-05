@@ -4208,15 +4208,30 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		ContentCollection thisCollection = null;
 		try
 		{
-			thisCollection = findCollection(id);
+			thisCollection = getCollection(id);
 		}
 		catch (TypeException e)
 		{
 			thisCollection = null;
 		}
+		catch (IdUnusedException e)
+		{
+			thisCollection = null;
+		}
+		catch (PermissionException e)
+		{
+			return null;
+		}
 		if (thisCollection == null)
 		{
-			thisResource = findResource(id);
+			try
+			{
+				thisResource = getResource(id);
+			}
+			catch (PermissionException e)
+			{
+				return null;
+			}
 		}
 		else
 		{
@@ -5002,7 +5017,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			while (memberIt.hasNext())
 			{
 				String member_id = (String) memberIt.next();
-				copyIntoFolder(member_id, new_folder_id);
+				if (isAvailable(member_id)){
+					copyIntoFolder(member_id, new_folder_id);
+				}
 			}
 
 		}
