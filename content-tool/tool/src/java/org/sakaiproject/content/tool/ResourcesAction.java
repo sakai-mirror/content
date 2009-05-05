@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.PermissionsHelper;
@@ -58,6 +60,8 @@ import org.sakaiproject.cheftool.VelocityPortlet;
 import org.sakaiproject.cheftool.VelocityPortletPaneledAction;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.conditions.api.Rule;
+import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -87,8 +91,13 @@ import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.Notification;
+import org.sakaiproject.event.api.NotificationEdit;
+import org.sakaiproject.event.api.NotificationLockedException;
+import org.sakaiproject.event.api.NotificationNotDefinedException;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.api.UsageSession;
+import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.event.cover.UsageSessionService;
 import org.sakaiproject.exception.IdInvalidException;
@@ -4188,6 +4197,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			context.put("GROUP_ACCESS", AccessMode.GROUPED.toString());
 			context.put("INHERITED_ACCESS", AccessMode.INHERITED.toString());
 			context.put("PUBLIC_ACCESS", PUBLIC_ACCESS);
+			
+			buildConditionContext(context, state);
 		}
 		return template;
 	}
@@ -5156,8 +5167,144 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			context.put("showMountPointProperty", Boolean.TRUE.toString());
 		}
+		buildConditionContext(context, state);
 
 		return TEMPLATE_REVISE_METADATA;
+	}
+	
+	public static void buildConditionContext(Context context, SessionState state) {
+		context.put("resourceSelections", state.getAttribute("resourceSelections"));
+		context.put("conditionSelections", state.getAttribute("conditionSelections"));		
+	}
+	
+	public static void saveCondition(ListItem item, ParameterParser params, SessionState state, int index) {
+		boolean cbSelected = Boolean.valueOf(params.get("cbCondition" + ListItem.DOT + index));
+		String selectedConditionValue = params.get("selectCondition" + ListItem.DOT + index);
+		if (selectedConditionValue == null) return;
+		logger.debug("Selected condition value: " + selectedConditionValue);
+		//The selectCondition value must be broken up so we can get at the values
+		//that make up the index, submittedFunctionName, missingTermQuery, and operatorValue in that order
+		String[] conditionTokens = selectedConditionValue.split("\\|");
+		int selectedIndex = Integer.valueOf(conditionTokens[0]);
+		String submittedFunctionName = conditionTokens[1];
+		String missingTermQuery = conditionTokens[2];
+		String operatorValue = conditionTokens[3];
+		logger.debug("submittedFunctionName: " + submittedFunctionName);
+		logger.debug("missingTermQuery: " + missingTermQuery);
+		logger.debug("operatorValue: " + operatorValue);			
+		String submittedResourceFilter = params.get("selectResource" + ListItem.DOT + index);
+		// the number of grade points are tagging along for the ride. chop this off.
+		String assignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
+		submittedResourceFilter = submittedResourceFilter.substring(0, submittedResourceFilter.lastIndexOf("/"));
+		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
+		String eventDataClass = ConditionService.getClassNameForEvent(submittedFunctionName);
+		Object argument = null;
+		if ((selectedIndex == 9) || (selectedIndex == 10)) {
+			try {
+				argument = new Double(params.get("assignment_grade" + ListItem.DOT + index));
+			} catch (NumberFormatException e) {
+				return;
+			}
+			logger.debug("argument: " + argument);
+		}
+
+		if (cbSelected) {
+			if (item.useConditionalRelease) {
+				logger.debug("Previous condition exists. Removing related notification");
+				removeExistingNotification(item, state);
+			}
+			
+			String containingCollectionId = item.containingCollectionId;
+			String resourceId = item.getId();
+			if (! resourceId.startsWith(containingCollectionId)) {
+				resourceId = containingCollectionId + resourceId;
+				if (item.isCollection() && !resourceId.endsWith("/")) resourceId = resourceId + "/";
+			}
+			List<Predicate> predicates = new ArrayList();
+			Predicate resourcePredicate = new BooleanExpression(eventDataClass, missingTermQuery, operatorValue, argument);
+			
+			predicates.add(resourcePredicate);
+			
+			Rule resourceConditionRule = new ResourceReleaseRule(resourceId, predicates, Rule.Conjunction.OR);
+			NotificationEdit notification = NotificationService.addNotification();
+			notification.addFunction(submittedFunctionName);
+			notification.addFunction("cond+" + submittedFunctionName);
+			if (missingTermQuery.contains("Date")) {
+				notification.addFunction("datetime.update");
+			}
+			notification.setAction(resourceConditionRule);
+			notification.setResourceFilter(submittedResourceFilter);
+			notification.getProperties().addProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
+			notification.getProperties().addProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
+			notification.getProperties().addProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
+			notification.getProperties().addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade" + ListItem.DOT + index));
+			NotificationService.commitEdit(notification);
+			
+			item.setUseConditionalRelease(true);
+			item.setNotificationId(notification.getId());
+		} else {
+			//only remove the condition if it previously existed
+			if (item.useConditionalRelease) {
+				item.setUseConditionalRelease(false);
+				removeExistingNotification(item, state);
+			}			
+		}
+		
+	}
+
+	
+	private void loadConditionData(SessionState state) {	
+		logger.debug("Loading condition data");
+		ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
+		if ((item != null) && (item.useConditionalRelease)) {
+			try {
+				Notification notification = NotificationService.getNotification(item.getNotificationId());			
+				if (notification != null) {
+					item.setSubmittedFunctionName(notification.getProperties().getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME));
+					item.setSubmittedResourceFilter(notification.getProperties().getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER));
+					item.setSelectedConditionKey(notification.getProperties().getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY));
+					item.setConditionArgument(notification.getProperties().getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT));					
+				}
+			} catch (NotificationNotDefinedException e) {
+				addAlert(state, rb.getString("notification.load.error"));								
+			}					
+		}
+		
+		
+		Map resourceSelections = ConditionService.getEntitiesForService("gradebook");
+		
+		//TODO look this data up
+		//Using LinkedHashMap to maintain order
+		Map<String,String> conditionSelections = new LinkedHashMap<String,String>();
+		conditionSelections.put("1|gradebook.updateAssignment|dueDateHasPassed|no_operator","due date has passed.");
+		conditionSelections.put("2|gradebook.updateAssignment|dueDateHasNotPassed|no_operator","due date has not passed.");
+		conditionSelections.put("3|gradebook.updateAssignment|isReleasedToStudents|no_operator","is released to students.");
+		conditionSelections.put("4|gradebook.updateAssignment|isNotReleasedToStudents|no_operator","is not released to students.");
+		conditionSelections.put("5|gradebook.updateAssignment|isIncludedInCourseGrade|no_operator","is included in course grade.");
+		conditionSelections.put("6|gradebook.updateAssignment|isNotIncludedInCourseGrade|no_operator","is not included in course grade.");
+		conditionSelections.put("7|gradebook.updateItemScore|isScoreBlank|no_operator", "grade is blank.");
+		conditionSelections.put("8|gradebook.updateItemScore|isScoreNonBlank|no_operator", "grade is non-blank.");
+		conditionSelections.put("9|gradebook.updateItemScore|getScore|less_than","grade is less than:");
+		conditionSelections.put("10|gradebook.updateItemScore|getScore|greater_than_equal_to","grade is greater than or equal to:");	
+		
+		//This isn't the final resting place for this data..see the buildReviseMetadataContext method in this class
+		state.setAttribute("resourceSelections", resourceSelections);
+		state.setAttribute("conditionSelections", conditionSelections);
+		if (item != null) {
+			state.setAttribute("conditionArgument", item.getConditionArgument());			
+		}
+	}
+
+	private static void removeExistingNotification(ListItem item, SessionState state) {
+		logger.debug("Removing condition");	
+		try {
+			NotificationEdit notificationToRemove = NotificationService.editNotification(item.getNotificationId());
+			NotificationService.removeNotification(notificationToRemove);
+		} catch (NotificationLockedException e) {
+			addAlert(state, rb.getString("disable.condition.error"));				
+		} catch (NotificationNotDefinedException e) {
+			addAlert(state, rb.getString("disable.condition.error"));								
+		}		
 	}
 
 	/**
@@ -8697,6 +8844,24 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				state.setAttribute(attrName, requestState.get(attrName));
 			}
+		}
+		
+	}
+	
+	private static void notifyCondition(Entity entity) {
+		Notification resourceNotification = null;
+		String notificationId = entity.getProperties().getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		if (notificationId != null && !"".equals(notificationId)) {
+			try {
+				resourceNotification = NotificationService.getNotification(notificationId);
+			} catch (NotificationNotDefinedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+			
+		if (resourceNotification != null) {
+			EventTrackingService.post(EventTrackingService.newEvent("cond+" + resourceNotification.getFunction(), resourceNotification.getResourceFilter(), true));
 		}
 		
 	}

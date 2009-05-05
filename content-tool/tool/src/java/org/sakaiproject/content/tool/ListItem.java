@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.conditions.cover.ConditionService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
@@ -394,6 +395,17 @@ public class ListItem
 	protected boolean useRetractDate;
 
 	protected Time retractDate;
+	protected boolean useConditionalRelease = false;
+	private String submittedFunctionName;
+	private String submittedResourceFilter;
+	private String selectedConditionKey;
+	private String conditionArgument;
+	private String conditionAssignmentPoints;
+	private String notificationId;
+	private Collection<String> accessControlList;
+
+	protected boolean numberFieldIsInvalid;
+	protected boolean numberFieldIsOutOfRange;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -533,6 +545,15 @@ public class ListItem
 				}
 			}			
 		}
+		
+		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
+		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		this.accessControlList = props.getPropertyList(ContentHostingService.CONDITIONAL_ACCESS_LIST);
+		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
+		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
+		//this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
+		//this.conditionArgument = props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT);
+
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
@@ -1424,8 +1445,79 @@ public class ListItem
 			this.retractDate = null;
 		}
 		
+		String selectedConditionValue = params.get("selectCondition" + index);
+		if (selectedConditionValue == null) return;
+		String[] conditionTokens = selectedConditionValue.split("\\|");
+		int selectedIndex = Integer.valueOf(conditionTokens[0]);
+		if ((selectedIndex == 9) || (selectedIndex == 10)) {
+			this.conditionArgument = params.get("assignment_grade" + index);
+			Double argument = null;
+			try {
+				argument = new Double(this.conditionArgument);
+			} catch (NumberFormatException nfe) {
+				this.numberFieldIsInvalid = true;
+			}
+			
+			String submittedResourceFilter = params.get("selectResource" + index);
+			// the number of grade points are tagging along for the ride. chop this off.
+			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
+			Double assignmentPoints = new Double(conditionAssignmentPoints);
+			if ((argument > assignmentPoints) || (argument < 0)) {
+				this.numberFieldIsOutOfRange = true;
+			}
+		}
+
+		
 	}
 	
+	public String getConditionArgument() {
+		return conditionArgument;
+	}
+
+	public void setConditionArgument(String conditionArgument) {
+		this.conditionArgument = conditionArgument;
+	}
+
+	public boolean isUseConditionalRelease() {
+		return useConditionalRelease;
+	}
+
+	public void setUseConditionalRelease(boolean useConditionalRelease) {
+		this.useConditionalRelease = useConditionalRelease;
+	}
+
+	public String getSubmittedFunctionName() {
+		return submittedFunctionName;
+	}
+
+	public void setSubmittedFunctionName(String submittedFunctionName) {
+		this.submittedFunctionName = submittedFunctionName;
+	}
+
+	public String getSubmittedResourceFilter() {
+		return submittedResourceFilter;
+	}
+
+	public void setSubmittedResourceFilter(String submittedResourceFilter) {
+		this.submittedResourceFilter = submittedResourceFilter;
+	}
+
+	public String getSelectedConditionKey() {
+		return selectedConditionKey;
+	}
+
+	public void setSelectedConditionKey(String selectedConditionKey) {
+		this.selectedConditionKey = selectedConditionKey;
+	}
+
+	public String getNotificationId() {
+		return notificationId;
+	}
+
+	public void setNotificationId(String notificationId) {
+		this.notificationId = notificationId;
+	}
+
 	protected void captureCopyright(ParameterParser params, String index) 
 	{
 		// rights
@@ -2863,6 +2955,7 @@ public class ListItem
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		//setCopyrightOnEntity(props);
+		setConditionalReleaseOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		setQuotaOnEntity(props);
@@ -2897,6 +2990,19 @@ public class ListItem
 	{
 		edit.setAvailability(hidden, releaseDate, retractDate);
 	}
+	
+	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
+	{
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
+		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
+		props.removeProperty(ContentHostingService.CONDITIONAL_ACCESS_LIST);
+		if (this.accessControlList != null) {
+			for (String id : this.accessControlList) {
+				props.addPropertyToList(ContentHostingService.CONDITIONAL_ACCESS_LIST, id);
+			}
+		}
+	}
+
 
 	protected void setCopyrightOnEntity(ResourcePropertiesEdit props) 
 	{
@@ -2980,6 +3086,7 @@ public class ListItem
 		setCHHMountpoint(props);
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
+		setConditionalReleaseOnEntity(props);
 		setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
