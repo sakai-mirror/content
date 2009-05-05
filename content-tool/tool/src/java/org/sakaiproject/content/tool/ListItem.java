@@ -3,18 +3,18 @@
  * $Id$
  ***********************************************************************************
  *
- * Copyright (c) 2007 The Sakai Foundation.
- * 
- * Licensed under the Educational Community License, Version 1.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
+ * Copyright (c) 2007, 2008, 2009 The Sakai Foundation
+ *
+ * Licensed under the Educational Community License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *      http://www.opensource.org/licenses/ecl1.php
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ *       http://www.osedu.org/licenses/ECL-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  *
  **********************************************************************************/
@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,19 +36,19 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
-import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
-import org.sakaiproject.conditions.cover.ConditionService;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.ContentResourceFilter;
 import org.sakaiproject.content.api.ExpandableResourceType;
 import org.sakaiproject.content.api.GroupAwareEdit;
 import org.sakaiproject.content.api.GroupAwareEntity;
@@ -57,6 +56,7 @@ import org.sakaiproject.content.api.ResourceToolAction;
 import org.sakaiproject.content.api.ResourceToolActionPipe;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.api.ResourceTypeRegistry;
+import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
@@ -78,11 +78,13 @@ import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.thread_local.cover.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ParameterParser;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Validator;
@@ -107,10 +109,25 @@ public class ListItem
 
     protected static final Comparator PRIORITY_SORT_COMPARATOR = ContentHostingService.newContentHostingComparator(ResourceProperties.PROP_CONTENT_PRIORITY, true);
 
-	/** A long representing the number of milliseconds in one week.  Used for date calculations */
-	protected static final long ONE_WEEK = 1000L * 60L * 60L * 24L * 7L;
-
 	public static final String DOT = "_";
+
+	/** A long representing the number of milliseconds in one week.  Used for date calculations */
+	public static final long ONE_DAY = 24L * 60L * 60L * 1000L;
+	
+	/** A long representing the number of milliseconds in one week.  Used for date calculations */
+	public static final long ONE_WEEK = 7L * ONE_DAY;
+
+	/** 
+	 ** Comparator for sorting Group objects
+	 **/
+	private static class GroupComparator implements Comparator {
+		public int compare(Object o1, Object o2) {
+			return ((Group)o1).getTitle().compareToIgnoreCase( ((Group)o2).getTitle() );
+		}
+	}
+	
+	// sort groups before display
+	private static GroupComparator groupComparator = new GroupComparator();
 	
 	/**
 	 * @param entity
@@ -123,18 +140,18 @@ public class ListItem
 	 * @param depth
 	 * @param userSelectedSort
 	 * @param preventPublicDisplay
+	 * @param addFilter TODO
 	 * @return
 	 */
-	public static ListItem getListItem(ContentEntity entity, ListItem parent, ResourceTypeRegistry registry, boolean expandAll, Set<String> expandedFolders, List<String> items_to_be_moved, List<String> items_to_be_copied, int depth, Comparator userSelectedSort, boolean preventPublicDisplay)
+	public static ListItem getListItem(ContentEntity entity, ListItem parent, ResourceTypeRegistry registry, boolean expandAll, Set<String> expandedFolders, List<String> items_to_be_moved, List<String> items_to_be_copied, int depth, Comparator userSelectedSort, boolean preventPublicDisplay, ContentResourceFilter addFilter)
 	{
 		ListItem item = null;
 		boolean isCollection = entity.isCollection();
 		
-		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
+		org.sakaiproject.content.api.ContentHostingService contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
 		
 		boolean isAvailabilityEnabled = contentService.isAvailabilityEnabled();
 		
-        Reference ref = EntityManager.newReference(entity.getReference());
         if(entity == null)
         {
         	item = new ListItem("");
@@ -142,7 +159,9 @@ public class ListItem
         else
         {
         	item = new ListItem(entity);
+            //item.m_reference = EntityManager.newReference(entity.getReference());
         }
+        
         item.setPubviewPossible(! preventPublicDisplay);
         item.setDepth(depth);
         /*
@@ -191,11 +210,11 @@ public class ListItem
 						ServiceLevelAction expandAction = ((ExpandableResourceType) typeDef).getExpandAction();
 						if(expandAction != null && expandAction.available(entity))
 						{
-							expandAction.initializeAction(ref);
+							expandAction.initializeAction(item.m_reference);
 							
 				       		expandedFolders.add(entity.getId());
 				       		
-				       		expandAction.finalizeAction(ref);
+				       		expandAction.finalizeAction(item.m_reference);
 						}
 					}
 				}
@@ -260,7 +279,7 @@ public class ListItem
 						continue;
 					}
 
-	        		ListItem child = getListItem(childEntity, item, registry, expandAll, expandedFolders, items_to_be_moved, items_to_be_copied, depth + 1, userSelectedSort, preventPublicDisplay);
+	        		ListItem child = getListItem(childEntity, item, registry, expandAll, expandedFolders, items_to_be_moved, items_to_be_copied, depth + 1, userSelectedSort, preventPublicDisplay, addFilter);
 	        		if(items_to_be_copied != null && items_to_be_copied.contains(child.id))
 	        		{
 	        			child.setSelectedForCopy(true);
@@ -272,7 +291,13 @@ public class ListItem
 	        		item.addMember(child);
 	        	}
 			}
-			item.setAddActions(ResourcesAction.getAddActions(entity, item.getPermissions(), registry));
+ 			
+			List<ResourceToolAction> myAddActions = ResourcesAction.getAddActions(entity, item.getPermissions(), registry);
+			if(addFilter != null)
+			{
+				myAddActions = addFilter.filterAllowedActions(myAddActions);
+			}
+			item.setAddActions(myAddActions );
 			//this.members = coll.getMembers();
 			item.setIconLocation( ContentTypeImageService.getContentTypeImage("folder"));
         }
@@ -283,7 +308,7 @@ public class ListItem
         {
         	if(otherActions == null)
         	{
-        		otherActions = new Vector<ResourceToolAction>(pasteActions);
+        		otherActions = new ArrayList<ResourceToolAction>(pasteActions);
         	}
         	else
         	{
@@ -322,8 +347,10 @@ public class ListItem
 	protected boolean expandable = false;
 	protected boolean isEmpty = true;
 	protected boolean isExpanded = false;
+	protected boolean isHot = false;
 	protected boolean isSortable = false;
 	protected boolean isTooBig = false;
+	protected boolean isCourseSite = false;
 	protected String size = "";
 	protected String sizzle = "";
 	protected String createdBy;
@@ -331,6 +358,8 @@ public class ListItem
 	protected String modifiedBy;
 	protected String modifiedTime;
 	protected int depth;
+
+	protected String chhmountpoint; // Content Hosting Handler bean name
 
 	protected Map<String, ResourceToolAction> multipleItemActions = new HashMap<String, ResourceToolAction>();
 
@@ -344,13 +373,14 @@ public class ListItem
 	 * permissions in the hierarchy.   
 	 */
 	protected ContentEntity entity;
+	protected Reference m_reference;
 	protected AccessMode accessMode;
 	protected AccessMode inheritedAccessMode;
-	protected Collection<Group> groups = new Vector<Group>();
-	protected Collection<Group> inheritedGroups = new Vector<Group>();
-	protected Collection<Group> possibleGroups = new Vector<Group>();
-	protected Collection<Group> allowedRemoveGroups = new Vector<Group>();
-	protected Collection<Group> allowedAddGroups = new Vector<Group>();
+	protected Collection<Group> groups = new ArrayList<Group>();
+	protected Collection<Group> inheritedGroups = new ArrayList<Group>();
+	protected Collection<Group> possibleGroups = new ArrayList<Group>();
+	protected Collection<Group> allowedRemoveGroups = null;
+	protected Collection<Group> allowedAddGroups = null;
 	protected Map<String,Group> siteGroupsMap = new HashMap<String, Group>();
 
 	protected boolean isPubviewPossible;
@@ -362,15 +392,8 @@ public class ListItem
 	protected boolean useReleaseDate;
 	protected Time releaseDate;
 	protected boolean useRetractDate;
+
 	protected Time retractDate;
-	protected boolean useConditionalRelease = false;
-	private String submittedFunctionName;
-	private String submittedResourceFilter;
-	private String selectedConditionKey;
-	private String conditionArgument;
-	private String conditionAssignmentPoints;
-	private String notificationId;
-	private Collection<String> accessControlList;
 	
 	protected String description;
 	protected String copyrightInfo = "";
@@ -399,11 +422,10 @@ public class ListItem
 
 	private int constructor;
 
-	protected boolean numberFieldIsInvalid;
-	protected boolean numberFieldIsOutOfRange;
+	protected long dropboxHighlight;
 
+	protected Time lastChange = null;
 
-	
 	private org.sakaiproject.content.api.ContentHostingService contentService;
 
 	/**
@@ -426,18 +448,19 @@ public class ListItem
 			return;
 		}
 	    String refstr = entity.getReference();
-		Reference ref = EntityManager.newReference(refstr);
-		String contextId = ref.getContext();
-		boolean isUserSite = false;
-		if(contextId != null)
-		{
-			isUserSite = SiteService.isUserSite(contextId);
-		}
-		setUserSite(isUserSite);
-		
 		this.isSiteCollection = this.siteCollection(refstr);
 
-		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
+		boolean isUserSite = isInWorkspace(parent, refstr);
+		setUserSite(isUserSite);
+		
+		if(m_reference == null)
+		{
+			m_reference = EntityManager.newReference(refstr);
+		}
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
 		if(entity.getContainingCollection() == null)
 		{
 			this.containingCollectionId = null;
@@ -454,20 +477,62 @@ public class ListItem
 		{
 			this.isDropbox = contentService.isInDropbox(this.containingCollectionId);
 		}
+
 		ResourceProperties props = entity.getProperties();
 		this.accessUrl = entity.getUrl();
 		this.collection = entity.isCollection();
 		this.id = entity.getId();
 		this.name = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
+		if(name == null || name.trim().equals(""))
+		{
+			
+			String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
+			if(siteCollectionId != null && siteCollectionId.equals(id))
+			{
+				String context = m_reference.getContext();
+				Site site = getSiteObject(context);
+				if(site != null)
+				{
+	                String siteTitle = site.getTitle();
+	                if(siteTitle == null || siteTitle.trim().equals(""))
+	                {
+	                	siteTitle = site.getId();
+	                }
+					name = trb.getFormattedMessage("title.resources", new String[]{siteTitle});
+				}
+			}
+		}
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
 		
-		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
-		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
-		this.accessControlList = props.getPropertyList(ContentHostingService.CONDITIONAL_ACCESS_LIST);
-		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
-		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
-		//this.selectedConditionKey = props.getProperty(ContentHostingService.PROP_SELECTED_CONDITION_KEY);
-		//this.conditionArgument = props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE_ARGUMENT);
+		if(this.isDropbox)
+		{
+			try
+			{
+				lastChange  = props.getTimeProperty(org.sakaiproject.content.api.ContentHostingService.PROP_DROPBOX_CHANGE_TIMESTAMP);
+//				long oneDayAgo = TimeService.newTime().getTime() - dropboxHighlight * ONE_DAY;
+//				
+//				if(lastChange != null && lastChange.getTime() > oneDayAgo)
+//				{
+//					setHot(true);
+//				}
+			}
+			catch(Exception e)
+			{
+				// ignore
+			}
+			
+			String context = m_reference.getContext();
+			Site site = getSiteObject(context);
+			if(site != null)
+			{
+				String siteType = site.getType();
+				String courseSiteType = ServerConfigurationService.getString("courseSiteType");
+				if(siteType != null && courseSiteType!= null && courseSiteType.equals(siteType))
+				{
+					this.isCourseSite = true;
+				}
+			}			
+		}
 		
 		this.permissions = new TreeSet<ContentPermissions>();
 		this.selected = false;
@@ -492,18 +557,46 @@ public class ListItem
 		if(this.collection)
 		{
 			ContentCollection collection = (ContentCollection) entity;
+			String shortSizeStr = null;
+			if(typeDef != null)
+			{
+				shortSizeStr = typeDef.getSizeLabel(entity);
+			}
         	int collection_size = collection.getMemberCount();
-        	if(collection_size == 1)
-        	{
-        		setSize(rb.getString("size.item"));
-        	}
-        	else
-        	{
-	        	String[] args = { Integer.toString(collection_size) };
-	        	setSize(rb.getFormattedMessage("size.items", args));
-	        	setSizzle(rb.getFormattedMessage("size.items", args));
-        	}
+			if(shortSizeStr == null)
+			{
+	        	if(collection_size == 1)
+	        	{
+	        		shortSizeStr = rb.getString("size.item");
+	        	}
+	        	else
+	        	{
+		        	String[] args = { Integer.toString(collection_size) };
+		        	shortSizeStr = rb.getFormattedMessage("size.items", args);
+	        	}
+			}
+			else if(shortSizeStr.length() > ResourceType.MAX_LENGTH_SHORT_SIZE_LABEL)
+			{
+				shortSizeStr = shortSizeStr.substring(0, ResourceType.MAX_LENGTH_SHORT_SIZE_LABEL);
+			}
 			setIsEmpty(collection_size < 1);
+			setSize(shortSizeStr);
+			String longSizeStr = null;
+			if(typeDef != null)
+			{
+				longSizeStr = typeDef.getLongSizeLabel(entity);
+			}
+			if(longSizeStr == null)
+			{
+				longSizeStr = shortSizeStr;
+			}
+			else if(longSizeStr.length() > ResourceType.MAX_LENGTH_LONG_SIZE_LABEL)
+			{
+				
+				longSizeStr = longSizeStr.substring(0, ResourceType.MAX_LENGTH_LONG_SIZE_LABEL);
+			}
+			setSizzle(longSizeStr);
+			
 			setSortable(contentService.isSortByPriorityEnabled() && collection_size > 1 && collection_size < ResourceType.EXPANDABLE_FOLDER_SIZE_LIMIT);
 			if(collection_size > ResourceType.EXPANDABLE_FOLDER_SIZE_LIMIT)
 			{
@@ -512,7 +605,7 @@ public class ListItem
 			// setup for quota - ADMIN only, site-root collection only
 			if (SecurityService.isSuperUser())
 			{
-				String siteCollectionId = ContentHostingService.getSiteCollection(contextId);
+				String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
 				if(siteCollectionId.equals(entity.getId()))
 				{
 					setCanSetQuota(true);
@@ -545,9 +638,15 @@ public class ListItem
 			{
 				this.iconLocation = ContentTypeImageService.getContentTypeImage(this.mimetype);
 			}
-			String size = "";
-			String sizzle = "";
-			if(props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
+			
+			String size = null;
+			String sizzle = null;
+			if(typeDef != null)
+			{
+				size = typeDef.getSizeLabel(entity);
+				sizzle = typeDef.getLongSizeLabel(entity);
+			}
+			if((size == null || sizzle == null) && props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
 			{
 				long size_long = 0;
                 try
@@ -567,31 +666,63 @@ public class ListItem
 				formatter.setMaximumFractionDigits(1);
 				if(size_long > 700000000L)
 				{
-					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
-					size = rb.getFormattedMessage("size.gb", args);
-					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.gbytes", argyles);
+					if(size == null)
+					{
+						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
+						size = rb.getFormattedMessage("size.gb", args);
+					}
+					if(sizzle == null)
+					{
+						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.gbytes", argyles);
+					}
 				}
 				else if(size_long > 700000L)
 				{
-					String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
-					size = rb.getFormattedMessage("size.mb", args);
-					String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.mbytes", argyles);
+					if(size == null)
+					{
+						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
+						size = rb.getFormattedMessage("size.mb", args);
+					}
+					if(sizzle == null)
+					{
+						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.mbytes", argyles);
+					}
 				}
 				else if(size_long > 700L)
 				{
-					String[] args = { formatter.format(1.0 * size_long / 1024L) };
-					size = rb.getFormattedMessage("size.kb", args);
-					String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
-					sizzle = rb.getFormattedMessage("size.kbytes", argyles);
+					if(size == null)
+					{
+						String[] args = { formatter.format(1.0 * size_long / 1024L) };
+						size = rb.getFormattedMessage("size.kb", args);
+					}
+					if(sizzle == null)
+					{
+						String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
+						sizzle = rb.getFormattedMessage("size.kbytes", argyles);
+					}
 				}
 				else 
 				{
 					String[] args = { formatter.format(size_long) };
-					size = rb.getFormattedMessage("size.bytes", args);
-					sizzle = rb.getFormattedMessage("size.bytes", args);
+					if(size == null)
+					{
+						size = rb.getFormattedMessage("size.bytes", args);
+					}
+					if(sizzle == null)
+					{
+						sizzle = rb.getFormattedMessage("size.bytes", args);
+					}
 				}
+			}
+			if(size == null)
+			{
+				size = "";
+			}
+			if(sizzle == null)
+			{
+				sizzle = "";
 			}
 			setSize(size);
 			setSizzle(sizzle);
@@ -632,16 +763,10 @@ public class ListItem
 		this.setCreatedTime(props.getPropertyFormatted(ResourceProperties.PROP_CREATION_DATE));
 		
 		Site site = null;
-		Collection<Group> site_groups = new Vector<Group>();
+		ArrayList<Group> site_groups = new ArrayList<Group>();
 		
-		try 
-		{
-			site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
-		} 
-		catch (IdUnusedException e) 
-		{
-			logger.warn("resourcesAction.newEditItems() IdUnusedException ", e);
-		}
+		String context = ToolManager.getCurrentPlacement().getContext();
+		site = getSiteObject(context);
 		if(site != null)
 		{
 			for(Group gr : (Collection<Group>) site.getGroups())
@@ -659,6 +784,8 @@ public class ListItem
 					site_groups.add(gr);
 				}
 			}
+			
+			Collections.sort( site_groups, groupComparator );
 		}
 //		if(isOptionalPropertiesEnabled())
 //		{
@@ -682,54 +809,6 @@ public class ListItem
 		else 
 		{
 			setPossibleGroups(site_groups);
-		}
-        
-		Collection<Group> groupsWithRemovePermission = null;
-		if(AccessMode.GROUPED == this.accessMode)
-		{
-			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(id);
-			Collection<Group> more = contentService.getGroupsWithRemovePermission(ref.getContainer());
-			if(more != null && ! more.isEmpty())
-			{
-				groupsWithRemovePermission.addAll(more);
-			}
-		}
-		else if(AccessMode.GROUPED == this.inheritedAccessMode)
-		{
-			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(ref.getContainer());
-		}
-		else if(ref.getContext() != null && contentService.getSiteCollection(ref.getContext()) != null)
-		{
-			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(contentService.getSiteCollection(ref.getContext()));
-		}
-		this.allowedRemoveGroups.clear();
-		if(groupsWithRemovePermission != null)
-		{
-			this.allowedRemoveGroups.addAll(groupsWithRemovePermission);
-		}
-		
-		Collection<Group> groupsWithAddPermission = null;
-		if(AccessMode.GROUPED == this.accessMode)
-		{
-			groupsWithAddPermission = contentService.getGroupsWithAddPermission(id);
-			Collection<Group> more = contentService.getGroupsWithAddPermission(ref.getContainer());
-			if(more != null && ! more.isEmpty())
-			{
-				groupsWithAddPermission.addAll(more);
-			}
-		}
-		else if(AccessMode.GROUPED == this.inheritedAccessMode)
-		{
-			groupsWithAddPermission = contentService.getGroupsWithAddPermission(ref.getContainer());
-		}
-		else if(contentService.getSiteCollection(ref.getContext()) != null)
-		{
-			groupsWithAddPermission = contentService.getGroupsWithAddPermission(contentService.getSiteCollection(ref.getContext()));
-		}
-		this.allowedAddGroups.clear();
-		if(groupsWithAddPermission != null)
-		{
-			this.allowedAddGroups.addAll(groupsWithAddPermission);
 		}
 
         this.isPubviewInherited = contentService.isInheritingPubView(id);
@@ -763,6 +842,79 @@ public class ListItem
 		this.isAvailable = entity.isAvailable();
     }
 
+	private void initAllowedAddGroups() 
+	{
+		if(this.allowedAddGroups == null)
+		{
+			this.allowedAddGroups = new ArrayList<Group>(); 
+		}
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
+		if(m_reference == null)
+		{
+			String refStr = contentService.getReference(this.id);
+			m_reference = EntityManager.newReference(refStr);
+		}
+		Collection<Group> groupsWithAddPermission = null;
+		if(AccessMode.GROUPED == this.accessMode)
+		{
+			groupsWithAddPermission = contentService.getGroupsWithAddPermission(id);
+			Collection<Group> more = contentService.getGroupsWithAddPermission(m_reference.getContainer());
+			if(more != null && ! more.isEmpty())
+			{
+				groupsWithAddPermission.addAll(more);
+			}
+		}
+		else if(AccessMode.GROUPED == this.inheritedAccessMode)
+		{
+			groupsWithAddPermission = contentService.getGroupsWithAddPermission(m_reference.getContainer());
+		}
+		else if(contentService.getSiteCollection(m_reference.getContext()) != null)
+		{
+			groupsWithAddPermission = contentService.getGroupsWithAddPermission(contentService.getSiteCollection(m_reference.getContext()));
+		}
+		this.allowedAddGroups.clear();
+		if(groupsWithAddPermission != null)
+		{
+			this.allowedAddGroups.addAll(groupsWithAddPermission);
+		}
+	}
+
+	private Site getSiteObject(String context) 
+	{
+		// should /content be caching an object belonging to SiteService?
+		Site site = (Site) ThreadLocalManager.get("context@" + context);
+		if(site == null)
+		{
+		    try
+		    {
+		        site = SiteService.getSite(context);
+		        ThreadLocalManager.set("context@" + context, site);
+		    }
+		    catch (IdUnusedException e)
+		    {
+		        logger.warn("IdUnusedException context == " + context);
+		    }
+		}
+		return site;
+	}
+
+	private String getSiteDropboxId(String id) 
+	{
+		String rv = null;
+		if(id != null)
+		{
+			String parts[] = id.split("/");
+			if(parts.length >= 3)
+			{
+				rv = "/" + parts[1] + "/" + parts[2] + "/";
+			}
+		}
+		return rv;
+	}
+
 	protected void setSizzle(String sizzle) 
 	{
 		this.sizzle = sizzle;
@@ -792,7 +944,10 @@ public class ListItem
 	public ListItem(ResourceToolActionPipe pipe, ListItem parent, Time defaultRetractTime)
 	{
 		this.constructor = 3;
-		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
 		this.entity = null;
 		//this.initMetadataGroups(null);
 		this.containingCollectionId = parent.getId();
@@ -880,6 +1035,8 @@ public class ListItem
 			this.isDropbox = parent.isDropbox;
 		}
 		
+		this.isCourseSite = parent.isCourseSite();
+		
 		Time now = TimeService.newTime();
 		User creator = UserDirectoryService.getCurrentUser();
 		if(creator != null)
@@ -908,13 +1065,9 @@ public class ListItem
 		{
 			this.inheritedGroups.addAll(parent.getInheritedGroups());
 			this.setPossibleGroups(parent.getPossibleGroups());
-
 		}
-        
-		this.allowedRemoveGroups = new Vector(parent.allowedRemoveGroups);		
-		this.allowedAddGroups = new Vector(parent.allowedAddGroups);
-		
-		this.isPubviewPossible = parent.isPubviewPossible;
+
+ 		this.isPubviewPossible = parent.isPubviewPossible;
         this.isPubviewInherited = parent.isPubviewInherited || parent.isPubview;
         if(this.isPubviewInherited)
         {
@@ -931,7 +1084,29 @@ public class ListItem
 		this.useRetractDate = false;
 		Time retractDate = TimeService.newTime(defaultRetractTime.getTime());
 		this.isAvailable = parent.isAvailable();
+		
+		String refstr = contentService.getReference(id);
+		this.isSiteCollection = this.siteCollection(refstr);
 
+		boolean isUserSite = isInWorkspace(parent, refstr);
+		setUserSite(isUserSite);
+
+	}
+
+	/**
+	 * @param parent
+	 * @param refstr
+	 * @return
+	 */
+	protected boolean isInWorkspace(ListItem parent, String refstr) 
+	{
+		Reference ref = EntityManager.newReference(refstr);
+		String contextId = ref.getContext();
+		boolean isUserSite = (parent != null && parent.isUserSite()) 
+						|| (contextId != null && SiteService.isUserSite(contextId)) 
+						|| (refstr != null && refstr.trim().startsWith("/content/user/")) 
+						|| (this.containingCollectionId != null && this.containingCollectionId.trim().startsWith("/content/user/"));
+		return isUserSite;
 	}
 
 	/**
@@ -941,7 +1116,10 @@ public class ListItem
 	{
 		this.constructor = 1;
 		this.id = entityId;
-		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
 		
 		ContentEntity entity = null;
 		try
@@ -977,13 +1155,8 @@ public class ListItem
 		
 		String refstr = contentService.getReference(id);
 		this.isSiteCollection = this.siteCollection(refstr);
-		Reference ref = EntityManager.newReference(refstr);
-		String contextId = ref.getContext();
-		boolean isUserSite = false;
-		if(contextId != null)
-		{
-			isUserSite = SiteService.isUserSite(contextId);
-		}
+		
+		boolean isUserSite = isInWorkspace(parent, refstr);
 		setUserSite(isUserSite);
 
 	}
@@ -995,7 +1168,7 @@ public class ListItem
     {
         if(this.members == null)
         {
-        	this.members = new Vector<ListItem>();
+        	this.members = new ArrayList<ListItem>();
         }
         this.members.add(member);
     }
@@ -1054,6 +1227,12 @@ public class ListItem
     {
     	boolean allowed = false;
     	
+    	// instead of getting all groups with remove access, could we query for THIS group?
+    	// or is this more efficient because we get them all at once?
+    	if(this.allowedRemoveGroups == null)
+    	{
+    		initAllowedRemoveGroups();
+    	}
     	for(Group gr : this.allowedRemoveGroups)
     	{
     		if(gr == null)
@@ -1069,6 +1248,57 @@ public class ListItem
     	
     	return allowed;
     }
+
+	protected void initAllowedRemoveGroups() 
+	{
+		if(this.allowedRemoveGroups == null)
+		{
+			this.allowedRemoveGroups = new ArrayList<Group>(); 
+		}
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
+		if(m_reference == null)
+		{
+			String refStr = contentService.getReference(this.id);
+			m_reference = EntityManager.newReference(refStr);
+		}
+		Collection<Group> groupsWithRemovePermission = null;
+		if(AccessMode.GROUPED == this.accessMode)
+		{
+			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(id);
+			String container = m_reference.getContainer();
+			if(container != null)
+			{
+				Collection<Group> more = contentService.getGroupsWithRemovePermission(container);
+				if(more != null && ! more.isEmpty())
+				{
+					groupsWithRemovePermission.addAll(more);
+				}
+			}
+		}
+		else if(AccessMode.GROUPED == this.inheritedAccessMode)
+		{
+			if(this.parent != null && this.parent.allowedRemoveGroups != null)
+			{
+				groupsWithRemovePermission = new ArrayList(this.parent.allowedRemoveGroups);
+			}
+			else if(m_reference.getContainer() != null)
+			{
+				groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(m_reference.getContainer());
+			}
+		}
+		else if(m_reference.getContext() != null && contentService.getSiteCollection(m_reference.getContext()) != null)
+		{
+			groupsWithRemovePermission = contentService.getGroupsWithRemovePermission(contentService.getSiteCollection(m_reference.getContext()));
+		}
+		this.allowedRemoveGroups.clear();
+		if(groupsWithRemovePermission != null)
+		{
+			this.allowedRemoveGroups.addAll(groupsWithRemovePermission);
+		}
+	}
 
 	public boolean canRead()
 	{
@@ -1194,28 +1424,6 @@ public class ListItem
 			this.retractDate = null;
 		}
 		
-		String selectedConditionValue = params.get("selectCondition" + index);
-		if (selectedConditionValue == null) return;
-		String[] conditionTokens = selectedConditionValue.split("\\|");
-		int selectedIndex = Integer.valueOf(conditionTokens[0]);
-		if ((selectedIndex == 9) || (selectedIndex == 10)) {
-			this.conditionArgument = params.get("assignment_grade" + index);
-			Double argument = null;
-			try {
-				argument = new Double(this.conditionArgument);
-			} catch (NumberFormatException nfe) {
-				this.numberFieldIsInvalid = true;
-			}
-			
-			String submittedResourceFilter = params.get("selectResource" + index);
-			// the number of grade points are tagging along for the ride. chop this off.
-			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
-			Double assignmentPoints = new Double(conditionAssignmentPoints);
-			if ((argument > assignmentPoints) || (argument < 0)) {
-				this.numberFieldIsOutOfRange = true;
-			}
-		}
-		
 	}
 	
 	protected void captureCopyright(ParameterParser params, String index) 
@@ -1250,11 +1458,29 @@ public class ListItem
 	{
 		// description
 		String description = params.getString("description" + index);
-		this.setDescription(description);
+		if(description != null)
+		{
+			StringBuilder errorMessages = new StringBuilder();
+			description = FormattedText.processFormattedText(description, errorMessages);
+			// what to do with errorMessages
+			if(errorMessages.length() > 0)
+			{
+				logger.warn("ListItem.captureDescription() containingCollectionId: " + this.containingCollectionId + " id: " + this.id + " error in FormattedText.processFormattedText(): " + errorMessages.toString());
+			}
+			this.setDescription(description);
+		}
+	}
+
+	protected void captureCHHMountpoint(ParameterParser params, String index) 
+	{
+		// content hosting handler bean name
+		String chhmountpoint = params.getString(ContentHostingHandlerResolver.CHH_BEAN_NAME);
+		this.setCHHMountpoint(chhmountpoint);
 	}
 
 	public void captureProperties(ParameterParser params, String index) 
 	{
+		captureCHHMountpoint(params, index);
 		captureDisplayName(params, index);
 		captureDescription(params, index);
 		captureCopyright(params, index);
@@ -1351,7 +1577,7 @@ public class ListItem
      */
     public List<ListItem> convert2list()
     {
-    	List<ListItem> list = new Vector<ListItem>();
+    	List<ListItem> list = new ArrayList<ListItem>();
     	Stack<ListItem> processStack = new Stack<ListItem>();
     	
     	processStack.push(this);
@@ -1504,12 +1730,6 @@ public class ListItem
     	return addActions;
     }
 	
-	protected Collection<Group> getAllowedRemoveGroupRefs() 
-	{
-		// TODO Auto-generated method stub
-		return new TreeSet<Group>(this.allowedAddGroups);
-	}
-	
 	/**
      * @return the createdBy
      */
@@ -1528,7 +1748,10 @@ public class ListItem
 	public List<ListItem> getCollectionPath()
 	{
 		LinkedList<ListItem> path = new LinkedList<ListItem>();
-		org.sakaiproject.content.api.ContentHostingService contentService = ContentHostingService.getInstance();
+		if(contentService == null)
+		{
+			contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
+		}
 		
 		ContentCollection containingCollection = null;
 		ContentEntity entity = this.getEntity();
@@ -1612,7 +1835,7 @@ public class ListItem
      */
     public Collection<Group> getEffectiveGroups()
     {
-    	Collection<Group> groups = new Vector<Group>();
+    	Collection<Group> groups = new ArrayList<Group>();
     	
     	
     	
@@ -1773,7 +1996,7 @@ public class ListItem
      */
     public Collection<Group> getGroups()
     {
-    	return new Vector<Group>(groups);
+    	return new ArrayList<Group>(groups);
     }
 	
 	/**
@@ -1821,7 +2044,7 @@ public class ListItem
      */
     public Collection<Group> getInheritedGroups()
     {
-    	return new Vector<Group>(inheritedGroups);
+    	return new ArrayList<Group>(inheritedGroups);
     }
 
 	public List<ListItem> getMembers() 
@@ -1908,7 +2131,7 @@ public class ListItem
      */
     public Collection<Group> getPossibleGroups()
     {
-    	return new Vector<Group>(possibleGroups);
+    	return new ArrayList<Group>(possibleGroups);
     }
 
 	/**
@@ -1982,27 +2205,8 @@ public class ListItem
     {
     	return isAvailable;
     }
-    
-    public boolean useConditionalRelease()
-    {
-    	return useConditionalRelease;
-    }
 
-    public String getSubmittedFunctionName()
-    {
-    	return submittedFunctionName;
-    }
-    
-    public String getSubmittedResourceFilter()
-    {
-    	return submittedResourceFilter;
-    }
-
-    public String getSelectedConditionKey()
-    {
-    	return selectedConditionKey;
-    }
-    /**
+	/**
 	 * @return the collection
 	 */
 	public boolean isCollection()
@@ -2033,7 +2237,21 @@ public class ListItem
      */
     public boolean isGroupPossible()
     {
-    	return this.allowedAddGroups != null && ! this.allowedAddGroups.isEmpty();
+    	boolean rv = false;
+    	if(this.accessMode == AccessMode.INHERITED && parent != null)
+    	{
+    		rv = parent.isGroupPossible();
+    	}
+    	else
+    	{
+	    	// can this be done more efficiently without getting all groups with add allowed?
+	    	if(this.allowedAddGroups == null)
+	    	{
+	    		initAllowedAddGroups();
+	    	}
+	    	rv = this.allowedAddGroups != null && ! this.allowedAddGroups.isEmpty();
+    	}
+    	return rv;
     }
 
 	/**
@@ -2267,6 +2485,16 @@ public class ListItem
 	{
 		this.description = description;
 	}
+
+	/**
+     * @param chhmountpoint the chhmountpoint (bean name) to set
+     */
+    public void setCHHMountpoint(String chhmountpoint)
+    {
+    	this.chhmountpoint = chhmountpoint;
+    }
+
+	/**
     
     /**
      * Sets expanded status of the list item.  Also updates the iconLocation 
@@ -2326,28 +2554,8 @@ public class ListItem
     {
     	this.hidden = hidden;
     }
-    
-    public void setUseConditionalRelease(boolean useConditionalRelease)
-    {
-    	this.useConditionalRelease = useConditionalRelease;
-    }
 
-    public void setSubmittedFunctionName(String submittedFunctionName)
-    {
-    	this.submittedFunctionName = submittedFunctionName;
-    }
-    
-    public void setSubmittedResourceFilter(String submittedResourceFilter)
-    {
-    	this.submittedResourceFilter = submittedResourceFilter;
-    }
-    
-    public void setSelectedConditionKey(String selectedConditionKey)
-    {
-    	this.selectedConditionKey = selectedConditionKey;
-    }
-    
-    /**
+	/**
 	 * @param hover
 	 */
 	public void setHoverText(String hover)
@@ -2400,7 +2608,7 @@ public class ListItem
 	{
 		if(this.members == null)
 		{
-			this.members = new Vector<ListItem>();
+			this.members = new ArrayList<ListItem>();
 		}
 		this.members.clear();
 		this.members.addAll(members);
@@ -2654,7 +2862,6 @@ public class ListItem
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
-		setConditionalReleaseOnEntity(props);
 		//setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
@@ -2689,7 +2896,6 @@ public class ListItem
 	protected void setAvailabilityOnEntity(GroupAwareEdit edit)
 	{
 		edit.setAvailability(hidden, releaseDate, retractDate);
-		edit.setConditionallyReleased(useConditionalRelease);
 	}
 
 	protected void setCopyrightOnEntity(ResourcePropertiesEdit props) 
@@ -2760,13 +2966,21 @@ public class ListItem
 		}
 	}
 
+	protected void setCHHMountpoint(ResourcePropertiesEdit props) 
+	{
+		if(this.chhmountpoint != null)
+		{
+			props.addProperty(ContentHostingHandlerResolver.CHH_BEAN_NAME, this.chhmountpoint);
+		}
+	}
+
 	public void updateContentResourceEdit(ContentResourceEdit edit) 
 	{
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
+		setCHHMountpoint(props);
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
 		setCopyrightOnEntity(props);
-		setConditionalReleaseOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
@@ -2795,19 +3009,7 @@ public class ListItem
 			props.addProperty(ResourceProperties.PROP_DISPLAY_NAME, this.name);
 		}
 	}
-	
-	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
-	{
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
-		props.removeProperty(ContentHostingService.CONDITIONAL_ACCESS_LIST);
-		if (this.accessControlList != null) {
-			for (String id : this.accessControlList) {
-				props.addPropertyToList(ContentHostingService.CONDITIONAL_ACCESS_LIST, id);
-			}
-		}
-	}
-	
+
 	public String getCopyrightStatus() 
 	{
 		return copyrightStatus;
@@ -2930,11 +3132,14 @@ public class ListItem
 	{
 		boolean site = false;
 		
-		Reference ref = EntityManager.newReference(refStr);
-		String context = ref.getContext();
+		if( m_reference == null )
+		{
+			m_reference = EntityManager.newReference(refStr);
+		}
+		String context = m_reference.getContext();
 		// what happens if context is null??
 		String siteCollection = ContentHostingService.getSiteCollection(context);
-		if(ref.getId().equals(siteCollection))
+		if(m_reference.getId().equals(siteCollection))
 		{
 			site = true;
 		}
@@ -2970,7 +3175,7 @@ public class ListItem
 
 	public List<String> checkRequiredProperties()
     {
-		List<String> alerts = new Vector<String>();
+		List<String> alerts = new ArrayList<String>();
 		String name = getName();
 		if(name == null || name.trim().equals(""))
 		{
@@ -3050,7 +3255,7 @@ public class ListItem
 		{
 			if(this.metadataGroups == null)
 			{
-				metadataGroups =  new Vector<MetadataGroup>();
+				metadataGroups =  new ArrayList<MetadataGroup>();
 			}
 			boolean optionalPropertiesDefined = false;
 			String opt_prop_name = rb.getString("opt_props");
@@ -3099,7 +3304,7 @@ public class ListItem
 				metadataGroups.add(dc);
 			}
 
-			//Map metadata = new Hashtable();
+			//Map metadata = new HashMap();
 			if(this.metadataGroups != null && ! this.metadataGroups.isEmpty())
 			{
 				for(MetadataGroup metadata_group : this.metadataGroups)
@@ -3389,35 +3594,128 @@ public class ListItem
 	    return typeSupportsOptionalProperties;
     }
 
-	public void setConditionArgument(String conditionArgument) {
-		this.conditionArgument = conditionArgument;
-	}
-
-	public String getConditionArgument() {
-		return conditionArgument;
-	}
-
-	public String getNotificationId() {
-		return this.notificationId;
-	}
-
-	public void setNotificationId(String notificationId) {
-		this.notificationId = notificationId;
-	}
-
-	public void setNumberFieldIsInvalid(boolean b) {
-		this.numberFieldIsInvalid = b;
+	/**
+	 * @return the isHot
+	 */
+	public boolean isHot(String dropboxHighlight) 
+	{
+		boolean hot = false;
+		try
+		{
+			if(dropboxHighlight != null && ! dropboxHighlight.trim().equals("") && this.lastChange != null)
+			{
+				long days = Long.parseLong(dropboxHighlight);
+				long minTime = TimeService.newTime().getTime() - days * ONE_DAY;
+				hot = this.lastChange.getTime() > minTime;
+			}
+		}
+		catch(Exception e)
+		{
+			hot = false;;
+		}
 		
+		return hot;
 	}
 
-	public String getConditionAssignmentPoints() {
-		return conditionAssignmentPoints;
+	/**
+	 * @param isHot the isHot to set
+	 */
+	public void setHot(boolean isHot) {
+		this.isHot = isHot;
 	}
 
-	public void setConditionAssignmentPoints(String conditionAssignmentPoints) {
-		this.conditionAssignmentPoints = conditionAssignmentPoints;
+	private String getIndividualDropboxId(String id) 
+	{
+		String rv = null;
+		if(id != null)
+		{
+			String parts[] = id.split("/");
+			if(parts.length >= 4)
+			{
+				rv = "/" + parts[1] + "/" + parts[2] + "/" + parts[3] + "/";
+			}
+		}
+		return rv;
 	}
 
+	/**
+	 * Determine whether the user is a Dropbox maintainer for the root-level dropbox (provided the current item is
+	 * an individual dropbox or an item inside an individual dropbox). 
+	 * @return true if the user is a site-level maintainer for the dropbox (provided the current item is
+	 * an individual dropbox or an item inside an individual dropbox), and false otherwise.
+	 */
+	public boolean userIsMaintainer()
+	{
+		boolean userIsMaintainer = false;
+		if(this.isDropbox)
+		{
+			String dropboxId = null;
+			if(id != null && !id.trim().equals(""))
+			{
+				dropboxId = getIndividualDropboxId(id);
+			}
+			else if(containingCollectionId != null && ! containingCollectionId.trim().equals(""))
+			{
+				dropboxId = getIndividualDropboxId(containingCollectionId);
+			}
+			else if(parent != null)
+			{
+				dropboxId = getIndividualDropboxId(parent.getId());
+			}
+			if(dropboxId != null)
+			{
+				User currentUser = UserDirectoryService.getCurrentUser();
+				String userEid = currentUser.getEid();
+				String userId = currentUser.getId();
+				userIsMaintainer = ! ((userEid == null || dropboxId.contains(userEid)) || (userId == null || dropboxId.contains(userId)));
+			}
+		}
+		return userIsMaintainer;
+	}
 
+	/**
+	 * @return the dropboxHighlight
+	 */
+	public long getDropboxHighlight() {
+		return dropboxHighlight;
+	}
+
+	/**
+	 * @param dropboxHighlight the dropboxHighlight to set
+	 */
+	public void setDropboxHighlight(long dropboxHighlight) {
+		this.dropboxHighlight = dropboxHighlight;
+	}
+
+	/**
+	 * @return the lastChange
+	 */
+	public Time getLastChange() {
+		return lastChange;
+	}
+
+	/**
+	 * @param lastChange the lastChange to set
+	 */
+	public void setLastChange(Time lastChange) {
+		this.lastChange = lastChange;
+	}
+
+	/**
+	 * @return the isCourseSite
+	 */
+	public boolean isCourseSite() 
+	{
+		return isCourseSite;
+	}
+
+	/**
+	 * @param isCourseSite the isCourseSite to set
+	 */
+	public void setCourseSite(boolean isCourseSite) 
+	{
+		this.isCourseSite = isCourseSite;
+	}
+	
 }
 

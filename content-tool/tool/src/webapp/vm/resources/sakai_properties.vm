@@ -18,48 +18,14 @@
 	document.calendars[calendarcounter] = new Array(yearselect_id, monthselect_id, dayselect_id, inputfield_id);
 *#
 
-#macro (resources_dateselectionwidget $prefix $suffix $current_value)
+#macro (resources_dateselectionwidget $prefix $suffix $current_value $dateFormat)
 	#set($yearSelected = $current_value.year)
 	#set($earliestYear = $yearSelected - 4)
 	#set($latestYear = $yearSelected + 4)
 	#set($monthSelected = $current_value.month)
 	#set($daySelected = $current_value.day)
-	<select name="${prefix}_month${DOT}${suffix}" id="${prefix}_month${DOT}${suffix}">  
-    	#if ($monthSelected == 1) <option value="1" selected="selected">$tlang.getString("month.jan")</option> #else <option value="1">$tlang.getString("month.jan")</option> #end
- 		#if ($monthSelected == 2) <option value="2" selected="selected">$tlang.getString("month.feb")</option> #else <option value="2">$tlang.getString("month.feb")</option> #end
-		#if ($monthSelected == 3) <option value="3" selected="selected">$tlang.getString("month.mar")</option> #else <option value="3">$tlang.getString("month.mar")</option> #end
-		#if ($monthSelected == 4) <option value="4" selected="selected">$tlang.getString("month.apr")</option> #else <option value="4">$tlang.getString("month.apr")</option> #end
-		#if ($monthSelected == 5) <option value="5" selected="selected">$tlang.getString("month.may")</option> #else <option value="5">$tlang.getString("month.may")</option> #end
-		#if ($monthSelected == 6) <option value="6" selected="selected">$tlang.getString("month.jun")</option> #else <option value="6">$tlang.getString("month.jun")</option> #end
-		#if ($monthSelected == 7) <option value="7" selected="selected">$tlang.getString("month.jul")</option> #else <option value="7">$tlang.getString("month.jul")</option> #end
-		#if ($monthSelected == 8) <option value="8" selected="selected">$tlang.getString("month.aug")</option> #else <option value="8">$tlang.getString("month.aug")</option> #end
-		#if ($monthSelected == 9) <option value="9" selected="selected">$tlang.getString("month.sep")</option> #else <option value="9">$tlang.getString("month.sep")</option> #end
-		#if ($monthSelected == 10) <option value="10" selected="selected">$tlang.getString("month.oct")</option> #else <option value="10">$tlang.getString("month.oct")</option> #end
-		#if ($monthSelected == 11) <option value="11" selected="selected">$tlang.getString("month.nov")</option> #else <option value="11">$tlang.getString("month.nov")</option> #end
-		#if ($monthSelected == 12) <option value="12" selected="selected">$tlang.getString("month.dec")</option> #else <option value="12">$tlang.getString("month.dec")</option> #end
-    </select>
-    <select name="${prefix}_day${DOT}${suffix}" id="${prefix}_day${DOT}${suffix}">
-	    #foreach($d in [1..31])
-	        #if($d == $daySelected)
-	            <option value="$d" selected="selected">$d</option>
-	        #else
-	            <option value="$d">$d</option>
-	        #end
-		#end
-    </select>
-    <select name="${prefix}_year${DOT}${suffix}" id="${prefix}_year${DOT}${suffix}">
-        #foreach ($y in [$earliestYear .. $latestYear])
-            #if ($y == $yearSelected)
-                    <option value="$y" selected="selected">$y</option>
-            #else
-                    <option value="$y">$y</option>
-            #end
-		#end
-    </select>
-    <img id="${prefix}_calendar${DOT}${suffix}" src="/library/calendar/images/calendar/cal.gif" alt="" style="cursor: pointer;" title="Popup date selector" />
-    <input type="hidden" name="chef_calendarhiddenfield${calendarcounter}" id="chef_calendarhiddenfield${calendarcounter}" />
-	#set($cValue = $calendarMap.put("$calendarcounter", ["${prefix}_year${DOT}${suffix}", "${prefix}_month${DOT}${suffix}", "${prefix}_day${DOT}${suffix}", "chef_calendarhiddenfield${calendarcounter}"]))
-	#set($calendarcounter = $calendarcounter + 1)
+   
+   #chef_dateselectionwidget("${prefix}_year${DOT}${suffix}" "${prefix}_month${DOT}${suffix}" "${prefix}_day${DOT}${suffix}" $earliestYear $latestYear $yearSelected $monthSelected $daySelected $dateFormat "")
 #end
 
 #macro(resources_timeSelectionWidget $prefix $suffix $current_value)
@@ -347,7 +313,7 @@
 					<td>
 					</td>
 					<td>
-						#resources_dateselectionwidget("release" "$i" $model.releaseDate.breakdownLocal() )
+						#resources_dateselectionwidget("release" "$i" $model.releaseDate.breakdownLocal() $dateFormat )
 					</td>
 					<td>
 						#resources_timeSelectionWidget("release" "$i" $model.releaseDate)
@@ -387,80 +353,12 @@
 					<td>
 					</td>
 					<td>
-						#resources_dateselectionwidget("retract" "$i" $model.retractDate.breakdownLocal())
+						#resources_dateselectionwidget("retract" "$i" $model.retractDate.breakdownLocal() $dateFormat)
 					</td>
 					<td>
 						#resources_timeSelectionWidget("retract" "$i" $model.retractDate)
 					</td>
 				</tr>
-				<tr>
-					<td>
-					</td>
-					<td>
-					#if($resourceSelections.size() == 0)
-						<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox" disabled>
-					#else
-						#if($item.useConditionalRelease())
-							<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox" checked="checked">
-						#else
-							<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox">
-						#end
-					#end	
-					</td>
-					<td colspan="3">
-						<label for="cbCondition${DOT}$i">
-							Only if the following condition is met:
-						</label>
-					</td>
-				</tr>
-			</table>					
-			<table>
-				<tr>
-					<td>
-						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					</td>
-					<td>
-						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					</td>
-					<td colspan="3">
-						#if($resourceSelections.size() == 0)
-							$tlang.getString("no.gradebook.assignments")
-						#else						
-							Gradebook 
-							<select name="selectResource${DOT}$i" id="selectResource${DOT}$i">
-							#foreach ($key in $resourceSelections.keySet())
-								#if($key.equals($item.getSubmittedResourceFilter()) && $item.useConditionalRelease())
-									<option value="${key}" selected="selected">${resourceSelections.get(${key})}</option>
-								#else
-									<option value="${key}">${resourceSelections.get(${key})}</option>
-								#end
-							
-							#end
-							</select>
-							<select name="selectCondition${DOT}$i"
-							  id="selectCondition${DOT}$i"
-							  onchange="changeCondition(this.options[this.selectedIndex].value, '${DOT}$i');">
-							#foreach ($key in $conditionSelections.keySet())							
-								#if($key.equals($item.getSelectedConditionKey()) && $item.useConditionalRelease())
-									<option value="${key}" selected="selected">${conditionSelections.get(${key})}</option>							
-								#else
-									<option value="${key}">${conditionSelections.get(${key})}</option>							
-								#end
-							#end
-							</select>
-							#if($item.getSelectedConditionKey().startsWith("9") || $item.getSelectedConditionKey().startsWith("10"))
-							<span id="grade_argument_span${DOT}$i" style="display:inline;">
-								<input type="text" size="3" name="assignment_grade${DOT}$i" id="assignment_grade${DOT}$i" value="$item.getConditionArgument()" />
-							#else
-							<span id="grade_argument_span${DOT}$i" style="display:none;">
-								<input type="text" size="3" name="assignment_grade${DOT}$i" id="assignment_grade${DOT}$i" />
-							#end
-							</span>
-						#end
-					</td>
-				</tr>
-			</table>
-			<table>
 				<tr>
 					<td>
 						<input type="radio" name="hidden${DOT}$i" id="hidden_true${DOT}$i" value="true" #if($model.isHidden())checked="checked" #end/>
@@ -489,54 +387,60 @@
 			#end
 		</h4>
 	
-		<table class="itemSummary" border="0" style="clear:both;margin:left:.7em">
+		<table class="itemSummary" border="0" style="clear:both;"">
 			#if (!($dropboxMode && $collectionId==$homeCollectionId))
 				<tr> 
-					<td style="width:180px;padding-left:.7em"> 
-						<label>#if("$!TYPE_UPLOAD" == "$!{type.id}")$tlang.getString("props.creator.upl")#else$tlang.getString("props.creator")#end</label>
-					</td>
+					<th> 
+						#if("$!TYPE_UPLOAD" == "$!{type.id}")$tlang.getString("props.creator.upl")#else$tlang.getString("props.creator")#end
+					</th>
 					<td>
 						$validator.escapeHtml("$model.createdBy")
 					</td>
 				</tr>
 				<tr> 
-					<td style="width:180px;padding-left:.7em"> 
-						<label>#if("$!TYPE_UPLOAD" == "$!{type.id}")$tlang.getString("props.creatime.upl")#else$tlang.getString("props.creatime")#end</label>
-					</td>
+					<th> 
+						#if("$!TYPE_UPLOAD" == "$!{type.id}")$tlang.getString("props.creatime.upl")#else$tlang.getString("props.creatime")#end
+					</th>
 					<td>
 						$validator.escapeHtml("$model.createdTime")
 					</td>
 				</tr>
 			#end
 			<tr>
-				<td style="width:180px;padding-left:.7em"> 
-					<label>$tlang.getString("props.modby")</label>
-				</td>
+				<th> 
+					$tlang.getString("props.modby")
+				</th>
 				<td>
 					$validator.escapeHtml("$model.modifiedBy")
 				</td>
 			</tr>
 			<tr> 
-				<td style="width:180px;padding-left:.7em"> 
-					<label>$tlang.getString("props.modtime")</label>
-				</td>
+				<th> 
+					$tlang.getString("props.modtime")
+				</th>
 				<td>
 					$validator.escapeHtml("$model.modifiedTime")
 				</td>
 			</tr>
 			<tr> 
-				<td  style="width:180px;padding-left:.7em"> 
-					<label>$tlang.getString("props.url")</label>
-				</td>
+				<th> 
+					$tlang.getString("props.url")
+				</th>
 				<td>
-					<a href="$model.accessUrl" target="$model.target">$model.accessUrl</a>
+					<div>
+						<a class="textPanelFooter" href="javascript:document.getElementById('fileURLHolder').style.overflow='auto';
+						document.getElementById('fileURLHolder').focus();document.getElementById('fileURLHolder').select();">$tlang.getString("props.select")</a>
+						| <a class="textPanelFooter" href="$model.accessUrl" target ="_blank">$tlang.getString("props.open")</a>
+					</div>
+					<textarea id="fileURLHolder" rows="2" cols="50" style="overflow:hidden">$model.accessUrl</textarea>						
+
 				</td>
 			</tr>
 			#if(! $item.isCollection())
 				<tr> 
-					<td  style="width:180px;padding-left:.7em"> 
-						<label>$tlang.getString("props.size")</label>
-					</td>
+					<th>
+						$tlang.getString("props.size")
+					</th>
 					<td>
 						$model.sizzle 
 					</td>
@@ -544,9 +448,9 @@
 			#end
 			#if(! $model.isUrl() && ! $model.isCollection() && "$!{model.mimetype}" != "")
 				<tr> 
-					<td style="width:180px;padding-left:.7em"> 
-						<label>$tlang.getString("props.mime")</label>
-					</td>
+					<th>
+						$tlang.getString("props.mime")
+					</th>
 					<td>
 						<span id="mime_warning${DOT}$i"></span>
 						<span id="mime_widget${DOT}$i">
@@ -558,9 +462,12 @@
 					</td>
 				</tr>
 			#end
+			#if ($showMountPointProperty)
+				<tr>
+					<th>$tlang.getString("props.mountpoint")</th>
+          <td><input type="textbox" name="sakai:handler-bean-id" id="sakai:handler-bean-id" value="$CHHmountpoint" /></td>
+				</tr>
+			#end
 		</table> 
 	#end
 #parse("/vm/resources/sakai_metadata-edit.vm")
-	
-
-		

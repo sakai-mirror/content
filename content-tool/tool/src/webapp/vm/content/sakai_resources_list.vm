@@ -1,42 +1,87 @@
 ## version: $Id:  $
+
 <!-- sakai_resources_list.vm, use with org.sakaiproject.content.tool.ResourcesAction.java -->
 <!-- this is the new list template, which uses the resources type registry -->
 <!--[if gt IE 5.0]><![if lt IE 7]>
 <style type="text/css">
-/* that IE 5+ conditional comment makes this only visible in IE 5+ */
-ul.makeMenu li {  /* the behaviour to mimic the li:hover rules in IE 5+ */
-	behavior: url( /library/js/IEmen.htc );
-  }
+/* that IE 5+ conditional comment makes this only visible in IE 5+*/ 
 ul.makeMenu ul {  /* copy of above declaration without the > selector */                                                                      
   display: none; position: absolute; top: 18px; left: 0px; background-image:none; background-color:#ffffff;width: 15em; z-index:3;border:1px solid  #666  	
 }
+ul.makeMenu ul li {display:block}
+
+
 </style>
 <![endif]><![endif]-->
-<!--[if gt IE 6.0]>
+<!--[if gt IE 6.0]><![if lt IE 8]>
 <style type="text/css">
-	 ul.makeMenu ul{top: 10px !important}
-	 ul.makeMenu {border:none }
-	 ul.makeMenu:hover {border:none }
-</style>
-<![endif]-->
+ul.makeMenu li {
+  list-style-type: none; 
+  margin: 0px; 
+  padding:5px; 
+  position: relative;
+  color: #000000;
+  display:inline;
+}
 
+.menuOpen{margin:2px !important;padding:2px !important;background:#fff;width:6em;border-width:1px 1px 1px 0;border-style:solid;border-color: #ccc;}
+	.menuOpen:hover{border-width:1px 1px 1px 0;border-style:solid;border-color: #ccc;;background:#fff}
+	ul.makeMenu{border:none !important;background:#fff;border:1px solid #ccc !important;margin:2px;padding:2px;padding-left:5px;width:3em;}
+	ul.makeMenu:hover{border:1px solid #ccc !important; background:#fff}
+	ul.makeMenu ul{top: 15px !important;left:0}
+	 .attach{width:1em !important;}
+
+</style>
+<![endif]><![endif]-->
+
+#**#
+<script type ="text/javascript" src ="/library/js/jquery.js">
+<!-- // -->
+</script>
+<script  type ="text/javascript">
+$(document).ready(function() {
+	jQuery('.portletBody').click(function(e) { 
+			
+		if ( e.target.className !='menuOpen' &&e.target.className !='dropdn'  ){
+			$('.makeMenuChild').hide();
+		}
+			else
+			{
+				if( e.target.className =='dropdn' ){
+			targetId=$(e.target).parent('li').attr('id');
+			$('.makeMenuChild').hide();
+			$('#menu-' + targetId).show();
+
+}
+				else{
+			targetId=e.target.id;
+			$('.makeMenuChild').hide();
+			$('#menu-' + targetId).show();
+			}}
+	});
+	});
+</script>
+#**#
 #set($num = 0)
 <div class="portletBody specialLink">
 	#set($itemsOnLine = 0)
 	#if ($atHome && $atHome == $TRUE)
-			<div class="navIntraTool">
-				$tlang.getString("list.site")
-				| <a href="#toolLink("ResourcesAction" "doShow_webdav")" title="$tlang.getString('dav.webdav')">$tlang.getString("dav.webdav").trim()</a> 
+			<ul class="navIntraTool actionToolBar">
+				<li class="firstToolBarItem"><span class="current">$tlang.getString("list.site")</span></li>
+				<li><span><a href="#toolLink("ResourcesAction" "doShow_webdav")" title="$tlang.getString('dav.webdav')">$tlang.getString("dav.webdav").trim()</a></span></li>
 				#if($showPermissions)
-				| <a href="#toolLinkParam("ResourcesAction" "doPermissions" "collectionId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.sPerm')">$tlang.getString("list.sPerm").trim()</a>
+				<li><span><a href="#toolLinkParam("ResourcesAction" "doPermissions" "collectionId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.sPerm')">$clang.getString("list.sPerm").trim()</a></span></li>
 				#end
 				#if($showOptions)
-				| <a href="#toolLinkParam("ResourcesAction" "doOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.options')">$clang.getString("list.options").trim()</a>
+				<li><span><a href="#toolLinkParam("ResourcesAction" "doOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.options')">$clang.getString("list.options").trim()</a></span></li>
 				#end
-			</div>
+				#if($showDropboxOptions)
+				<li><span><a href="#toolLinkParam("ResourcesAction" "doDropboxOptions" "siteId=$validator.escapeUrl(${site.id})")" title="$clang.getString('list.options')">$clang.getString("list.options").trim()</a></span></li>
+				#end
+			</ul>
 	#end 
 	#if ($alertMessage)
-		<br /><div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div class="clear" ></div>
+		<br /><div class="alertMessage">$clang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div class="clear" ></div>
 	#end
 	<form name="showForm" id="showForm" action="#toolForm("ResourcesAction")" method="post">
 		<input type="hidden" name="source" id="source" value="0" />
@@ -75,36 +120,55 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 				#end
 			</h3>
 		</div>	
-		#if($listActions)
-			<div class="navIntraToolLink" >
-				#set ($itemsOnLine = 0)
-				#foreach($key in $listActions.keySet())
-					#set($action = $listActions.get("$key"))
-					#if($itemsOnLine > 0)|#end
-					<input id="${action.id}-button" type="button" value="$!action.label"
-						onclick="javascript:document.getElementById('sakai_action').value='doMultiItemDispatch';document.getElementById('rt_action').value='$action.id';document.getElementById('showForm').submit();"
-						disabled="disabled" alt="$!action.id" />
-					
-					#set ($itemsOnLine = $itemsOnLine + 1)
+		#if($listActions || $showHotDropboxWidget)
+			<div class="navPanel">
+				<div class="navIntraToolLink viewNav">
+					#if($listActions)
+						<span>
+							#set ($itemsOnLine = 0)
+							#foreach($key in $listActions.keySet())
+								#set($action = $listActions.get("$key"))
+								#if($itemsOnLine > 0)|#end
+								<input id="${action.id}-button" type="button" value="$!action.label"
+									onclick="javascript:document.getElementById('sakai_action').value='doMultiItemDispatch';document.getElementById('rt_action').value='$action.id';document.getElementById('showForm').submit();"
+									disabled="disabled" alt="$!action.id" />
+								
+								#set ($itemsOnLine = $itemsOnLine + 1)
+							#end
+						</span>
+					#end
+				</div>
+				#if($showHotDropboxWidget)
+					<div class="listNav">
+						<span class="instruction">
+							Highlight individual dropboxes with recent changes:
+						</span>	
+						<select name="dropboxHighlight" id="dropboxHighlight" onchange="javascript:document.getElementById('sakai_action').value='doSetHotDropbox';document.getElementById('showForm').submit();">
+							<option value="1"#if("$!dropboxHighlight" == "1") selected="selected"#end>1 day</option>
+							<option value="2"#if("$!dropboxHighlight" == "2") selected="selected"#end>2 days</option>
+							<option value="3"#if("$!dropboxHighlight" == "3") selected="selected"#end>3 days</option>
+							<option value="7"#if("$!dropboxHighlight" == "7") selected="selected"#end>1 week</option>
+						</select>
+					</div>
 				#end
-			</div>
+			</div>	
 		#end
+				
 		#set ($actionCount=2000)
 		#set ($actionCount2=1000)
 		######################  Heirarchical list of resource folders/items  ##############
-		<table class="listHier lines" cellspacing="0" border="0"  summary="$clang.getString("sh.listsum")">
+		<table class="listHier lines centerLines" cellspacing="0" border="0"  summary="$clang.getString("sh.listsum")">
 			######################  Column labels, sort controls, expand/collapse all  ##############
 			<caption class="skip"  style="display:none">$clang.getString("sh.listcap")</caption>
 			<tr>
 				<th id="expansion" style="border:none">
 					#if ($expandallflag && "$expandallflag" == "$TRUE")
-						<a href="#" onclick="javascript:document.getElementById('sakai_action').value='doUnexpandall';document.getElementById('collectionId').value='$collectionId';document.getElementById('showForm').submit();"
+						<a href="javascript:document.getElementById('sakai_action').value='doUnexpandall';document.getElementById('collectionId').value='$collectionId';document.getElementById('showForm').submit();"
 							title= "$clang.getString('collapseall')">
 							<img src = "#imageLink("sakai/collapse-expand.gif")" border="0" title="$clang.getString('collapseall')" alt="$clang.getString('collapseall')" hspace="0" />
 						</a>								 
 					#else
-						<a href="#"
-							onclick="javascript:document.getElementById('sakai_action').value='doExpandall';document.getElementById('collectionId').value='$collectionId';document.getElementById('showForm').submit();"
+						<a href="javascript:document.getElementById('sakai_action').value='doExpandall';document.getElementById('collectionId').value='$collectionId';document.getElementById('showForm').submit();"
 							title= "$clang.getString('expandall')">
 							<img src = "#imageLink("sakai/expand-collapse.gif")" border="0" title="$clang.getString('expandall')" alt="$clang.getString('expandall')" hspace="0" />
 						</a>								 
@@ -112,11 +176,10 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 				</th>
 				<th id="checkboxes"  style="border:none">
 						<input type="checkbox" name="selectall" id="selectall" disabled="disabled" title="$clang.getString("list.select")"
-							onclick="javascript:toggleSelectAll(this, 'selectedMembers')" value="" />
+							onclick="javascript:toggleSelectAll(this, 'selectedMembers')" value="" /><label for="selectall" class="skip">$clang.getString("list.select")</label>
 				</th>
 				<th id="title"  style="border:none">
-					<a href="#"
-						onclick="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='title';document.getElementById('showForm').submit();"
+					<a href="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='title';document.getElementById('showForm').submit();"
 						title= "$clang.getString('sh.sorttit')">
 						$clang.getString("gen.title1")
 						#if ($currentSortedBy.equals($resourceProperties.NamePropDisplayName)) 
@@ -141,8 +204,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					$clang.getString("gen.access")
 				</th>
 				<th id="creator"  style="border:none">
-					<a href="#"
-						onclick="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='created by';document.getElementById('showForm').submit();"
+					<a href="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='created by';document.getElementById('showForm').submit();"
 						title= "$clang.getString('sh.sortaut')">
 						$clang.getString("gen.created")
 						#if ($currentSortedBy.equals($resourceProperties.NamePropCreator)) 
@@ -155,8 +217,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					</a>
 				</th>
 				<th id="modified"  style="border:none">
-					<a href="#"
-						onclick="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='last modified';document.getElementById('showForm').submit();"
+					<a href="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='last modified';document.getElementById('showForm').submit();"
 						title= "$clang.getString('sh.sortdate')">
 						$clang.getString("gen.last1")
 						#if ($currentSortedBy.equals($resourceProperties.NamePropModifiedDate)) 
@@ -169,8 +230,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					</a>
 				</th>
 				<th id="size"  style="border:none">
-					<a href="#"
-						onclick="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='size';document.getElementById('showForm').submit();"
+					<a href="javascript:document.getElementById('sakai_action').value='doSort';document.getElementById('collectionId').value='$collectionId';document.getElementById('criteria').value='size';document.getElementById('showForm').submit();"
 						title= "$clang.getString('sh.sortsize')">
 						$clang.getString("gen.size")
 						#if ($currentSortedBy.equals($resourceProperties.NamePropContentLength)) 
@@ -219,11 +279,13 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 						#end
 					</td>
 					<td headers="title" style="text-indent:$width" class="specialLink">
+					#if($item.isHot("$!dropboxHighlight")) #set($iconDecor="recentItem") #set($newNote="new") #else  #set($iconDecor="nil")  #set($newNote="")#end 
 						<h$headerDepth> 
 							#if ($item.canRead())
 								#if($item.isCollection())
+									<span class="skip">$newNote</span><span class="$iconDecor">
 									#if($item.isEmpty() || $item.isTooBig() || $item.depth < 1)
-										<img src="#imageLink($item.iconLocation)" border= "0" alt="$item.hoverText" hspace="0" />
+										<img src="#imageLink($item.iconLocation)" border= "0" alt="$item.hoverText" hspace="0" /></span>
 									#else
 										<a href="#"
 											#if($item.isExpanded())
@@ -231,10 +293,9 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 											#else
 												onclick="javascript:document.getElementById('sakai_action').value='doExpand_collection';document.getElementById('collectionId').value='$item.Id';document.getElementById('showForm').submit();"
 											#end
-											title= "$item.expandLabel">
-										<img src="#imageLink($item.expandIconLocation)" border= "0" alt="$item.expandLabel" hspace="0" />
-										</a>
+											title= "$item.expandLabel"><img src="#imageLink($item.expandIconLocation)" border= "0" alt="$item.expandLabel"  /></a></span>
 									#end
+									
 								#else
 									#if ($item.hasCopyrightAlert())
 										## if there is a copyright alert, show the alert page first
@@ -287,37 +348,58 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 							#set ($itemsOnLine = 0)
 							#foreach($action in $item.pasteActions)
 								#if($itemsOnLine > 0)|#end
-								<a href="#" class=" highlightlink" title="$labeler.getLabel($action) here" onclick="document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
+								<a class=" highlightlink" title="$labeler.getLabel($action) here" href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
 								#set ($itemsOnLine = $itemsOnLine + 1)
 							#end
 						#end
 					</td>
-						#set ($actionCount=($actionCount - 1))
-						#set ($actionCount2=($actionCount2 - 1))
-						<td headers="actions2"   class="attach">
-						#if($item.addActions && !$item.addActions.isEmpty())
+					#set ($actionCount=($actionCount - 1))
+					#set ($actionCount2=($actionCount2 - 1))
+					<td headers="actions2"   class="attach">
+
+					#if($item.addActions && !$item.addActions.isEmpty())
+							<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';"></a>
+							<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='block';" class="skip">$tlang.getString("button.startadd")</a>
+
 							<ul style="z-index:$actionCount;margin:0;display:block" class="makeMenu">
-								<li>
-									<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="Add" /> 
-									$tlang.getString("button.add")
-									<ul class="">
+
+							<li  class="menuOpen" id="$actionCount">
+									&nbsp;$tlang.getString("button.add") 
+								<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="$tlang.getString("button.add")"  class="dropdn"/> 
+									<ul  id="menu-$actionCount" class="makeMenuChild">
+##										<li class="menuClose">
+##										<a href="#"  onmousedown="document.getElementById('menu-$actionCount').style.display='none';">$tlang.getString("button.closemenu")</a>
+##										</li>
 										#foreach($action in $item.addActions)
-											<li>
-												<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a>
-											</li>
+											<li><a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a></li>
 										#end
+										<li style="height:1px;width:1px;display:inline;">
+											<a href="#"  class="skip" onfocus="document.getElementById('menu-$actionCount').style.display='none';document.getElementById('last-$actionCount').focus()" >$tlang.getString("button.endadd")</a>
+										</li>
 									</ul>
-							  	</li>
-							</ul>
-						#end
-					</td>
+
+									</li>
+
+								</ul>
+
+							<a href="#" id="last-$actionCount" class="skip"></a>							
+
+							#end
+
+						</td>
 					<td headers="actions3"   class="attach">
-						#if($item.otherActions && !$item.otherActions.isEmpty())
-							<ul style="z-index:$actionCount2;margin:0;display:block" class="makeMenu" >
-								<li>
-									<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="Actions" />
-									$tlang.getString("button.actions")
-									<ul class="">
+
+					#if($item.otherActions && !$item.otherActions.isEmpty())
+						<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';" class="skip"></a>
+						<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='block';" class="skip">$tlang.getString("button.startact")</a>
+							<ul style="z-index:$actionCount2;margin:0;display:block" class="makeMenu">
+								<li class="menuOpen" id="$actionCount2">
+									&nbsp;$tlang.getString("button.actions")
+									<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="$tlang.getString("button.actions")" class="dropdn"/>									
+									<ul  id="menu-$actionCount2"  class="makeMenuChild">
+##										<li class="menuClose">
+##											<a href="#"  onmousedown="document.getElementById('menu-$actionCount2').style.display='none'">$tlang.getString("button.closemenu")</a>
+##										</li>
 										#foreach($action in $item.otherActions)
 											<li>
 												<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
@@ -325,12 +407,16 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 												</a>
 											</li>
 										#end
+										<li style="height:1px;width:1px;display:inline;">
+											<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0"  class="skip">$tlang.getString("button.endact")</a>
+										</li>
 									</ul>
-							  	</li>
+								</li>
 							</ul>
+							<a href="#" id="last-$actionCount2" class="skip"></a>		
 						#end
 
-					</td>
+						</td>
 					#if($item.depth > 0)
 						<td headers="access" title="$item.effectiveGroupsLabel">
 							#if($item.isPubviewInherited() || $item.isPubview())
@@ -344,7 +430,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 							#end
 						</td>
 						<td headers="creator">
-							$item.createdBy
+							$validator.escapeHtml($item.createdBy)
 						</td>
 						<td headers="modified">
 							$item.ModifiedTime
@@ -366,8 +452,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					<tr>
 						<th colspan="10"  style="border:none">
 						<h3>
-							<a href="#"
-								onclick="javascript:document.getElementById('sakai_action').value='doHideOtherSites';document.getElementById('showForm').submit();"
+							<a href="javascript:document.getElementById('sakai_action').value='doHideOtherSites';document.getElementById('showForm').submit();"
 								title= "$clang.getString('list.hide')">
 							##<a href="#toolLink("ResourcesAction" "doHideOtherSites")" title= "$clang.getString('list.hide')">
 								<img src="#imageLink("sakai/collapse.gif")" alt="$clang.getString('list.hide')" border="0" align="top" />
@@ -456,11 +541,13 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 								#end
 							</td>
 							<td headers="title" style="text-indent:$width" class="specialLink">
+						#if($item.isHot("$!dropboxHighlight")) #set($iconDecor="recentItem") #set($newNote="new") #else  #set($iconDecor="nil")  #set($newNote="")#end 
 								<h$headerDepth> 
 									#if ($item.canRead())
 										#if($item.isCollection())
+										<span class="skip">$newNote</span><span class="$iconDecor">	
 											#if($item.isEmpty() || $item.isTooBig())
-												<img src="#imageLink($item.iconLocation)" border= "0" alt="$item.hoverText" hspace="0" />
+												<img src="#imageLink($item.iconLocation)" border= "0" alt="$item.hoverText" hspace="0" /></span>
 											#else
 												<a href="#"
 													#if($item.isExpanded())
@@ -468,10 +555,9 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 													#else
 														onclick="javascript:document.getElementById('sakai_action').value='doExpand_collection';document.getElementById('collectionId').value='$item.Id';document.getElementById('showForm').submit();"
 													#end
-													title= "$item.expandLabel">
-												<img src="#imageLink($item.expandIconLocation)" border= "0" alt="$item.expandLabel" hspace="0" />
-												</a>
+													title= "$item.expandLabel"><img src="#imageLink($item.expandIconLocation)" border= "0" alt="$item.expandLabel" hspace="0" /></a></span>
 											#end
+											
 										#else
 											#if ($item.hasCopyrightAlert())
 												## if there is a copyright alert, show the alert page first
@@ -524,37 +610,54 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 									#set ($itemsOnLine = 0)
 									#foreach($action in $item.pasteActions)
 										#if($itemsOnLine > 0)|#end
-										<a href="#" class=" highlightlink" title="$labeler.getLabel($action) here" onclick="document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
+										<a class=" highlightlink" title="$labeler.getLabel($action) here" href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');"><img src = "#imageLink("silk/page_paste.gif")" border="0"  alt="$labeler.getLabel($action)"/></a> 
 										#set ($itemsOnLine = $itemsOnLine + 1)
 									#end
 								#end
 							</td>
-								<td headers="actions2"   class="attach">
-								#set ($actionCount=($actionCount - 1))
-								#set ($actionCount2=($actionCount2 - 1))
+							#set ($actionCount=($actionCount - 1))
+							#set ($actionCount2=($actionCount2 - 1))
+							<td headers="actions2"   class="attach">
+
 								#if($item.addActions && !$item.addActions.isEmpty())
+									<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';"></a>
+									<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='block';" class="skip">$tlang.getString("button.startadd")</a>
 									<ul style="z-index:$actionCount;margin:0;display:block" class="makeMenu">
-										<li>
-											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="Add" /> 
-											$tlang.getString("button.add")
-											<ul class="">
-												#foreach($action in $item.addActions)
-													<li>
-														<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a>
-													</li>
-												#end
+										<li class="menuOpen" id="$actionCount">
+											&nbsp;$tlang.getString("button.add")
+											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="$tlang.getString("button.add")" class="dropdn"/>
+											<ul  id="menu-$actionCount" class="makeMenuChild">
+##												<li class="menuClose">
+##													<a href="#"  onmousedown="document.getElementById('menu-$actionCount').style.display='none';">$tlang.getString("button.closemenu")</a>
+##												</li>
+							    #foreach($action in $item.addActions)
+												<li>
+													<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a>
+												</li>
+							    #end
+										<li style="height:1px;width:1px;display:inline;">
+													<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';document.getElementById('last-$actionCount').focus()" style="height:1px;margin:0;padding:0" class="skip">$tlang.getString("button.endadd")</a>
+												</li>
 											</ul>
-									  	</li>
+										</li>
 									</ul>
+									<a href="#" id="last-$actionCount" style="height:1px;margin:0;padding:0" class="skip"></a>
 								#end
+
 								</td>
-								<td headers="actions3"   class="attach">
-								#if($item.otherActions && !$item.otherActions.isEmpty())
+							<td headers="actions3" class="attach">
+
+							#if($item.otherActions && !$item.otherActions.isEmpty())
+									<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';"></a>
+									<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='block';"  class="skip">$tlang.getString("button.startact")</a>
 									<ul style="z-index:$actionCount2;margin:0;display:block" class="makeMenu" >
-										<li>
-											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="Actions" />
-											$tlang.getString("button.actions")
-											<ul class="">
+										<li class="menuOpen" id="$actionCount2">
+											&nbsp;$tlang.getString("button.actions")
+											<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="$tlang.getString("button.actions")"  class="dropdn"/>
+											<ul  id="menu-$actionCount2" class="makeMenuChild">
+##												<li class="menuClose">
+##													<a href="#" 	 onmousedown="document.getElementById('menu-$actionCount2').style.display='none';">$tlang.getString("button.closemenu")</a>
+##												</li>											
 												#foreach($action in $item.otherActions)
 													<li>
 														<a  href="javascript:document.getElementById('selectedItemId').value='$item.id';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
@@ -562,10 +665,15 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 														</a>
 													</li>
 												#end
+										<li style="height:1px;width:1px;display:inline;">
+													<a href="#" onfocus="document.getElementById('menu-$actionCount2').style.display='none';document.getElementById('last-$actionCount2').focus()" style="height:1px;margin:0;padding:0" title="Actions menu end" class="skip">tlang.getString("button.endact")</a>
+												</li>
 											</ul>
-									  	</li>
+								  	</li>
 									</ul>
+									<a href="#" id="last-$actionCount2" ></a>
 								#end
+
 							</td>
 							#if($item.depth > 0)
 								<td headers="access" title="$item.effectiveGroups">
@@ -580,7 +688,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 									#end
 								</td>
 								<td headers="creator">
-									$item.createdBy
+									$validator.escapeHtml($item.createdBy)
 								</td>
 								<td headers="modified">
 									$item.ModifiedTime
@@ -599,7 +707,7 @@ ul.makeMenu ul {  /* copy of above declaration without the > selector */
 					<tr>
 						<th colspan="10"  style="border:none">
 						<h3>
-							<a href="#"  		onclick="javascript:document.getElementById('sakai_action').value='doShowOtherSites';document.getElementById('showForm').submit();"
+							<a href="javascript:document.getElementById('sakai_action').value='doShowOtherSites';document.getElementById('showForm').submit();"
 								title= "$clang.getString('list.show')">
 								<img src="#imageLink("sakai/expand.gif")" alt="$clang.getString('list.show')" border="0" align="top" />
 								$validator.escapeHtml("$clang.getString('list.show')")

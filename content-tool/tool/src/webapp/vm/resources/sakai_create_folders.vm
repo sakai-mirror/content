@@ -20,7 +20,9 @@
 		</h4>
 	</div>
 	<form name="addFolderForm" id="addFolderForm" method="post" action="#toolForm("ResourcesHelperAction")">
+		<input type="hidden" name="pipe-init-id" id="pipe-init-id" value="$!{pipe-init-id}" />
 		<input type="hidden" name="fileCount" id="fileCount" value="$pipes.size()" />
+		<input type="hidden" name="requestStateId" id="requestStateId" value="$!{requestStateId}" />
 		#set($lastIndex = $pipes.size() - 1)
 		<input type="hidden" name="lastIndex" id="lastIndex" value="$lastIndex" />
 		<div id="fileInputDiv">
@@ -50,7 +52,7 @@
 			#end
 		</div>
 		<p class="act">
-			<a href="#" onclick="javascript:addFileInput();">$tlang.getString("label.addFolder")</a>
+			<a href="#" onclick="javascript:addFileInput();return false">$tlang.getString("label.addFolder")</a>
 		</p>
 #*
 		#if ($model.resourceTypeDef.hasNotificationDialog())
@@ -69,7 +71,7 @@
 		<p class="act">
 			<input type="button" class="active" name="savechanges" id="saveChanges" onclick="javascript:showNotif('submitnotif03','saveChanges','addFolderForm');document.getElementById('addFolderForm').action='#toolLink("ResourcesHelperAction" "doCreateFolders")&flow=save';submitform('addFolderForm');" value="$tlang.getString("label.finfldr")" accesskey="s" />
 			<input type="button" name="cancel" onclick="javascript:document.getElementById('addFolderForm').action='#toolLink("ResourcesHelperAction" "doCancel")';submitform('addFolderForm');" value="$tlang.getString("label.cancel")" accesskey="x" />
-			<span class="submitnotif" id="submitnotif03" style="visibility:hidden">$tlang.getString("label.proces")</span>
+			<span class="messageProgress"  id="submitnotif03" style="visibility:hidden">$tlang.getString("processmessage.folders")</span>
 		</p>
 	</form>
 </div>

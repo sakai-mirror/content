@@ -12,6 +12,7 @@
 	#set($i = "0")
 	#set($model = $item)
 	<form name="$DETAILS_FORM_NAME" id="$DETAILS_FORM_NAME" action="#toolLink("ResourcesAction" "doReviseProperties")" method="post">
+		<input type="hidden" name="pipe-init-id" id="pipe-init-id" value="$!{pipe-init-id}" />
 		<input type="hidden" name="sakai_action" id="sakai_action" value="doReviseProperties" />
 		<input type="hidden" name="user_action" id="user_action" value="save" />
 		<div id="propertiesDiv${DOT}$i" style="display:block;">
@@ -34,21 +35,40 @@
 			<hr class="itemSeparator" />
 		</div>			
 	
-		#if (! $item.isDropbox())
-			#if (! $item.isCollection())
-				#if ($notification)
-					##<p class="shorttext">
-					<p>
-						<label for="notify">
-							$tlang.getString("gen.email1")
-						</label>	
-						<select name="notify" id="notify">
-							<option value="r">$tlang.getString("gen.email2")</option>
-							<option value="o">$tlang.getString("gen.email3")</option>
-							<option value="n" selected="selected">$tlang.getString("gen.email4")</option>
-						</select>
-					</p>	
+		#if ($model.resourceTypeDef.hasNotificationDialog())
+			#if($model.isDropbox())
+				#if($model.userIsMaintainer() || $dropboxNotificationAllowed)
+					<p class="act">
+						<input type="checkbox" name="notify_dropbox" id="notify_dropbox" value="true" /> 
+						<label for="notify_dropbox">
+							#if($model.isCourseSite())
+								#if($model.userIsMaintainer())
+									$tlang.getString("notify.student")
+								#else
+									$tlang.getString("notify.instructor")
+								#end
+							#else
+								#if($model.userIsMaintainer())
+									$tlang.getString("notify.access")
+								#else
+									$tlang.getString("notify.maintain")
+								#end
+							#end
+						</label>
+					</p>
 				#end
+			#elseif($model.isUserSite())
+			#else
+				<p>
+					<label for="notify">
+						$tlang.getString("gen.email1")
+					</label>	
+					<select name="notify" id="notify">
+						<option value="r">$tlang.getString("gen.email2")</option>
+						<option value="o">$tlang.getString("gen.email3")</option>
+						<option value="n" selected="selected">$tlang.getString("gen.email4")</option>
+					</select>
+				</p>	
 			#end
 		#end
 	

@@ -3,13 +3,13 @@
  * $Id$
  ***********************************************************************************
  *
- * Copyright (c) 2005, 2006 The Sakai Foundation.
+ * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
  *
- * Licensed under the Educational Community License, Version 1.0 (the "License");
+ * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.opensource.org/licenses/ecl1.php
+ *       http://www.osedu.org/licenses/ECL-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,6 +46,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.PagedResourceHelperAction;
@@ -651,6 +654,8 @@ public class FilePickerAction extends PagedResourceHelperAction
 
 			boolean expandAll = Boolean.TRUE.toString().equals(toolSession.getAttribute(STATE_NEED_TO_EXPAND_ALL));
 
+			ContentResourceFilter filter = (ContentResourceFilter) state.getAttribute(STATE_ATTACHMENT_FILTER);
+			
 			//state.removeAttribute(STATE_PASTE_ALLOWED_FLAG);
 
 			List<ListItem> this_site = new Vector<ListItem>();
@@ -682,9 +687,8 @@ public class FilePickerAction extends PagedResourceHelperAction
 								ContentCollection db = contentService.getCollection(dbId);
 								expandedCollections.add(dbId);
 
-								ListItem item = ListItem.getListItem(db, (ListItem) null, registry, expandAll, expandedCollections, (List<String>) null, (List<String>) null, 0, userSelectedSort, false);
+								ListItem item = ListItem.getListItem(db, (ListItem) null, registry, expandAll, expandedCollections, (List<String>) null, (List<String>) null, 0, userSelectedSort, false, null);
 								List<ListItem> items = item.convert2list();
-								ContentResourceFilter filter = (ContentResourceFilter)toolSession.getAttribute(STATE_ATTACHMENT_FILTER);
 								if(filter != null)
 								{
 									items = filterList(items, filter);
@@ -715,7 +719,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 							ContentCollection db = contentService.getCollection(dropboxId);
 							expandedCollections.add(dropboxId);
 
-							ListItem item = ListItem.getListItem(db, null, registry, expandAll, expandedCollections, null, null, 0, null, false);
+							ListItem item = ListItem.getListItem(db, null, registry, expandAll, expandedCollections, null, null, 0, null, false, null);
 							this_site.addAll(item.convert2list());
 
 	//						List dbox = getListView(dropboxId, highlightedItems, (ResourcesBrowseItem) null, false, state);
@@ -739,9 +743,8 @@ public class FilePickerAction extends PagedResourceHelperAction
 			else
 			{
 				ContentCollection collection = contentService.getCollection(collectionId);
-				ListItem item = ListItem.getListItem(collection, null, registry, expandAll, expandedCollections, null, null, 0, null, false);
+				ListItem item = ListItem.getListItem(collection, null, registry, expandAll, expandedCollections, null, null, 0, null, false, filter);
 				List<ListItem> items = item.convert2list();
-				ContentResourceFilter filter = (ContentResourceFilter)toolSession.getAttribute(STATE_ATTACHMENT_FILTER);
 				if(filter != null)
 				{
 					items = filterList(items, filter);
@@ -943,6 +946,31 @@ public class FilePickerAction extends PagedResourceHelperAction
 		return template;
 	    //return TEMPLATE_SELECT;
     }
+    
+    /**
+     * remove all security advisors
+     */
+    protected void disableSecurityAdvisors()
+    {
+    	// remove all security advisors
+    	SecurityService.clearAdvisors();
+    }
+
+    /**
+     * Establish a security advisor to allow the "embedded" azg work to occur
+     * with no need for additional security permissions.
+     */
+    protected void enableSecurityAdvisor()
+    {
+      // put in a security advisor so we can create citationAdmin site without need
+      // of further permissions
+      SecurityService.pushAdvisor(new SecurityAdvisor() {
+        public SecurityAdvice isAllowed(String userId, String function, String reference)
+        {
+          return SecurityAdvice.ALLOWED;
+        }
+      });
+    }
 
 	/**
      * @param filter 
@@ -987,6 +1015,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			state.removeAttribute(FilePickerHelper.FILE_PICKER_MAX_ATTACHMENTS);
 			state.removeAttribute(FilePickerHelper.FILE_PICKER_RESOURCE_FILTER);
 			state.removeAttribute(FilePickerHelper.DEFAULT_COLLECTION_ID);
+			state.removeAttribute(FilePickerHelper.FILE_PICKER_ATTACH_LINKS);
 		}
 		
  	}	// cleanup
@@ -1039,15 +1068,17 @@ public class FilePickerAction extends PagedResourceHelperAction
 				String accessUrl = null;
 				if(res == null)
 				{
-		                props = contentService.getProperties(ref.getId());
-		                accessUrl = contentService.getUrl(ref.getId());
+				    // NOTE: the statement below throws exceptions if the ref.id is invalid
+	                props = contentService.getProperties(ref.getId());
+	                accessUrl = contentService.getUrl(ref.getId());
 	 			}
 				else
 				{
 					props = res.getProperties();
 					accessUrl = res.getUrl();
 				}
-	
+
+				// FIXME this logic is confusing because res could be null still, the logic that relies on res not being null should be moved up to the null check above
 				String displayName = props.getPropertyFormatted(ResourceProperties.PROP_DISPLAY_NAME);
 				String containerId = contentService.getContainingCollectionId (res.getId());
 	
@@ -1226,17 +1257,17 @@ public class FilePickerAction extends PagedResourceHelperAction
 		//ResourceType type = registry.getType(typeId); 
 		
 		String max_file_size_mb = (String) toolSession.getAttribute(STATE_FILE_UPLOAD_MAX_SIZE);
-		int max_bytes = 1024 * 1024;
+		long max_bytes = 1024L * 1024L;
 		try
 		{
-			max_bytes = Integer.parseInt(max_file_size_mb) * 1024 * 1024;
+			max_bytes = Long.parseLong(max_file_size_mb) * 1024L * 1024L;
 		}
 		catch(Exception e)
 		{
 			// if unable to parse an integer from the value
 			// in the properties file, use 1 MB as a default
 			max_file_size_mb = "1";
-			max_bytes = 1024 * 1024;
+			max_bytes = 1024L * 1024L;
 		}
 
 		FileItem fileitem = null;
@@ -1294,6 +1325,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 						toolSession.setAttribute(STATE_ATTACH_TOOL_NAME, toolName);
 					}
 
+					enableSecurityAdvisor();
 					ContentResource attachment = contentService.addAttachmentResource(resourceId, siteId, toolName, contentType, bytes, props);
 					
 					ContentResourceFilter filter = (ContentResourceFilter) state.getAttribute(STATE_ATTACHMENT_FILTER);
@@ -1325,6 +1357,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					item.setHoverText(typedef.getLocalizedHoverText(attachment));
 					item.setIconLocation(typedef.getIconLocation(attachment));
 					new_items.add(item);
+					disableSecurityAdvisors();
 					
 					toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
 				}
@@ -1354,8 +1387,16 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				catch(RuntimeException e)
 				{
-					logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
-					addAlert(state, crb.getString("failed"));
+					if(contentService.ID_LENGTH_EXCEPTION.equals(e.getMessage()))
+					{
+						// couldn't we just truncate the resource-id instead of rejecting the upload?
+						addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{name}));
+					}
+					else
+					{
+						logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
+						addAlert(state, crb.getString("failed"));
+					}
 				}
 			}
 			else
@@ -1410,6 +1451,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				toolSession.setAttribute(STATE_ATTACH_TOOL_NAME, toolName);
 			}
 
+			enableSecurityAdvisor();
 			ContentResource attachment = contentService.addAttachmentResource(newResourceId, siteId, toolName, ResourceProperties.TYPE_URL, newUrl, resourceProperties);
 
 			List<AttachItem> new_items = (List<AttachItem>) toolSession.getAttribute(STATE_ADDED_ITEMS);
@@ -1430,6 +1472,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			item.setHoverText(typedef.getLocalizedHoverText(attachment));
 			item.setIconLocation(typedef.getIconLocation(attachment));
 			new_items.add(item);
+			disableSecurityAdvisors();
 			toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
 		}
 		catch(MalformedURLException e)
@@ -1463,8 +1506,16 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		catch(RuntimeException e)
 		{
-			logger.debug("ResourcesAction.doAttachurl ***** Unknown Exception ***** " + e.getMessage());
-			addAlert(state, crb.getString("failed"));
+			if(contentService.ID_LENGTH_EXCEPTION.equals(e.getMessage()))
+			{
+				// couldn't we just truncate the resource-id instead of rejecting the upload?
+				addAlert(state, trb.getFormattedMessage("alert.toolong", new String[]{url}));
+			}
+			else
+			{
+				logger.debug("ResourcesAction.doAttachupload ***** Unknown Exception ***** " + e.getMessage());
+				addAlert(state, crb.getString("failed"));
+			}
 		}
 
 		toolSession.setAttribute(STATE_FILEPICKER_MODE, MODE_ATTACHMENT_SELECT_INIT);
@@ -1707,7 +1758,9 @@ public class FilePickerAction extends PagedResourceHelperAction
 			try
 			{
 				resource = contentService.getResource(itemId);
+				Reference reference = EntityManager.newReference(resource.getReference());
 				
+				// we're making a copy, so we need to invoke the copy methods related to the resource-type registration 
 				String typeId = resource.getResourceType();
 				ResourceType typedef = registry.getType(typeId);
 				copyAction = typedef.getAction(ResourceToolAction.PASTE_COPIED);
@@ -1728,7 +1781,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				else if(copyAction instanceof ServiceLevelAction)
 				{
-					((ServiceLevelAction) copyAction).initializeAction(EntityManager.newReference(resource.getReference()));
+					((ServiceLevelAction) copyAction).initializeAction(reference);
 				}
 				else
 				{
@@ -1743,13 +1796,17 @@ public class FilePickerAction extends PagedResourceHelperAction
 					{
 						String displayName = props.getProperty(ResourceProperties.PROP_DISPLAY_NAME);
 						addAlert(state, (String) hrb.getFormattedMessage("filter", new Object[]{displayName}));
+						if(copyAction != null && copyAction instanceof ServiceLevelAction)
+						{
+							((ServiceLevelAction) copyAction).cancelAction(reference);
+						}
 						return;
 					}
 				}
-
 				ResourcePropertiesEdit newprops = contentService.newResourceProperties();
 				newprops.set(props);
 
+				// TODO: should use stream instead of byte array here
 				byte[] bytes = resource.getContent();
 				String contentType = resource.getContentType();
 				String filename = Validator.getFileName(itemId);
@@ -1762,7 +1819,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 					toolName = ToolManager.getCurrentPlacement().getTitle();
 				}
 			
-				// TODO: we're making a copy, so we need to invoke the copy methods related to the resource-type registration 
+				enableSecurityAdvisor();
 				attachment = contentService.addAttachmentResource(resourceId, siteId, toolName, contentType, bytes, props);
 
 				String displayName = newprops.getPropertyFormatted(ResourceProperties.PROP_DISPLAY_NAME);
@@ -1776,6 +1833,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				item.setIconLocation(typedef.getIconLocation(resource));
 				new_items.add(item);
 				toolSession.setAttribute(STATE_HELPER_CHANGED, Boolean.TRUE.toString());
+				disableSecurityAdvisors();
 			}
 			catch (PermissionException e)
 			{
@@ -3104,6 +3162,8 @@ public class FilePickerAction extends PagedResourceHelperAction
 		
 		Comparator userSelectedSort = (Comparator) toolSession.getAttribute(STATE_LIST_VIEW_SORT);
 		
+		ContentResourceFilter filter = (ContentResourceFilter) state.getAttribute(STATE_ATTACHMENT_FILTER);
+		
 		// set the sort values
 		String sortedBy = (String) toolSession.getAttribute (STATE_SORT_BY);
 		String sortedAsc = (String) toolSession.getAttribute (STATE_SORT_ASC);
@@ -3120,7 +3180,7 @@ public class FilePickerAction extends PagedResourceHelperAction
             try
             {
             	ContentCollection wsCollection = contentService.getCollection(wsCollectionId);
-				ListItem wsRoot = ListItem.getListItem(wsCollection, null, registry, false, expandedCollections, null, null, 0, userSelectedSort, false);
+				ListItem wsRoot = ListItem.getListItem(wsCollection, null, registry, false, expandedCollections, null, null, 0, userSelectedSort, false, filter);
 		        other_sites.add(wsRoot);
             }
             catch (IdUnusedException e)
@@ -3168,7 +3228,7 @@ public class FilePickerAction extends PagedResourceHelperAction
                 try
                 {
 	                collection = contentService.getCollection(collId);
-					ListItem root = ListItem.getListItem(collection, null, registry, false, expandedCollections, null, null, 0, null, false);
+					ListItem root = ListItem.getListItem(collection, null, registry, false, expandedCollections, null, null, 0, null, false, null);
 					root.setName(displayName);
 					other_sites.add(root);
                 }

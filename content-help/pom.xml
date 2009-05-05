@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>master</artifactId>
+    <artifactId>content-base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>M2</version>
-    <relativePath>../../master/pom.xml</relativePath>
+    <version>2.7.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <name>Sakai Content Help</name>
   <artifactId>sakai-content-help</artifactId>
@@ -14,12 +14,6 @@
     <deploy.target>shared</deploy.target>
   </properties>
   <build>
-    
-    
-    
-    
-    
-    
     <resources>
       <resource>
         <directory>src</directory>

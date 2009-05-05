@@ -8,6 +8,8 @@
 		<div style="display:block;clear:both" ></div>
 	#end
 	<form name="addContentForm" id="addContentForm" method="post" action="#toolForm("ResourcesHelperAction")" >
+		<input type="hidden" name="pipe-init-id" id="pipe-init-id" value="$!{pipe-init-id}" />
+		<input type="hidden" name="requestStateId" id="requestStateId" value="$!{requestStateId}" />
 		#if($!{item.isMissing("content")})
 			<div class="longtext validation">
 		#else
@@ -22,8 +24,30 @@
 				</tr>
 			</table>
 		</div>
-		#if(! $model.isDropbox())
-			#if ($hasNotificationDialog)
+		#if ($hasNotificationDialog)
+			#if($item.isDropbox())
+				#if($model.userIsMaintainer() || $dropboxNotificationAllowed)
+					<p class="act">
+						<input type="checkbox" name="notify_dropbox" id="notify_dropbox" value="true" /> 
+						<label for="notify_dropbox">
+							#if($model.isCourseSite())
+								#if($model.userIsMaintainer())
+									$tlang.getString("notify.student")
+								#else
+									$tlang.getString("notify.instructor")
+								#end
+							#else
+								#if($model.userIsMaintainer())
+									$tlang.getString("notify.access")
+								#else
+									$tlang.getString("notify.maintain")
+								#end
+							#end
+						</label>
+					</p>
+				#end
+			#elseif($item.isUserSite())
+			#else
 				<p class="shorttext">
 					<label for="notify">
 						$tlang.getString("gen.email1")
@@ -37,9 +61,9 @@
 			#end
 		#end
 		<p class="act">
-			<input type="button" class="active" name="savechanges" id="saveChanges" onclick="javascript:showNotif('submitnotif','saveChanges','addContentForm');document.getElementById('addContentForm').action='#toolLink("ResourcesHelperAction" "doContinue")';submitform('addContentForm');" value="$tlang.getString("label.continue")" accesskey="s" />
+			<input type="button" class="active" name="savechanges" id="saveChanges" onclick="javascript:showNotif('submitnotifxxx','saveChanges','addContentForm');document.getElementById('addContentForm').action='#toolLink("ResourcesHelperAction" "doContinue")';submitform('addContentForm');" value="$tlang.getString("label.continue")" accesskey="s" />
 			<input type="button" name="cancel" onclick="javascript:document.getElementById('addContentForm').action='#toolLink("ResourcesHelperAction" "doCancel")';submitform('addContentForm');" value="$tlang.getString("label.cancel")" accesskey="x" />
-			<span id="submitnotif" style="visibility:hidden">$tlang.getString("label.proces")</span>
+			<span id="submitnotifxxx"  class="messageProgress"  style="visibility:hidden">$tlang.getString("processmessage.save.html")</span>
 		</p>
 	</form>
 </div>
