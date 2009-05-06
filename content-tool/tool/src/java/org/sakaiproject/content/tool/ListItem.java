@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
-import org.sakaiproject.conditions.cover.ConditionService;
+import org.sakaiproject.conditions.api.ConditionService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
@@ -395,12 +395,13 @@ public class ListItem
 	protected boolean useRetractDate;
 
 	protected Time retractDate;
-	protected boolean useConditionalRelease = false;
+	public boolean useConditionalRelease = false;
 	private String submittedFunctionName;
 	private String submittedResourceFilter;
 	private String selectedConditionKey;
 	private String conditionArgument;
 	private String conditionAssignmentPoints;
+
 	private String notificationId;
 	private Collection<String> accessControlList;
 
@@ -414,7 +415,7 @@ public class ListItem
 
 	protected ListItem parent;
 
-	protected String containingCollectionId;
+	public String containingCollectionId;
 
 	protected boolean isUserSite = false;
 	protected boolean isDropbox = false;
@@ -439,6 +440,15 @@ public class ListItem
 	protected Time lastChange = null;
 
 	private org.sakaiproject.content.api.ContentHostingService contentService;
+	
+
+	public String getConditionAssignmentPoints() {
+		return conditionAssignmentPoints;
+	}
+
+	public void setConditionAssignmentPoints(String conditionAssignmentPoints) {
+		this.conditionAssignmentPoints = conditionAssignmentPoints;
+	}
 
 	/**
 	 * @param entity
@@ -515,6 +525,10 @@ public class ListItem
 			}
 		}
 		this.description = props.getProperty(ResourceProperties.PROP_DESCRIPTION);
+		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ConditionService.PROP_CONDITIONAL_RELEASE));
+		this.notificationId = props.getProperty(ConditionService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		this.accessControlList = props.getPropertyList(ContentHostingService.CONDITIONAL_ACCESS_LIST);
+
 		
 		if(this.isDropbox)
 		{
@@ -546,8 +560,8 @@ public class ListItem
 			}			
 		}
 		
-		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE));
-		this.notificationId = props.getProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID);
+		this.useConditionalRelease = Boolean.parseBoolean(props.getProperty(ConditionService.PROP_CONDITIONAL_RELEASE));
+		this.notificationId = props.getProperty(ConditionService.PROP_CONDITIONAL_NOTIFICATION_ID);
 		this.accessControlList = props.getPropertyList(ContentHostingService.CONDITIONAL_ACCESS_LIST);
 		//this.submittedFunctionName = props.getProperty(ContentHostingService.PROP_SUBMITTED_FUNCTION_NAME);
 		//this.submittedResourceFilter = props.getProperty(ContentHostingService.PROP_SUBMITTED_RESOURCE_FILTER);
@@ -2993,8 +3007,8 @@ public class ListItem
 	
 	protected void setConditionalReleaseOnEntity(ResourcePropertiesEdit props) 
 	{
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
-		props.addProperty(ContentHostingService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
+		props.addProperty(ConditionService.PROP_CONDITIONAL_RELEASE, Boolean.toString(this.useConditionalRelease));
+		props.addProperty(ConditionService.PROP_CONDITIONAL_NOTIFICATION_ID, this.notificationId);
 		props.removeProperty(ContentHostingService.CONDITIONAL_ACCESS_LIST);
 		if (this.accessControlList != null) {
 			for (String id : this.accessControlList) {
