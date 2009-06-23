@@ -1,0 +1,30 @@
+<classpath>
+  <classpathentry kind="src" path="src/bundle" including="**/*.properties" excluding="**/*.java"/>
+  <classpathentry kind="src" path="src/config" including="**/*.properties|**/*.xml" excluding="**/*.java"/>
+  <classpathentry kind="src" path="src/java"/>
+  <classpathentry kind="src" path="src/sql" including="**/*.sql" excluding="**/*.java"/>
+  <classpathentry kind="output" path="m2-target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/javax/jcr/jcr/1.0/jcr-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/junit/junit/3.8.1/junit-3.8.1.jar"/>
+  <classpathentry kind="src" path="/sakai-component"/>
+  <classpathentry kind="src" path="/sakai-component-api"/>
+  <classpathentry kind="src" path="/sakai-content-api"/>
+  <classpathentry kind="src" path="/sakai-content-impl"/>
+  <classpathentry kind="src" path="/sakai-content-lock-hbm"/>
+  <classpathentry kind="src" path="/sakai-content-util"/>
+  <classpathentry kind="src" path="/sakai-db-api"/>
+  <classpathentry kind="src" path="/sakai-db-conversion"/>
+  <classpathentry kind="src" path="/sakai-db-storage"/>
+  <classpathentry kind="src" path="/sakai-entity-api"/>
+  <classpathentry kind="src" path="/sakai-entity-util"/>
+  <classpathentry kind="src" path="/sakai-event-util"/>
+  <classpathentry kind="src" path="/sakai-jcr-api"/>
+  <classpathentry kind="src" path="/sakai-memory-api"/>
+  <classpathentry kind="src" path="/sakai-tool-api"/>
+  <classpathentry kind="src" path="/sakai-user-api"/>
+  <classpathentry kind="src" path="/sakai-util"/>
+  <classpathentry kind="src" path="/sakai-util-api"/>
+</classpath>
