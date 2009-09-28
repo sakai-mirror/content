@@ -284,8 +284,10 @@ $(document).ready(function() {
 							#if ($item.canRead())
 								#if($item.isCollection())
 									<span class="skip">$newNote</span><span class="$iconDecor">
-									#if($item.isEmpty() || $item.isTooBig() || $item.depth < 1)
+									#if($item.isEmpty() || $item.depth < 1)
 										<img src="#imageLink($item.iconLocation)" border= "0" alt="$item.hoverText" hspace="0" /></span>
+									#elseif ($item.isTooBig())
+										<img src="/library/image/sakai/dir_unexpand.gif" border= "0" alt="$item.hoverText" title ="$clang.getString('list.toobig')"   hspace="0" /></span> ##title="clang.getString('list.toobig')"
 									#else
 										<a href="#"
 											#if($item.isExpanded())
