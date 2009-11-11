@@ -21,6 +21,7 @@ import org.sakaiproject.event.api.NotificationNotDefinedException;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.cover.NotificationService;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.util.ParameterParser;
 import org.sakaiproject.util.ResourceLoader;
@@ -41,6 +42,9 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
     private static ResourceLoader rb = new ResourceLoader("content");
 	
 	static void saveCondition(ListItem item, ParameterParser params, SessionState state, int index) {
+		if (! conditionsEnabled()) {
+			return;
+		}
 		boolean cbSelected = Boolean.valueOf(params.get("cbCondition" + ListItem.DOT + index));
 		String selectedConditionValue = params.get("selectCondition" + ListItem.DOT + index);
 		if (selectedConditionValue == null) return;
@@ -116,7 +120,15 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 	}
 
 	
-	void loadConditionData(SessionState state) {	
+	private static boolean conditionsEnabled() {
+		return ServerConfigurationService.getBoolean("conditions.service.enabled", Boolean.FALSE);
+	}
+
+
+	void loadConditionData(SessionState state) {
+		if (! conditionsEnabled()) {
+			return;
+		}
 		logger.debug("Loading condition data");
 		ListItem item = (ListItem) state.getAttribute(ResourcesAction.STATE_REVISE_PROPERTIES_ITEM);
 		if ((item != null) && (item.useConditionalRelease)) {
@@ -159,6 +171,9 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 	}
 
 	static void removeExistingNotification(ListItem item, SessionState state) {
+		if (! conditionsEnabled()) {
+			return;
+		}
 		logger.debug("Removing condition");	
 		try {
 			NotificationEdit notificationToRemove = NotificationService.editNotification(item.getNotificationId());
@@ -173,11 +188,19 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 
 	
 	static void buildConditionContext(Context context, SessionState state) {
+		if (! conditionsEnabled()) {
+			context.put("conditions_enabled", Boolean.FALSE);
+			return;
+		}
+		context.put("conditions_enabled", Boolean.TRUE);
 		context.put("resourceSelections", state.getAttribute("resourceSelections"));
 		context.put("conditionSelections", state.getAttribute("conditionSelections"));		
 	}
 	
 	static void notifyCondition(Entity entity) {
+		if (! conditionsEnabled) {
+			return;
+		}
 		Notification resourceNotification = null;
 		String notificationId = entity.getProperties().getProperty(ConditionService.PROP_CONDITIONAL_NOTIFICATION_ID);
 		if (notificationId != null && !"".equals(notificationId)) {

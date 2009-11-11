@@ -359,6 +359,7 @@
 						#resources_timeSelectionWidget("retract" "$i" $model.retractDate)
 					</td>
 				</tr>
+				#if($conditions_enabled)
 				<tr>
 					<td>
 					</td>
@@ -379,7 +380,9 @@
 						</label>
 					</td>
 				</tr>
-			</table>					
+				#end
+			</table>
+			#if($conditions_enabled)					
 			<table>
 				<tr>
 					<td>
@@ -426,6 +429,7 @@
 					</td>
 				</tr>
 			</table>
+			#end
 			<table>
 				<tr>
 					<td>
