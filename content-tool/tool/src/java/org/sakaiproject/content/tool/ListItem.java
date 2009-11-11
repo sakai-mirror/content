@@ -441,11 +441,10 @@ public class ListItem
 
 	private org.sakaiproject.content.api.ContentHostingService contentService;
 	
-
 	public String getConditionAssignmentPoints() {
 		return conditionAssignmentPoints;
 	}
-
+	
 	public void setConditionAssignmentPoints(String conditionAssignmentPoints) {
 		this.conditionAssignmentPoints = conditionAssignmentPoints;
 	}

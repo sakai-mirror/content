@@ -1190,8 +1190,6 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			//alerts.addAll(newFile.checkRequiredProperties());
 							
 			pipe.setRevisedListItem(newFile);
-			
-			ResourceConditionsHelper.saveCondition(newFile, params, state, i);
 				
 			actualCount++;
 			
@@ -1448,14 +1446,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 
 				// capture properties
 				newFile.captureProperties(params, ListItem.DOT + i);
-				if (newFile.numberFieldIsInvalid) {
-					addAlert(state, rb.getString("invalid.condition.argument"));
-					return;
-				}
-				if (newFile.numberFieldIsOutOfRange) {
-					addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFile.getConditionAssignmentPoints() + ".");
-					return;
-				}
+				
 				// notification
 				int noti = determineNotificationPriority(params, newFile.isDropbox, newFile.userIsMaintainer());
 				newFile.setNotification(noti);
@@ -1463,7 +1454,6 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 				
 				pipe.setRevisedListItem(newFile);
 				
-				ResourceConditionsHelper.saveCondition(newFile, params, state, i);
 				uploadCount++;
 				
 			}

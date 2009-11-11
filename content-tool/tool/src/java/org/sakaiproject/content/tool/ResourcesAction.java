@@ -762,7 +762,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	
 	protected static final String STATE_REVISE_PROPERTIES_ENTITY_ID = PREFIX + REQUEST + "revise_properties_entity_id";
 	
-	public static final String STATE_REVISE_PROPERTIES_ITEM = PREFIX + REQUEST + "revise_properties_item";
+	protected static final String STATE_REVISE_PROPERTIES_ITEM = PREFIX + REQUEST + "revise_properties_item";
 	
 	/** The select all flag */
 	private static final String STATE_SELECT_ALL_FLAG = PREFIX + REQUEST + "select_all_flag";
@@ -5143,7 +5143,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			context.put("showMountPointProperty", Boolean.TRUE.toString());
 		}
 		conditionsHelper.buildConditionContext(context, state);
-
+		
 		return TEMPLATE_REVISE_METADATA;
 	}
 
