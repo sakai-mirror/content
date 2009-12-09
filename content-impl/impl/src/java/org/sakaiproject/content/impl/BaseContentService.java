@@ -6529,6 +6529,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 				{
 					rv.clear();  // Ignore the hierarchical inheritance in /attachment
 					rv.add(m_siteService.siteReference(siteId));
+					rv.add(getReference(ref.getId()));
 					attachmentOverride = true;  // Nothing else is needed
 				}
 			}
