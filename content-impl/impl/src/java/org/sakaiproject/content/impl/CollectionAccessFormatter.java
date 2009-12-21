@@ -29,13 +29,11 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
-import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.cover.ContentHostingService;
+import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.time.api.Time;
@@ -51,8 +49,6 @@ import org.sakaiproject.util.Validator;
  */
 public class CollectionAccessFormatter
 {
-	private static final Log M_log = LogFactory.getLog(CollectionAccessFormatter.class);
-	
 	/**
 	 * Format the collection as an HTML display.
 	 */
@@ -125,7 +121,6 @@ public class CollectionAccessFormatter
 
 			// System.out.println("after sort have " + members.size());
 
-			// xi Will all be ContentEntity
 			Iterator xi = members.iterator();
 
 			res.setContentType("text/html; charset=UTF-8");
@@ -150,9 +145,8 @@ public class CollectionAccessFormatter
 				out.println("<html><head>");
 				out.println("<title>" + "Index of " + pl.getProperty(ResourceProperties.PROP_DISPLAY_NAME) + "</title>");
 				String webappRoot = ServerConfigurationService.getServerUrl();
-				String skinRepo = ServerConfigurationService.getString("skin.repo", "/library/skins");
 				out.println("<link href=\"" + webappRoot
-						+ skinRepo+ "/default/access.css\" type=\"text/css\" rel=\"stylesheet\" media=\"screen\" />");
+						+ "/library/skin/default/access.css\" type=\"text/css\" rel=\"stylesheet\" media=\"screen\" />");
 				if (basedir != null)
 				{
 					out.println("<script type=\"text/javascript\">");
@@ -255,23 +249,13 @@ public class CollectionAccessFormatter
 
 			while (xi.hasNext())
 			{
-				ContentEntity content = (ContentEntity)xi.next();
-				ResourceProperties properties = content.getProperties();
-				boolean isCollection = content.isCollection();
-				String xs = content.getId();
-				
-				// These both perform the same check in the implementation but we should observe the API.
-				// This also checks to see if a resource is hidden or time limited.
-				if ( isCollection) {
-					if (!ContentHostingService.allowGetCollection(xs)) {
-						continue;
-					}
-				} else {
-					if (!ContentHostingService.allowGetResource(xs)) {
-						continue;
-					}
-				}
-				
+				// System.out.println("hasnext");
+				Entity nextres = (Entity) xi.next();
+				ResourceProperties properties = nextres.getProperties();
+				boolean isCollection = properties.getBooleanProperty(ResourceProperties.PROP_IS_COLLECTION);
+				String xs = nextres.getId();
+
+				ContentResource content = null;
 				if (isCollection)
 				{
 					xs = xs.substring(0, xs.length() - 1);
@@ -279,8 +263,11 @@ public class CollectionAccessFormatter
 				}
 				else
 				{
+					content = (ContentResource) nextres;
 					xs = xs.substring(xs.lastIndexOf('/') + 1);
 				}
+
+				// System.out.println("id " + xs);
 
 				try
 				{
@@ -312,12 +299,11 @@ public class CollectionAccessFormatter
 					}
 					else
 					{
-						ContentResource contentResource = (ContentResource)content;
-						long filesize = ((contentResource.getContentLength() - 1) / 1024) + 1;
+						long filesize = ((content.getContentLength() - 1) / 1024) + 1;
 						String createdBy = getUserProperty(properties, ResourceProperties.PROP_CREATOR).getDisplayName();
 						Time modTime = properties.getTimeProperty(ResourceProperties.PROP_MODIFIED_DATE);
 						String modifiedTime = modTime.toStringLocalShortDate() + " " + modTime.toStringLocalShort();
-						String filetype = contentResource.getContentType();
+						String filetype = content.getContentType();
 
 						if (sferyx)
 							out
@@ -362,9 +348,8 @@ public class CollectionAccessFormatter
 			}
 
 		}
-		catch (Throwable e)
+		catch (Throwable ignore)
 		{
-			M_log.warn("Problem formatting HTML for collection: "+ x.getId(), e);
 		}
 
 		if (out != null && printedHeader)
