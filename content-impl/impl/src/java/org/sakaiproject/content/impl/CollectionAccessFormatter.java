@@ -145,8 +145,9 @@ public class CollectionAccessFormatter
 				out.println("<html><head>");
 				out.println("<title>" + "Index of " + pl.getProperty(ResourceProperties.PROP_DISPLAY_NAME) + "</title>");
 				String webappRoot = ServerConfigurationService.getServerUrl();
+				String skinRepo = ServerConfigurationService.getString("skin.repo", "/library/skins");
 				out.println("<link href=\"" + webappRoot
-						+ "/library/skin/default/access.css\" type=\"text/css\" rel=\"stylesheet\" media=\"screen\" />");
+						+ skinRepo+ "/default/access.css\" type=\"text/css\" rel=\"stylesheet\" media=\"screen\" />");
 				if (basedir != null)
 				{
 					out.println("<script type=\"text/javascript\">");
