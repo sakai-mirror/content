@@ -26,4 +26,11 @@ package org.sakaiproject.content.impl;
  */
 public class ContentServiceSqlDb2 extends ContentServiceSqlDefault
 {
+
+	@Override
+	public String getFilesizeExistsSql()
+	{
+		return "select RESOURCE_ID from CONTENT_RESOURCE where FILE_SIZE is NULL FETCH FIRST 1 ROWS ONLY";
+	}
+	
 }

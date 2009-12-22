@@ -57,4 +57,9 @@ public class ContentServiceSqlMySql extends ContentServiceSqlDefault
 	{
 		return "create index " + table.trim() + "_CONTEXT_INDEX on " + table + " (CONTEXT);";
 	}
+
+	public String getFilesizeExistsSql() 
+	{
+		return "select RESOURCE_ID from CONTENT_RESOURCE where FILE_SIZE is NULL limit 1";
+	}
 }

@@ -170,6 +170,8 @@ public interface ContentServiceSql
 
 	String getFilesizeColumnCountSql();
 
+	String getFilesizeExistsSql();
+
 	/**
 	 * A statement to create a UTF test table based on the name
 	 * 

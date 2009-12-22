@@ -266,6 +266,11 @@ public class ContentServiceSqlDefault implements ContentServiceSql
 		return "select COUNT(RESOURCE_ID) from CONTENT_RESOURCE where FILE_SIZE is NULL";
 	}
 
+	public String getFilesizeExistsSql()
+	{
+		return "select TOP 1 RESOURCE_ID from CONTENT_RESOURCE where FILE_SIZE is NULL";
+	}
+
 
 	/*
 	 * (non-Javadoc)

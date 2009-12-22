@@ -309,8 +309,49 @@ public class DbContentService extends BaseContentService
 	 */
 	public void init()
 	{
-		if ( m_sqlService != null ) {
+		if (m_sqlService == null) {
+			M_log.error("init(): no sqlService found");
+			return;
+		}
+
+		try
+		{
+			// system property to manually set conversion completion status.
+			filesizeColumnReady = m_serverConfigurationService.getBoolean("content.filesizeColumnReady", false);
+
 			setContentServiceSql(m_sqlService.getVendor());
+
+			// if we are auto-creating our schema, check and create
+			if (m_autoDdl)
+			{
+				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content");
+
+				// add the delete table
+				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_delete");
+
+				// do the 2.1.0 conversions
+				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_2_1_0");
+			}
+
+			// Check for the existence of the FILE_SIZE column
+			filesizeColumnExists = filesizeColumnExists();
+
+			if(!filesizeColumnExists)
+			{
+				addNewColumns();
+				filesizeColumnExists = filesizeColumnExists();
+			}
+
+			if(filesizeColumnExists && ! readyToUseFilesizeColumn())
+			{
+				// if the convert flag is set to add CONTEXT and FILE_SIZE columns
+				// start doing the conversion
+				if(convertToContextQueryForCollectionSize)
+				{
+				populateNewColumns();
+				}
+			}
+
 			try
 			{
 				validateUTF8Db();
@@ -336,66 +377,33 @@ public class DbContentService extends BaseContentService
 								+ " http://bugs.sakaiproject.org/confluence/display/DOC/Install+Guide+-+DB+(2.4) \n"
 								+ "\n"
 								+ " Sakai Startup will continue but you might want to address this issue ASAP.\n");
+
 			}
+
 			if ( migrateData ) {
 				M_log.info("Migration of data to the Binary format will be performed by this node ");
 			} else {
 				M_log.info("Migration of data to the Binary format will NOT be performed by this node ");
-				
+	
 			}
-		}
-		try
-		{
-			// if we are auto-creating our schema, check and create
-			if ( m_sqlService != null && m_autoDdl)
-			{
-				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content");
-
-				// add the delete table
-				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_delete");
-
-				// do the 2.1.0 conversions
-				m_sqlService.ddl(this.getClass().getClassLoader(), "sakai_content_2_1_0");
-				
-				filesizeColumnExists = filesizeColumnExists();
-				
-				if(!filesizeColumnExists)
-				{
-					addNewColumns();
-					filesizeColumnExists = filesizeColumnExists();
-				}
-				if(filesizeColumnExists && ! readyToUseFilesizeColumn())
-				{
-					// if the convert flag is set to add CONTEXT and FILE_SIZE columns
-					// start doing the conversion
-					if(convertToContextQueryForCollectionSize)
-					{
-						populateNewColumns();
-					}
-				}
-			}
-
-			filesizeColumnExists = filesizeColumnExists();
 
 			// If CHH resolvers are turned off in sakai.properties, unset the resolver property.
 			// This MUST happen before super.init() calls newStorage()
 			// (since that's when obj refs to the contentHostingHandlerResovler are passed around).
-			if (!ServerConfigurationService.getBoolean(CHH_ENABLE_FLAG,false))
+			if (!m_serverConfigurationService.getBoolean(CHH_ENABLE_FLAG,false))
 				this.contentHostingHandlerResolver = null;
 
 			super.init();
 
-			// convert?
-			if ( m_sqlService != null ) {
-				if (m_convertToFile)
-				{
-					m_convertToFile = false;
-					convertToFile();
-				}
-	
-				M_log.info("init(): tables: " + m_collectionTableName + " " + m_resourceTableName + " " + m_resourceBodyTableName + " "
-						+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath + " storage: " + m_storage);
+			// convert to filesystem storage?
+			if (m_convertToFile)
+			{
+				m_convertToFile = false;
+				convertToFile();
 			}
+
+			M_log.info("init(): tables: " + m_collectionTableName + " " + m_resourceTableName + " " + m_resourceBodyTableName + " "
+					+ m_groupTableName + " locks-in-db: " + m_locksInDb + " bodyPath: " + m_bodyPath + " storage: " + m_storage);
 			
 		}
 		catch (Throwable t)
@@ -557,22 +565,13 @@ public class DbContentService extends BaseContentService
 	
 	public boolean readyToUseFilesizeColumn()
 	{
-		if(!filesizeColumnExists)
-		{
-			// do nothing
-		}
-		else if(filesizeColumnReady)
-		{
-			// do nothing
-		}
-		else 
+		if (filesizeColumnExists && !filesizeColumnReady)
 		{
 			long now = TimeService.newTime().getTime();
 			if(now > filesizeColumnCheckExpires)
 			{
 				// cached value has expired -- time to renew
-				int filesizeColumnCheckNullCount = countNullFilesizeValues();
-				if(filesizeColumnCheckNullCount > 0)
+				if(hasNullFilesizeValues())
 				{
 					filesizeColumnCheckExpires = now + TWENTY_MINUTES;
 					M_log.debug("Conversion of the ContentHostingService database tables is needed to improve performance");
@@ -607,6 +606,13 @@ public class DbContentService extends BaseContentService
 			}
 		}
 		return count;
+	}
+
+	protected boolean hasNullFilesizeValues() 
+	{
+		String sql = contentServiceSql.getFilesizeExistsSql();
+		List list = m_sqlService.dbRead(sql);
+		return (list != null && !list.isEmpty());
 	}
 
 	/**
