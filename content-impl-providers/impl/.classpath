@@ -9,20 +9,20 @@
       <attribute value="jar:file:/home/dhorwitz/.m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-beta02-SNAPSHOT/coursemanagement-api-1.0.0-beta02-SNAPSHOT.jar" sourcepath="M2_REPO/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-beta02-SNAPSHOT/coursemanagement-api-1.0.0-beta02-SNAPSHOT-sources.jar">
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-b02/coursemanagement-api-1.0.0-b02.jar" sourcepath="M2_REPO/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-b02/coursemanagement-api-1.0.0-b02-sources.jar">
     <attributes>
-      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-beta02-SNAPSHOT/coursemanagement-api-1.0.0-beta02-SNAPSHOT-javadoc.jar!/" name="javadoc_location"/>
+      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/edu-services/course-management/coursemanagement-api/1.0.0-b02/coursemanagement-api-1.0.0-b02-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
   <classpathentry kind="var" path="M2_REPO/junit/junit/3.8.1/junit-3.8.1.jar" sourcepath="M2_REPO/junit/junit/3.8.1/junit-3.8.1-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta07-SNAPSHOT/sakai-component-manager-1.1.0-beta07-SNAPSHOT.jar" sourcepath="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta07-SNAPSHOT/sakai-component-manager-1.1.0-beta07-SNAPSHOT-sources.jar">
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta10-SNAPSHOT/sakai-component-manager-1.1.0-beta10-SNAPSHOT.jar" sourcepath="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta10-SNAPSHOT/sakai-component-manager-1.1.0-beta10-SNAPSHOT-sources.jar">
     <attributes>
-      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta07-SNAPSHOT/sakai-component-manager-1.1.0-beta07-SNAPSHOT-javadoc.jar!/" name="javadoc_location"/>
+      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/kernel/sakai-component-manager/1.1.0-beta10-SNAPSHOT/sakai-component-manager-1.1.0-beta10-SNAPSHOT-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta07-SNAPSHOT/sakai-kernel-api-1.1.0-beta07-SNAPSHOT.jar" sourcepath="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta07-SNAPSHOT/sakai-kernel-api-1.1.0-beta07-SNAPSHOT-sources.jar">
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta10-SNAPSHOT/sakai-kernel-api-1.1.0-beta10-SNAPSHOT.jar" sourcepath="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta10-SNAPSHOT/sakai-kernel-api-1.1.0-beta10-SNAPSHOT-sources.jar">
     <attributes>
-      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta07-SNAPSHOT/sakai-kernel-api-1.1.0-beta07-SNAPSHOT-javadoc.jar!/" name="javadoc_location"/>
+      <attribute value="jar:file:/home/dhorwitz/.m2/repository/org/sakaiproject/kernel/sakai-kernel-api/1.1.0-beta10-SNAPSHOT/sakai-kernel-api-1.1.0-beta10-SNAPSHOT-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/sakaiproject/scheduler/scheduler-api/2.7.0-b01/scheduler-api-2.7.0-b01.jar" sourcepath="M2_REPO/org/sakaiproject/scheduler/scheduler-api/2.7.0-b01/scheduler-api-2.7.0-b01-sources.jar">
