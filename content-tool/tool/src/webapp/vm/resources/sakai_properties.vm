@@ -367,7 +367,7 @@
 					#if($resourceSelections.size() == 0)
 						<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox" disabled>
 					#else
-						#if($item.useConditionalRelease())
+						#if($item.isUseConditionalRelease())
 							<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox" checked="checked">
 						#else
 							<input name="cbCondition${DOT}$i" id="cbCondition${DOT}$i" value="true" type="checkbox">
@@ -398,7 +398,7 @@
 							Gradebook 
 							<select name="selectResource${DOT}$i" id="selectResource${DOT}$i">
 							#foreach ($key in $resourceSelections.keySet())
-								#if($key.equals($item.getSubmittedResourceFilter()) && $item.useConditionalRelease())
+								#if($key.equals($item.getSubmittedResourceFilter()) && $item.isUseConditionalRelease())
 									<option value="${key}" selected="selected">${resourceSelections.get(${key})}</option>
 								#else
 									<option value="${key}">${resourceSelections.get(${key})}</option>
@@ -410,7 +410,7 @@
 							  id="selectCondition${DOT}$i"
 							  onchange="changeCondition(this.options[this.selectedIndex].value, '${DOT}$i');">
 							#foreach ($key in $conditionSelections.keySet())							
-								#if($key.equals($item.getSelectedConditionKey()) && $item.useConditionalRelease())
+								#if($key.equals($item.getSelectedConditionKey()) && $item.isUseConditionalRelease())
 									<option value="${key}" selected="selected">${conditionSelections.get(${key})}</option>							
 								#else
 									<option value="${key}">${conditionSelections.get(${key})}</option>							
