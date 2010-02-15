@@ -1,5 +1,9 @@
 $(document).ready(function(){
 
+	if ($("#reorder-list li").size() - 1 >  15){
+		$('.grabHandle').show();
+		$('#inputFieldMessage').show();
+	}
 
     //get the initial order TODO - make an  array instead of putting the values in a span
     $('#reorder-list li').each(function(n){

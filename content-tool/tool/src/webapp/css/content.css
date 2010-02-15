@@ -50,7 +50,7 @@
 	border:1px solid #ddd;
 	width: 100%;
 }
-#reorder-list li span.grabHandle, #reorder-list-sortingToolBar span.grabHandle{
+#reorder-list li span.grabHandle{
 	display:block;
 	float:left;
 	width:5em;
@@ -63,12 +63,12 @@
 	visibility:hidden;
 }
 
-#reorder-list li .title, #reorder-list-sortingToolBar a.title{
+#reorder-list li .title{
 	display:block;
 	float:left;
 	width:45%;
 	}
-#reorder-list li span, #reorder-list-sortingToolBar a{
+#reorder-list li span{
 	padding-right:2em;
 }
 

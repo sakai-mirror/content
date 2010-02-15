@@ -25,7 +25,10 @@
 			</h3>
 		</div>
 		<div class="instruction">
-			$tlang.getString("sort.instruct")
+			$tlang.getString("sort.instruction.general")
+				<span id="inputFieldMessage" style="display:none">$tlang.getString('sort.instruction.input')</span>
+				<span class="skip">$tlang.getString('sort.instruction.general.hidden')</span>
+			
 		</div>
 		
 		<ul class="itemAction noPrint">
@@ -54,7 +57,7 @@
 				#set($count = 1)
 				#foreach($member in $collectionMembers)
 					<li class="sortable"  id="content.orderable$count">
-						<span style="white-space:nowrap" class="grabHandle">
+						<span style="display:none" class="grabHandle">
 							<input type="text" size="3" value="$count" id="index$count"/>
 							<input type="hidden"  size="3" id="holder$count"  value="$count" tabindex="-2"/>
 						</span>
