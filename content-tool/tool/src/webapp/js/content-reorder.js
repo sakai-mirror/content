@@ -1,10 +1,10 @@
 $(document).ready(function(){
 
-	if ($("#reorder-list li").size() - 1 >  15){
-		$('.grabHandle').show();
-		$('#inputFieldMessage').show();
-	}
-
+    if ($("#reorder-list li").size() - 1 > 15) {
+        $('.grabHandle').show();
+        $('#inputFieldMessage').show();
+    }
+    
     //get the initial order TODO - make an  array instead of putting the values in a span
     $('#reorder-list li').each(function(n){
         $('#lastMoveArrayInit').append($(this).attr('id') + ' ');
@@ -62,17 +62,23 @@ $(document).ready(function(){
         var that = this;
         preserveStatus();
         //what the value was (plucked from a hidden input)
-        var oldVal = $(this).siblings('input[id^=holder]').attr('value');
-        
+        var oldVal = parseInt($(this).siblings('input[id^=holder]').attr('value'));
         // the new value in the text field
-        var newVal = this.value;
+        var newVal = parseInt(this.value);
         if (isNaN(newVal) || newVal > $("input[id^=index]").size()) {
-            var failedValidMessage = $('#failedValidMessage').text();			
+            var failedValidMessage = $('#failedValidMessage').text();
             $('#messageHolder').text(failedValidMessage.replace('#', $('input[id^=index]').size()));
             $('#messageHolder').text('A number smaller than ' + $('input[id^=index]').size() + ' please!');
             $('.orderable-selected').removeClass('orderable-selected');
             $('#messageHolder').removeClass('messageSuccess');
             $('#messageHolder').addClass('messageValidation');
+			var messagePos = $(that).position();
+			$("#messageHolder").css({
+				'position':'absolute',
+				'height':'1.3em',
+				'top':messagePos.top,
+				'left':55
+			});
             $('#messageHolder').fadeIn('slow');
             $("#messageHolder").animate({
                 opacity: 1.0
@@ -95,6 +101,7 @@ $(document).ready(function(){
         
         //insert the row in new location - if new value is 1, insert before, if it is the last possible
         // insert after, otherwise insert before or after depending on if it is going up or down
+        
         if (newVal === '1') {
             $($(this).parents('li')).insertBefore($(this).parents('li').siblings('li').children('span').children('input[value=' + newVal + ']').parents('li'));
         }
@@ -109,6 +116,7 @@ $(document).ready(function(){
                 else {
                     $($(this).parents('li')).insertBefore($(this).parents('li').siblings('li').children('span').children('input[value=' + newVal + ']').parents('li'));
                 }
+                
             }
         registerChange('notfluid', $(this).parents('li'));
     });
@@ -143,18 +151,18 @@ var registerChange = function(originEvent, movedEl){
     // change the value of all the text fields (and value holders) to reflect new order
     var inputsX = $("input[id^=index]");
     var holderinputs = $("input[id^=holder]");
-	var selectItems = $("select.selectSet");
+    var selectItems = $("select.selectSet");
     for (var i = 0; i < inputsX.length; i = i + 1) {
         inputsX[i].value = i + 1;
     }
     for (var x = 0; x < holderinputs.length; x = x + 1) {
         holderinputs[x].value = x + 1;
     }
-	
+    
     $('.selectSet').each(function(n){
         $(this).val(n + 1);
     });
-   
+    
     $('#undo-last').fadeIn('slow');
     $('#undo-last-inact').hide();
     $('#undo-all').fadeIn('slow');
@@ -162,7 +170,7 @@ var registerChange = function(originEvent, movedEl){
     $(movedEl).animate({
         opacity: 1.0
     }, 2000, function(){
-		$(movedEl).removeClass('recentMove');
+        $(movedEl).removeClass('recentMove');
     });
 };
 
