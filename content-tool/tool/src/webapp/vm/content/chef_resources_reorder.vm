@@ -27,7 +27,7 @@
 		<div class="instruction">
 			$tlang.getString("sort.instruction.general")
 				<span id="inputFieldMessage" style="display:none">$tlang.getString('sort.instruction.input')</span>
-				<span class="skip">$tlang.getString('sort.instruction.general.hidden')</span>
+				<span id="inputKbdMessage" class="skip">$tlang.getString('sort.instruction.general.hidden')</span>
 			
 		</div>
 		
