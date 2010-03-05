@@ -138,6 +138,8 @@ public class ResourcesAction
 {
 	public static final String PIPE_INIT_ID = "pipe-init-id";
 
+	
+	
 	/**
 	 * Action
 	 *
@@ -2641,52 +2643,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				item.setCopyrightAlert(false);
 			}
 			
-//			Map metadata = new HashMap();
-//			List groups = (List) state.getAttribute(ListItem.STATE_METADATA_GROUPS);
-//			if(groups != null && ! groups.isEmpty())
-//			{
-//				Iterator it = groups.iterator();
-//				while(it.hasNext())
-//				{
-//					MetadataGroup group = (MetadataGroup) it.next();
-//					Iterator propIt = group.iterator();
-//					while(propIt.hasNext())
-//					{
-//						ResourcesMetadata prop = (ResourcesMetadata) propIt.next();
-//						String name = prop.getFullname();
-//						String widget = prop.getWidget();
-//						if(widget.equals(ResourcesMetadata.WIDGET_DATE) || widget.equals(ResourcesMetadata.WIDGET_DATETIME) || widget.equals(ResourcesMetadata.WIDGET_TIME))
-//						{
-//							Time time = TimeService.newTime();
-//							try
-//							{
-//								time = properties.getTimeProperty(name);
-//							}
-//							catch(Exception ignore)
-//							{
-//								// use "now" as default in that case
-//							}
-//							metadata.put(name, time);
-//						}
-//						else
-//						{
-//							String value = properties.getPropertyFormatted(name);
-//							metadata.put(name, value);
-//						}
-//					}
-//				}
-//				item.setMetadata(metadata);
-//			}
-//			else
-//			{
-//				item.setMetadata(new HashMap());
-//			}
+			logger.info("here we are!");
+			
+
 			// for collections only
 			if(item.isFolder())
 			{
 				// setup for quota - ADMIN only, site-root collection only
 				if (SecurityService.isSuperUser())
 				{
+					item.setIsAdmin(true);
+					
 					String siteCollectionId = ContentHostingService.getSiteCollection(contextId);
 					if(siteCollectionId.equals(entity.getId()))
 					{
@@ -2696,11 +2663,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 							long quota = properties.getLongProperty(ResourceProperties.PROP_COLLECTION_BODY_QUOTA);
 							item.setHasQuota(true);
 							item.setQuota(Long.toString(quota));
+					
 						}
 						catch (Exception any)
 						{
+							logger.debug("got exception: " + any);
 						}
 					}
+					
+					
 				}
 			}
 

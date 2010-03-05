@@ -39,6 +39,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.antivirus.api.VirusFoundException;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -73,8 +74,11 @@ import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
+import org.sakaiproject.exception.OverQuotaException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -425,6 +429,10 @@ public class ListItem
 	protected boolean isSiteCollection = false;
 	protected boolean hasQuota = false;
 	protected boolean canSetQuota = false;
+	private boolean isAdmin = false;
+	private Boolean allowHtmlInline;
+	
+
 	protected String quota;
 
 	protected boolean nameIsMissing = false;
@@ -638,9 +646,21 @@ public class ListItem
 			{
 				setIsTooBig(true);
 			}
+			
+			//does this collection allow inlineHTML?
+			try {
+				setAllowHtmlInline(collection.getProperties().getBooleanProperty(ResourceProperties.PROP_ALLOW_INLINE));
+			} catch (EntityPropertyNotDefinedException e) {
+				setAllowHtmlInline(false);
+			} catch (EntityPropertyTypeException e) {
+				setAllowHtmlInline(false);
+			}
+			
+			
 			// setup for quota - ADMIN only, site-root collection only
 			if (SecurityService.isSuperUser())
 			{
+				setIsAdmin(true);
 				String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
 				if(siteCollectionId.equals(entity.getId()))
 				{
@@ -1593,6 +1613,9 @@ public class ListItem
 		captureCopyright(params, index);
 		captureAccess(params, index);
 		captureAvailability(params, index);
+		if (isAdmin) {
+			captureHtmlInline(params, index);
+		}
 		if(this.canSetQuota)
 		{
 			captureQuota(params, index);
@@ -1605,6 +1628,11 @@ public class ListItem
 		{
 			this.captureOptionalPropertyValues(params, index);
 		}
+	}
+
+	protected void captureHtmlInline(ParameterParser params, String index) {
+		logger.debug("got allow inline of " + params.getBoolean("allowHtmlInline" + index));
+		this.allowHtmlInline = params.getBoolean("allowHtmlInline" + index);
 	}
 
 	protected void captureMimetypeChange(ParameterParser params, String index) 
@@ -1648,6 +1676,7 @@ public class ListItem
 				this.quota = null;
 			}		
 		}
+							
 	}
 
 	protected void captureDisplayName(ParameterParser params, String index) 
@@ -2966,6 +2995,7 @@ public class ListItem
 
 	public void updateContentCollectionEdit(ContentCollectionEdit edit) 
 	{
+		logger.debug("updateContentCollectionEdit()");
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
@@ -2974,6 +3004,8 @@ public class ListItem
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		setQuotaOnEntity(props);
+		setHtmlInlineOnEntity(props, edit);
+		
 		if(isOptionalPropertiesEnabled())
 		{
 			this.setMetadataPropertiesOnEntity(props);
@@ -3001,6 +3033,91 @@ public class ListItem
 		}
 	}
 
+	
+	private void setHtmlInlineOnEntity(ResourcePropertiesEdit props, ContentCollectionEdit topFolder) 
+	{
+		logger.debug("setHtmlInlineOnEntity() with allowHtmlInline: " + allowHtmlInline);
+		if(SecurityService.isSuperUser())
+		{
+			if(allowHtmlInline != null)
+			{
+				props.addProperty(ResourceProperties.PROP_ALLOW_INLINE, this.allowHtmlInline.toString());
+				
+			}
+			List<String> children = topFolder.getMembers();
+			for (int i = 0; i < children.size(); i++) {
+				String resId = children.get(i);
+				if (resId.endsWith("/")) {
+					setPropertyOnFolderRecursively(resId, ResourceProperties.PROP_ALLOW_INLINE, allowHtmlInline.toString());
+				}
+			}
+		}
+	}
+	
+
+	/**
+	 * Set a property on a resource and all its children
+	 * @param resourceId
+	 * @param property
+	 * @param value
+	 */
+	
+	private void setPropertyOnFolderRecursively(String resourceId, String property, String value) {
+		
+
+		
+		try {
+			if (ContentHostingService.isAttachmentResource(resourceId)) {
+				// collection
+				ContentCollectionEdit col = ContentHostingService.editCollection(resourceId);
+
+				ResourcePropertiesEdit resourceProperties = col.getPropertiesEdit();
+				resourceProperties.addProperty(property, Boolean.valueOf(value).toString());
+				ContentHostingService.commitCollection(col);
+
+				List<String> children = col.getMembers();
+				for (int i = 0; i < children.size(); i++) {
+					String resId = children.get(i);
+					if (resId.endsWith("/")) {
+						setPropertyOnFolderRecursively(resId, property, value);
+					}
+				}
+
+
+								
+			} else {
+				// resource
+				ContentResourceEdit res = ContentHostingService.editResource(resourceId);
+				ResourcePropertiesEdit resourceProperties = res.getPropertiesEdit();
+				resourceProperties.addProperty(property, Boolean.valueOf(value).toString());
+				ContentHostingService.commitResource(res, NotificationService.NOTI_NONE);				
+			}
+		} catch (PermissionException pe) {
+			pe.printStackTrace();
+			
+		} catch (IdUnusedException iue) {
+			iue.printStackTrace();
+		
+		} catch (TypeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InUseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (VirusFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OverQuotaException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServerOverloadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+	}
+	
+	
 	protected void setAvailabilityOnEntity(GroupAwareEdit edit)
 	{
 		edit.setAvailability(hidden, releaseDate, retractDate);
@@ -3105,6 +3222,7 @@ public class ListItem
 		setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
+		
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
 		{
 			setMimetypeOnEntity(edit, props);
@@ -3151,7 +3269,18 @@ public class ListItem
 	{
 		return canSetQuota;
 	}
-
+	
+	
+	
+	public boolean isAdmin() {
+		return isAdmin;
+	}
+	
+	public void setIsAdmin(boolean admin) {
+		isAdmin = admin;
+	}
+	
+	
 	public boolean hasQuota() 
 	{
 		return hasQuota;
@@ -3839,5 +3968,12 @@ public class ListItem
 		this.isCourseSite = isCourseSite;
 	}
 	
+	public boolean isAllowHtmlInline() {
+		return allowHtmlInline;
+	}
+
+	public void setAllowHtmlInline(boolean allowHtmlInline) {
+		this.allowHtmlInline = allowHtmlInline;
+	}
 }
 
