@@ -39,6 +39,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.antivirus.api.VirusFoundException;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -73,8 +74,11 @@ import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.InconsistentException;
+import org.sakaiproject.exception.OverQuotaException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.exception.TypeException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -147,8 +151,7 @@ public class ListItem
 	public static ListItem getListItem(ContentEntity entity, ListItem parent, ResourceTypeRegistry registry, boolean expandAll, Set<String> expandedFolders, List<String> items_to_be_moved, List<String> items_to_be_copied, int depth, Comparator userSelectedSort, boolean preventPublicDisplay, ContentResourceFilter addFilter)
 	{
 		ListItem item = null;
-		boolean isCollection = entity.isCollection();
-		
+			
 		org.sakaiproject.content.api.ContentHostingService contentService = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get(org.sakaiproject.content.api.ContentHostingService.class);
 		
 		boolean isAvailabilityEnabled = contentService.isAvailabilityEnabled();
@@ -156,12 +159,15 @@ public class ListItem
         if(entity == null)
         {
         	item = new ListItem("");
+        	return item;
         }
         else
         {
         	item = new ListItem(entity);
             //item.m_reference = EntityManager.newReference(entity.getReference());
         }
+        
+        boolean isCollection = entity.isCollection();
         
         item.setPubviewPossible(! preventPublicDisplay);
         item.setDepth(depth);
@@ -397,7 +403,7 @@ public class ListItem
 	protected Time retractDate;
 	public boolean useConditionalRelease = false;
 	private String submittedFunctionName;
-	private String submittedResourceFilter;
+	private String submittedResourceFilter = "";
 	private String selectedConditionKey;
 	private String conditionArgument;
 	private String conditionAssignmentPoints;
@@ -423,6 +429,10 @@ public class ListItem
 	protected boolean isSiteCollection = false;
 	protected boolean hasQuota = false;
 	protected boolean canSetQuota = false;
+	private boolean isAdmin = false;
+	private Boolean allowHtmlInline;
+	
+
 	protected String quota;
 
 	protected boolean nameIsMissing = false;
@@ -636,9 +646,21 @@ public class ListItem
 			{
 				setIsTooBig(true);
 			}
+			
+			//does this collection allow inlineHTML?
+			try {
+				setAllowHtmlInline(collection.getProperties().getBooleanProperty(ResourceProperties.PROP_ALLOW_INLINE));
+			} catch (EntityPropertyNotDefinedException e) {
+				setAllowHtmlInline(false);
+			} catch (EntityPropertyTypeException e) {
+				setAllowHtmlInline(false);
+			}
+			
+			
 			// setup for quota - ADMIN only, site-root collection only
 			if (SecurityService.isSuperUser())
 			{
+				setIsAdmin(true);
 				String siteCollectionId = contentService.getSiteCollection(m_reference.getContext());
 				if(siteCollectionId.equals(entity.getId()))
 				{
@@ -680,83 +702,16 @@ public class ListItem
 				size = typeDef.getSizeLabel(entity);
 				sizzle = typeDef.getLongSizeLabel(entity);
 			}
-			if((size == null || sizzle == null) && props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
+			if(props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH) != null)
 			{
-				long size_long = 0;
-                try
-                {
-	                size_long = props.getLongProperty(ResourceProperties.PROP_CONTENT_LENGTH);
-                }
-                catch (EntityPropertyNotDefinedException e)
-                {
-	                // TODO Auto-generated catch block
-	                logger.warn("EntityPropertyNotDefinedException for size of " + this.id);
-                }
-                catch (EntityPropertyTypeException e)
-                {
-	                size = props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH);
-                }
-				NumberFormat formatter = NumberFormat.getInstance(rb.getLocale());
-				formatter.setMaximumFractionDigits(1);
-				if(size_long > 700000000L)
+				if (size == null)
 				{
-					if(size == null)
-					{
-						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
-						size = rb.getFormattedMessage("size.gb", args);
-					}
-					if(sizzle == null)
-					{
-						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
-						sizzle = rb.getFormattedMessage("size.gbytes", argyles);
-					}
+					size = getSizeLabel(entity);
 				}
-				else if(size_long > 700000L)
+				if (sizzle == null)
 				{
-					if(size == null)
-					{
-						String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
-						size = rb.getFormattedMessage("size.mb", args);
-					}
-					if(sizzle == null)
-					{
-						String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
-						sizzle = rb.getFormattedMessage("size.mbytes", argyles);
-					}
+					sizzle = getLongSizeLabel(entity);
 				}
-				else if(size_long > 700L)
-				{
-					if(size == null)
-					{
-						String[] args = { formatter.format(1.0 * size_long / 1024L) };
-						size = rb.getFormattedMessage("size.kb", args);
-					}
-					if(sizzle == null)
-					{
-						String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
-						sizzle = rb.getFormattedMessage("size.kbytes", argyles);
-					}
-				}
-				else 
-				{
-					String[] args = { formatter.format(size_long) };
-					if(size == null)
-					{
-						size = rb.getFormattedMessage("size.bytes", args);
-					}
-					if(sizzle == null)
-					{
-						sizzle = rb.getFormattedMessage("size.bytes", args);
-					}
-				}
-			}
-			if(size == null)
-			{
-				size = "";
-			}
-			if(sizzle == null)
-			{
-				sizzle = "";
 			}
 			setSize(size);
 			setSizzle(sizzle);
@@ -1466,15 +1421,17 @@ public class ListItem
 			this.conditionArgument = params.get("assignment_grade" + index);
 			Double argument = null;
 			try {
-				argument = new Double(this.conditionArgument);
+				argument = Double.valueOf(this.conditionArgument);
 			} catch (NumberFormatException nfe) {
 				this.numberFieldIsInvalid = true;
+				//Not much we can do if its not a number
+				return;
 			}
 			
 			String submittedResourceFilter = params.get("selectResource" + index);
 			// the number of grade points are tagging along for the ride. chop this off.
 			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
-			Double assignmentPoints = new Double(conditionAssignmentPoints);
+			Double assignmentPoints = Double.valueOf(conditionAssignmentPoints);
 			if ((argument > assignmentPoints) || (argument < 0)) {
 				this.numberFieldIsOutOfRange = true;
 			}
@@ -1591,6 +1548,9 @@ public class ListItem
 		captureCopyright(params, index);
 		captureAccess(params, index);
 		captureAvailability(params, index);
+		if (isAdmin) {
+			captureHtmlInline(params, index);
+		}
 		if(this.canSetQuota)
 		{
 			captureQuota(params, index);
@@ -1603,6 +1563,11 @@ public class ListItem
 		{
 			this.captureOptionalPropertyValues(params, index);
 		}
+	}
+
+	protected void captureHtmlInline(ParameterParser params, String index) {
+		logger.debug("got allow inline of " + params.getBoolean("allowHtmlInline" + index));
+		this.allowHtmlInline = params.getBoolean("allowHtmlInline" + index);
 	}
 
 	protected void captureMimetypeChange(ParameterParser params, String index) 
@@ -1646,6 +1611,7 @@ public class ListItem
 				this.quota = null;
 			}		
 		}
+							
 	}
 
 	protected void captureDisplayName(ParameterParser params, String index) 
@@ -2964,6 +2930,7 @@ public class ListItem
 
 	public void updateContentCollectionEdit(ContentCollectionEdit edit) 
 	{
+		logger.debug("updateContentCollectionEdit()");
 		ResourcePropertiesEdit props = edit.getPropertiesEdit();
 		setDisplayNameOnEntity(props);
 		setDescriptionOnEntity(props);
@@ -2972,6 +2939,8 @@ public class ListItem
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
 		setQuotaOnEntity(props);
+		setHtmlInlineOnEntity(props, edit);
+		
 		if(isOptionalPropertiesEnabled())
 		{
 			this.setMetadataPropertiesOnEntity(props);
@@ -2999,6 +2968,91 @@ public class ListItem
 		}
 	}
 
+	
+	private void setHtmlInlineOnEntity(ResourcePropertiesEdit props, ContentCollectionEdit topFolder) 
+	{
+		logger.debug("setHtmlInlineOnEntity() with allowHtmlInline: " + allowHtmlInline);
+		if(SecurityService.isSuperUser())
+		{
+			if(allowHtmlInline != null)
+			{
+				props.addProperty(ResourceProperties.PROP_ALLOW_INLINE, this.allowHtmlInline.toString());
+				
+			}
+			List<String> children = topFolder.getMembers();
+			for (int i = 0; i < children.size(); i++) {
+				String resId = children.get(i);
+				if (resId.endsWith("/")) {
+					setPropertyOnFolderRecursively(resId, ResourceProperties.PROP_ALLOW_INLINE, allowHtmlInline.toString());
+				}
+			}
+		}
+	}
+	
+
+	/**
+	 * Set a property on a resource and all its children
+	 * @param resourceId
+	 * @param property
+	 * @param value
+	 */
+	
+	private void setPropertyOnFolderRecursively(String resourceId, String property, String value) {
+		
+
+		
+		try {
+			if (ContentHostingService.isAttachmentResource(resourceId)) {
+				// collection
+				ContentCollectionEdit col = ContentHostingService.editCollection(resourceId);
+
+				ResourcePropertiesEdit resourceProperties = col.getPropertiesEdit();
+				resourceProperties.addProperty(property, Boolean.valueOf(value).toString());
+				ContentHostingService.commitCollection(col);
+
+				List<String> children = col.getMembers();
+				for (int i = 0; i < children.size(); i++) {
+					String resId = children.get(i);
+					if (resId.endsWith("/")) {
+						setPropertyOnFolderRecursively(resId, property, value);
+					}
+				}
+
+
+								
+			} else {
+				// resource
+				ContentResourceEdit res = ContentHostingService.editResource(resourceId);
+				ResourcePropertiesEdit resourceProperties = res.getPropertiesEdit();
+				resourceProperties.addProperty(property, Boolean.valueOf(value).toString());
+				ContentHostingService.commitResource(res, NotificationService.NOTI_NONE);				
+			}
+		} catch (PermissionException pe) {
+			pe.printStackTrace();
+			
+		} catch (IdUnusedException iue) {
+			iue.printStackTrace();
+		
+		} catch (TypeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InUseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (VirusFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OverQuotaException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServerOverloadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+	}
+	
+	
 	protected void setAvailabilityOnEntity(GroupAwareEdit edit)
 	{
 		edit.setAvailability(hidden, releaseDate, retractDate);
@@ -3103,6 +3157,7 @@ public class ListItem
 		setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
+		
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
 		{
 			setMimetypeOnEntity(edit, props);
@@ -3149,7 +3204,18 @@ public class ListItem
 	{
 		return canSetQuota;
 	}
-
+	
+	
+	
+	public boolean isAdmin() {
+		return isAdmin;
+	}
+	
+	public void setIsAdmin(boolean admin) {
+		isAdmin = admin;
+	}
+	
+	
 	public boolean hasQuota() 
 	{
 		return hasQuota;
@@ -3192,7 +3258,7 @@ public class ListItem
 
 	 public String getMimeCategory()
 	 {
-		 if(this.mimetype == null || this.mimetype.equals(""))
+		 if(this.mimetype == null || "".equals(this.mimetype))
 		 {
 			 return "";
 		 }
@@ -3206,7 +3272,7 @@ public class ListItem
 
 	 public String getMimeSubtype()
 	 {
-		 if(this.mimetype == null || this.mimetype.equals(""))
+		 if(this.mimetype == null || "".equals(this.mimetype))
 		 {
 			 return "";
 		 }
@@ -3837,5 +3903,127 @@ public class ListItem
 		this.isCourseSite = isCourseSite;
 	}
 	
+	/**
+	 * This code was refactored out of {@link ListItem#set(ContentEntity)}with the idea that it would end up
+	 * in a ResourceType class and that the resource type registry would handle the builtin types as well 
+	 * (ContentCollection & ContentResource) rather than handling some stuff in the registry and some in the tool.
+	 * @see #getSizeLabel(ContentEntity)
+	 */
+	protected String getLongSizeLabel(ContentEntity entity) {
+		String sizzle = "";
+		ResourceProperties props = entity.getProperties();
+		try
+		{
+			long size_long = props.getLongProperty(ResourceProperties.PROP_CONTENT_LENGTH);
+			sizzle = formatLongSize(size_long);
+		}
+		catch (EntityPropertyNotDefinedException e)
+		{
+			logger.info("EntityPropertyNotDefinedException for size of " + entity.getId());
+		}
+		catch(EntityPropertyTypeException e)
+		{
+			logger.info("EntityPropertyTypeException not long of " + entity.getId());
+		}
+		return sizzle;
+	}
+
+	/**
+	 * Utility method to get a verbose filesize string.
+	 * @param size_long The size to be displayed (bytes).
+	 * @return A long human readable filesize.
+	 */
+	public static String formatLongSize(long size_long) {
+		// This method needs to be moved somewhere more sensible.
+		String sizzle = "";
+		NumberFormat formatter = NumberFormat.getInstance(rb.getLocale());
+		formatter.setMaximumFractionDigits(1);
+		if(size_long > 700000000L)
+		{
+			String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)), formatter.format(size_long) };
+			sizzle = rb.getFormattedMessage("size.gbytes", argyles);
+		}
+		else if(size_long > 700000L)
+		{
+			String[] argyles = { formatter.format(1.0 * size_long / (1024L * 1024L)), formatter.format(size_long) };
+			sizzle = rb.getFormattedMessage("size.mbytes", argyles);
+		}
+		else if(size_long > 700L)
+		{
+			String[] argyles = { formatter.format(1.0 * size_long / 1024L), formatter.format(size_long) };
+			sizzle = rb.getFormattedMessage("size.kbytes", argyles);
+		}
+		else 
+		{
+			String[] args = { formatter.format(size_long) };
+			sizzle = rb.getFormattedMessage("size.bytes", args);
+		}
+		return sizzle;
+	}
+
+
+	/**
+	 * @see #getLongSizeLabel(ContentEntity)
+	 */
+	protected String getSizeLabel(ContentEntity entity) {
+		String size = "";
+		ResourceProperties props = entity.getProperties();
+		long size_long = 0;
+		try
+		{
+			size_long = props.getLongProperty(ResourceProperties.PROP_CONTENT_LENGTH);
+			size = formatSize(size_long);
+		}
+		catch (EntityPropertyNotDefinedException e)
+		{
+			logger.warn("EntityPropertyNotDefinedException for size of " + entity.getId());
+		}
+		catch (EntityPropertyTypeException e)
+		{
+			size = props.getProperty(ResourceProperties.PROP_CONTENT_LENGTH);
+		}
+		return size;
+	}
+
+	/**
+	 * Utility method to get a nice short filesize string.
+	 * @param size_long The size to be displayed (bytes).
+	 * @return A short human readable filesize.
+	 */
+	public static String formatSize(long size_long) {
+		// This method needs to be moved somewhere more sensible.
+		String size = "";
+		NumberFormat formatter = NumberFormat.getInstance(rb.getLocale());
+		formatter.setMaximumFractionDigits(1);
+		if(size_long > 700000000L)
+		{
+			String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L * 1024L)) };
+			size = rb.getFormattedMessage("size.gb", args);
+		}
+		else if(size_long > 700000L)
+		{
+			String[] args = { formatter.format(1.0 * size_long / (1024L * 1024L)) };
+			size = rb.getFormattedMessage("size.mb", args);
+
+		}
+		else if(size_long > 700L)
+		{		String[] args = { formatter.format(1.0 * size_long / 1024L) };
+		size = rb.getFormattedMessage("size.kb", args);
+		}
+		else 
+		{
+			String[] args = { formatter.format(size_long) };
+			size = rb.getFormattedMessage("size.bytes", args);
+		}
+		return size;
+	}
+	
+	public boolean isAllowHtmlInline() {
+		return allowHtmlInline;
+	}
+
+	public void setAllowHtmlInline(boolean allowHtmlInline) {
+		this.allowHtmlInline = allowHtmlInline;
+	}
 }
 

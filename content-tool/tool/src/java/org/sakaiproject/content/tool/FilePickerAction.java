@@ -511,7 +511,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			toolSession.setAttribute(STATE_ADDED_ITEMS, new_items);
 		}
 		context.put("attached", new_items);
-		context.put("last", new Integer(new_items.size() - 1));
+		context.put("last", Integer.valueOf(new_items.size() - 1));
 
 		Integer max_cardinality = (Integer) toolSession.getAttribute(STATE_ATTACH_CARDINALITY);
 		if(max_cardinality == null)
@@ -964,7 +964,6 @@ public class FilePickerAction extends PagedResourceHelperAction
 		while(attachmentIt.hasNext())
 		{
 			Reference ref = attachmentIt.next();
-			String containerId = null;
 			String typeId = null;
 			String contentType = null;
 			try
@@ -989,7 +988,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 
 				String displayName = props.getPropertyFormatted(ResourceProperties.PROP_DISPLAY_NAME);
-				AttachItem item = new AttachItem(ref.getId(), displayName, containerId, accessUrl);
+				AttachItem item = new AttachItem(ref.getId(), displayName, null, accessUrl);
 				item.setContentType(contentType);
 				item.setResourceType(typeId);
 				ResourceType typedef = registry.getType(typeId);
@@ -1950,7 +1949,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		{
 			
 		}
-		else if(user_action.equals("save"))
+		else if("save".equals(user_action))
 		{
 			
 			item.captureProperties(params, ListItem.DOT + "0");
@@ -2115,7 +2114,7 @@ public class FilePickerAction extends PagedResourceHelperAction
             }
 			
 		}
-		else if(user_action.equals("cancel"))
+		else if("cancel".equals(user_action))
 		{
 			if(pipe != null)
 			{
@@ -2803,7 +2802,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 
 		// save the number of messges
-		toolSession.setAttribute(STATE_NUM_MESSAGES, new Integer(numMessages));
+		toolSession.setAttribute(STATE_NUM_MESSAGES, Integer.valueOf(numMessages));
 
 		// find the position of the message that is the top first on the page
 		int posStart = 0;
@@ -2876,7 +2875,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		// save which message is at the top of the page
 		ListItem itemAtTheTopOfThePage = (ListItem) allMessages.get(posStart);
 		toolSession.setAttribute(STATE_TOP_PAGE_MESSAGE_ID, itemAtTheTopOfThePage.getId());
-		toolSession.setAttribute(STATE_TOP_MESSAGE_INDEX, new Integer(posStart));
+		toolSession.setAttribute(STATE_TOP_MESSAGE_INDEX, Integer.valueOf(posStart));
 
 
 		// which message starts the next page (if any)
@@ -3062,8 +3061,8 @@ public class FilePickerAction extends PagedResourceHelperAction
                 }
                 catch (IdUnusedException e)
                 {
-	                // TODO Auto-generated catch block
-	                logger.warn("IdUnusedException (FilePickerAction.readAllResources()) collId == " + collId + " --> " + e);
+	                // its expected that some collections eg the drop box collection may not exit
+	                logger.debug("IdUnusedException (FilePickerAction.readAllResources()) collId == " + collId + " --> " + e);
                 }
                 catch (TypeException e)
                 {

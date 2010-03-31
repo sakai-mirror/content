@@ -89,7 +89,7 @@ import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.event.api.UsageSession;
-import org.sakaiproject.event.cover.NotificationService;
+import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.event.cover.UsageSessionService;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdLengthException;
@@ -138,6 +138,8 @@ public class ResourcesAction
 	private static final long serialVersionUID = 1L;
 	public static final String PIPE_INIT_ID = "pipe-init-id";
 
+	
+	
 	/**
 	 * Action
 	 *
@@ -565,6 +567,8 @@ public class ResourcesAction
 	/************** the more context *****************************************/
 
 	private static final String MODE_DAV = "webdav";
+	
+	private static final String MODE_QUOTA = "quota";
 
 	/************** the edit context *****************************************/
 
@@ -808,6 +812,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	/** vm files for each mode. */
 	private static final String TEMPLATE_DAV = "content/chef_resources_webdav";
+	
+	private static final String TEMPLATE_QUOTA = "resources/sakai_quota";
 
 	private static final String TEMPLATE_DELETE_CONFIRM = "content/chef_resources_deleteConfirm";
 
@@ -2478,12 +2484,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				item.setCopyrightAlert(false);
 			}
 			
+			logger.info("here we are!");
+			
 			// for collections only
 			if(item.isFolder())
 			{
 				// setup for quota - ADMIN only, site-root collection only
 				if (SecurityService.isSuperUser())
 				{
+					item.setIsAdmin(true);
+					
 					String siteCollectionId = ContentHostingService.getSiteCollection(contextId);
 					if(siteCollectionId.equals(entity.getId()))
 					{
@@ -2493,11 +2503,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 							long quota = properties.getLongProperty(ResourceProperties.PROP_COLLECTION_BODY_QUOTA);
 							item.setHasQuota(true);
 							item.setQuota(Long.toString(quota));
+					
 						}
 						catch (Exception any)
 						{
+							logger.debug("got exception: " + any);
 						}
 					}
+					
+					
 				}
 			}
 
@@ -2869,7 +2883,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			Integer expansionLimit = (Integer) state.getAttribute(STATE_EXPANDABLE_FOLDER_SIZE_LIMIT);
 			if(expansionLimit == null)
 			{
-				expansionLimit = new Integer(EXPANDABLE_FOLDER_SIZE_LIMIT);
+				expansionLimit = Integer.valueOf(EXPANDABLE_FOLDER_SIZE_LIMIT);
 			}
 			folder.setIsTooBig(collection_size > expansionLimit.intValue());
 				
@@ -4162,7 +4176,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			catch (TypeException e) {}
 			catch (PermissionException e) {}
 		}
-		
+		boolean allowUpdateSite = SiteService.allowUpdateSite(ToolManager.getCurrentPlacement().getContext());
 		if(atHome && SiteService.allowUpdateSite(ToolManager.getCurrentPlacement().getContext()))
 		{
 			if(dropboxMode)
@@ -4171,6 +4185,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			else
 			{
+				
 				if(!inMyWorkspace )
 				{
 					context.put("showPermissions", Boolean.TRUE.toString());
@@ -4187,6 +4202,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				}
 			}
 		}
+		
+		context.put("showQuota", Boolean.valueOf(!dropboxMode && allowUpdateSite));
 		
 		context.put("atHome", Boolean.toString(atHome));
 
@@ -4614,7 +4631,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		else if(mode.equals(MODE_DAV))
 		{
-			template = buildWebdavContext (portlet, context, data, state);
+			template =  buildWebdavContext(portlet, context, data, state);
+		}
+		else if(mode.equals(MODE_QUOTA))
+		{
+			template = buildQuotaContext (portlet, context, data, state);
 		}
 		else if(mode.equals(MODE_REVISE_METADATA))
 		{
@@ -5047,6 +5068,18 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 
 		String webdav_instructions = ServerConfigurationService.getString("webdav.instructions.url");
+		int extIndex = webdav_instructions.indexOf(".html");
+		String webdav_doc = webdav_instructions.substring(0,extIndex).trim();
+		String locale = new ResourceLoader().getLocale().getLanguage();
+
+		if ((locale == null) || locale.equalsIgnoreCase("en") || (locale.trim().length()==0)){
+			webdav_instructions = ServerConfigurationService.getString("webdav.instructions.url");
+		}else{
+			webdav_instructions = webdav_doc + "_" + locale + ".html";
+		}
+
+
+
 		context.put("webdav_instructions" ,webdav_instructions);
 
 		// TODO: Consider whether we should return a trivial session
@@ -5064,7 +5097,58 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		return TEMPLATE_DAV;
 
 	}	// buildWebdavContext
+	
+	/**
+	* Build the context for add display
+	*/
+	public String buildQuotaContext(	VelocityPortlet portlet,
+										Context context,
+										RunData data,
+										SessionState state)
+	{
+		logger.debug(this + ".buildQuotaContext()");
+		context.put("tlang",rb);
+		// find the ContentTypeImage service
+		
+		String siteCollectionId = ContentHostingService.getSiteCollection(ToolManager.getCurrentPlacement().getContext());
+		try
+		{
+			ContentCollection collection = ContentHostingService.getCollection(siteCollectionId);
+			long quota = ContentHostingService.getQuota(collection);
+			long usage = collection.getBodySizeK();
+			context.put("usage", ListItem.formatSize(usage * 1024));
+			if (quota > 0)
+			{
+				long usagePrecent = usage * 100 / quota;
+				context.put("usagePercent", usagePrecent);
+				context.put("quota", ListItem.formatSize(quota * 1024));
+			}
+			else
+			{
+				context.put("quota", rb.get("quota.unlimited"));
+			}
+		}
+		catch (IdUnusedException e)
+		{
+			logger.warn("Can't find collection for site: "+ siteCollectionId, e);
+		}
+		catch(TypeException e){
+			logger.warn("Site collection is of wrong type.", e);
+		}
+		catch(PermissionException e){
+			logger.warn("User doesn't have permission to access site collection", e);
+		}
 
+		boolean dropboxMode = RESOURCES_MODE_DROPBOX.equalsIgnoreCase((String) state.getAttribute(STATE_MODE_RESOURCES));
+		context.put("dropboxMode", Boolean.toString(dropboxMode));
+		
+		boolean maintainer = SiteService.allowUpdateSite(siteCollectionId);
+		context.put("maintainer", Boolean.toString(maintainer));
+
+		return TEMPLATE_QUOTA;
+
+	}	// buildWebdavContext
+	
 
 	/**
 	 * Iterate over attributes in ToolSession and remove all attributes starting with a particular prefix.
@@ -5445,7 +5529,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			user_action = pipe.getAction().getId();
 		}
 		
-		if(user_action.equals("save"))
+		if("save".equals(user_action))
 		{
 			item.captureProperties(params, ListItem.DOT + "0");
 			if (item.numberFieldIsInvalid) {
@@ -5688,7 +5772,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
             }
 			
 		}
-		else if(user_action.equals("cancel"))
+		else if("cancel".equals(user_action))
 		{
 			if(pipe != null)
 			{
@@ -6175,13 +6259,13 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				maxDepth = depth;
 			}
-			List v = (List) deleteItems.get(new Integer(depth));
+			List v = (List) deleteItems.get(Integer.valueOf(depth));
 			if(v == null)
 			{
 				v = new ArrayList();
 			}
 			v.add(item);
-			deleteItems.put(new Integer(depth), v);
+			deleteItems.put(Integer.valueOf(depth), v);
 		}
 
 		boolean isCollection = false;
@@ -6683,7 +6767,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		String user_action = params.getString("user_action");
 		
-		if(user_action.equals("save"))
+		if("save".equals(user_action))
 		{
 			String entityId = (String) state.getAttribute(STATE_REVISE_PROPERTIES_ENTITY_ID);
 			ListItem item = (ListItem) state.getAttribute(STATE_REVISE_PROPERTIES_ITEM);
@@ -6812,7 +6896,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			
 		}
-		else if(user_action.equals("cancel"))
+		else if("cancel".equals(user_action))
 		{
 			state.setAttribute(STATE_MODE, MODE_LIST);
 		}
@@ -6963,7 +7047,19 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	}	// doShow_webdav
 
-			
+	/**
+	* Show information about WebDAV
+	*/
+	public void doShowQuota ( RunData data )
+	{
+		logger.debug(this + ".doShowQuota()");
+		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
+
+		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
+
+		state.setAttribute (STATE_MODE, MODE_QUOTA);
+
+	}	// doShowQuota		
 
 
 	public void doShowMembers(RunData data)
@@ -7029,23 +7125,23 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 		String criteria = params.getString ("criteria");
 
-		if (criteria.equals ("title"))
+		if ("title".equals(criteria))
 		{
 			criteria = ResourceProperties.PROP_DISPLAY_NAME;
 		}
-		else if (criteria.equals ("size"))
+		else if ("size".equals(criteria))
 		{
 			criteria = ResourceProperties.PROP_CONTENT_LENGTH;
 		}
-		else if (criteria.equals ("created by"))
+		else if ("created by".equals(criteria))
 		{
 			criteria = ResourceProperties.PROP_CREATOR;
 		}
-		else if (criteria.equals ("last modified"))
+		else if ("last modified".equals(criteria))
 		{
 			criteria = ResourceProperties.PROP_MODIFIED_DATE;
 		}
-		else if (criteria.equals("priority") && ContentHostingService.isSortByPriorityEnabled())
+		else if ("priority".equals(criteria) && ContentHostingService.isSortByPriorityEnabled())
 		{
 			// if error, use title sort
 			criteria = ResourceProperties.PROP_CONTENT_PRIORITY;
@@ -7484,16 +7580,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		PortletConfig config = portlet.getPortletConfig();
 		try
 		{
-			Integer size = new Integer(config.getInitParameter(PARAM_PAGESIZE));
+			Integer size = Integer.valueOf(config.getInitParameter(PARAM_PAGESIZE));
 			if(size == null || size.intValue() < 1)
 			{
-				size = new Integer(DEFAULT_PAGE_SIZE);
+				size = Integer.valueOf(DEFAULT_PAGE_SIZE);
 			}
 			state.setAttribute(STATE_PAGESIZE, size);
 		}
 		catch(Exception any)
 		{
-			state.setAttribute(STATE_PAGESIZE, new Integer(DEFAULT_PAGE_SIZE));
+			state.setAttribute(STATE_PAGESIZE, Integer.valueOf(DEFAULT_PAGE_SIZE));
 		}
 
 		// state.setAttribute(STATE_TOP_PAGE_MESSAGE_ID, "");
@@ -7552,7 +7648,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		
 		/** set attribute for the maximum size at which the resources tool will expand a collection. */
 		int expandableFolderSizeLimit = ServerConfigurationService.getInt("resources.expanded_folder_size_limit", EXPANDABLE_FOLDER_SIZE_LIMIT);
-		state.setAttribute(STATE_EXPANDABLE_FOLDER_SIZE_LIMIT, new Integer(expandableFolderSizeLimit));
+		state.setAttribute(STATE_EXPANDABLE_FOLDER_SIZE_LIMIT, Integer.valueOf(expandableFolderSizeLimit));
 		
 		/** This attribute indicates whether "Other Sites" twiggle should show */
 		state.setAttribute(STATE_SHOW_ALL_SITES, Boolean.toString(show_other_sites));
@@ -7919,7 +8015,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 
 		// save the number of messges
-		state.setAttribute(STATE_NUM_MESSAGES, new Integer(numMessages));
+		state.setAttribute(STATE_NUM_MESSAGES, Integer.valueOf(numMessages));
 
 		// find the position of the message that is the top first on the page
 		int posStart = 0;
@@ -7993,7 +8089,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		// save which message is at the top of the page
 		ListItem itemAtTheTopOfThePage = (ListItem) allMessages.get(posStart);
 		state.setAttribute(STATE_TOP_PAGE_MESSAGE_ID, itemAtTheTopOfThePage.getId());
-		state.setAttribute(STATE_TOP_MESSAGE_INDEX, new Integer(posStart));
+		state.setAttribute(STATE_TOP_MESSAGE_INDEX, Integer.valueOf(posStart));
 
 
 		// which message starts the next page (if any)
