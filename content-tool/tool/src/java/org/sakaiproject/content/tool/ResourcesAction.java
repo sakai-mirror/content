@@ -5643,11 +5643,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			item.captureProperties(params, ListItem.DOT + "0");
 			if (item.numberFieldIsInvalid) {
-				addAlert(state, rb.getString("invalid.condition.argument"));
+				addAlert(state, rb.getString("conditions.invalid.condition.argument"));
 				return;
 			}
 			if (item.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + item.getConditionAssignmentPoints() + ".");
+				addAlert(state, rb.getString("conditions.condition.argument.outofrange") + " " + item.getConditionAssignmentPoints() + ".");
 				return;
 			}
 			String name = params.getString("name" + ListItem.DOT + "0");
@@ -6889,11 +6889,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			item.captureProperties(params, ListItem.DOT + "0");
 			if (item.numberFieldIsInvalid) {
-				addAlert(state, rb.getString("invalid.condition.argument"));
+				addAlert(state, rb.getString("conditions.invalid.condition.argument"));
 				return;
 			}
 			if (item.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + item.getConditionAssignmentPoints() + ".");
+				addAlert(state, rb.getString("conditions.condition.argument.outofrange") + " " + item.getConditionAssignmentPoints() + ".");
 				return;
 			}
 			

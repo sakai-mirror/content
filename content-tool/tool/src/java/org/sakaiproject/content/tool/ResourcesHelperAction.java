@@ -89,10 +89,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	/** the logger for this class */
 	 private static final Log logger = LogFactory.getLog(ResourcesHelperAction.class);
 	 
-	 private static final ResourceConditionsHelper conditionsHelper = new ResourceConditionsHelper();
-	 
 	/** Resource bundle using current language locale */
 	private static ResourceLoader rb = new ResourceLoader("types");
+	private static ResourceLoader contentResourceBundle = new ResourceLoader("content");
 	
 	protected  static final String ACCESS_HTML_TEMPLATE = "resources/sakai_access_html";
 
@@ -921,11 +920,11 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			// capture properties
 			newFolder.captureProperties(params, ListItem.DOT + i);
 			if (newFolder.numberFieldIsInvalid) {
-				addAlert(state, rb.getString("invalid.condition.argument"));
+				addAlert(state, contentResourceBundle.getString("conditions.invalid.condition.argument"));
 				return;
 			}
 			if (newFolder.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFolder.getConditionAssignmentPoints() + ".");
+				addAlert(state, contentResourceBundle.getString("conditions.condition.argument.outofrange") + " " + newFolder.getConditionAssignmentPoints() + ".");
 				return;
 			}
 
@@ -1193,11 +1192,11 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			// capture properties
 			newFile.captureProperties(params, ListItem.DOT + i);
 			if (newFile.numberFieldIsInvalid) {
-				addAlert(state, rb.getString("invalid.condition.argument"));
+				addAlert(state, contentResourceBundle.getString("conditions.invalid.condition.argument"));
 				return;
 			}
 			if (newFile.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("invalid.condition.argument.outside.range") + " " + newFile.getConditionAssignmentPoints() + ".");
+				addAlert(state, contentResourceBundle.getString("conditions.condition.argument.outofrange") + " " + newFile.getConditionAssignmentPoints() + ".");
 				return;
 			}
 			// notification

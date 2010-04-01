@@ -27,7 +27,7 @@ import org.sakaiproject.util.ParameterParser;
 import org.sakaiproject.util.ResourceLoader;
 
 
-public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
+public class ResourceConditionsHelper {
 	
 	/**
 	 * 
@@ -61,7 +61,7 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 		logger.debug("operatorValue: " + operatorValue);			
 		String submittedResourceFilter = params.get("selectResource" + ListItem.DOT + index);
 		// the number of grade points are tagging along for the ride. chop this off.
-		String assignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
+		String assignmentPointsString = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
 		submittedResourceFilter = submittedResourceFilter.substring(0, submittedResourceFilter.lastIndexOf("/"));
 		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
 		String eventDataClass = conditionService.getClassNameForEvent(submittedFunctionName);
@@ -70,6 +70,17 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 			try {
 				argument = new Double(params.get("assignment_grade" + ListItem.DOT + index));
 			} catch (NumberFormatException e) {
+				VelocityPortletPaneledAction.addAlert(state, rb.getString("conditions.invalid.condition.argument"));
+				return;
+			}
+			double assignmentPoints = 0;
+			try {
+				assignmentPoints = new Double(assignmentPointsString);
+			} catch (NumberFormatException e) {
+				return;
+			}
+			if (((Double)argument < 0) || ((Double)argument > assignmentPoints)) {
+				VelocityPortletPaneledAction.addAlert(state, rb.getString("conditions.condition.argument.outofrange") + " " + assignmentPointsString);
 				return;
 			}
 			logger.debug("argument: " + argument);
@@ -141,7 +152,7 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 					item.setConditionArgument(notification.getProperties().getProperty(ConditionService.PROP_CONDITIONAL_RELEASE_ARGUMENT));					
 				}
 			} catch (NotificationNotDefinedException e) {
-				addAlert(state, rb.getString("notification.load.error"));								
+				VelocityPortletPaneledAction.addAlert(state, rb.getString("conditions.notification.load.error"));								
 			}					
 		}
 		
@@ -179,9 +190,9 @@ public class ResourceConditionsHelper extends VelocityPortletPaneledAction {
 			NotificationEdit notificationToRemove = NotificationService.editNotification(item.getNotificationId());
 			NotificationService.removeNotification(notificationToRemove);
 		} catch (NotificationLockedException e) {
-			addAlert(state, rb.getString("disable.condition.error"));				
+			VelocityPortletPaneledAction.addAlert(state, rb.getString("conditions.disable.error"));				
 		} catch (NotificationNotDefinedException e) {
-			addAlert(state, rb.getString("disable.condition.error"));								
+			VelocityPortletPaneledAction.addAlert(state, rb.getString("conditions.disable.error"));								
 		}		
 	}
 	

@@ -1484,6 +1484,9 @@ public class ListItem
 		if (selectedConditionValue == null) return;
 		String[] conditionTokens = selectedConditionValue.split("\\|");
 		int selectedIndex = Integer.valueOf(conditionTokens[0]);
+		
+		this.numberFieldIsInvalid = false;
+		this.numberFieldIsOutOfRange = false;
 		if ((selectedIndex == 9) || (selectedIndex == 10)) {
 			this.conditionArgument = params.get("assignment_grade" + index);
 			Double argument = null;
@@ -1497,7 +1500,7 @@ public class ListItem
 			// the number of grade points are tagging along for the ride. chop this off.
 			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
 			Double assignmentPoints = new Double(conditionAssignmentPoints);
-			if ((argument > assignmentPoints) || (argument < 0)) {
+			if (argument != null && ((argument > assignmentPoints) || (argument < 0))) {
 				this.numberFieldIsOutOfRange = true;
 			}
 		}
