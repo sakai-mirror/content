@@ -1490,7 +1490,7 @@ public class ListItem
 			this.conditionArgument = params.get("assignment_grade" + index);
 			Double argument = null;
 			try {
-				argument = new Double(this.conditionArgument);
+				argument = Double.valueOf(this.conditionArgument);
 			} catch (NumberFormatException nfe) {
 				this.numberFieldIsInvalid = true;
 			}
@@ -1498,7 +1498,7 @@ public class ListItem
 			String submittedResourceFilter = params.get("selectResource" + index);
 			// the number of grade points are tagging along for the ride. chop this off.
 			this.conditionAssignmentPoints = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
-			Double assignmentPoints = new Double(conditionAssignmentPoints);
+			Double assignmentPoints = Double.valueOf(conditionAssignmentPoints);
 			if (argument != null && ((argument > assignmentPoints) || (argument < 0))) {
 				this.numberFieldIsOutOfRange = true;
 			}
@@ -3325,7 +3325,7 @@ public class ListItem
 
 	 public String getMimeCategory()
 	 {
-		 if(this.mimetype == null || this.mimetype.equals(""))
+		 if(this.mimetype == null || "".equals(this.mimetype))
 		 {
 			 return "";
 		 }
@@ -3339,7 +3339,7 @@ public class ListItem
 
 	 public String getMimeSubtype()
 	 {
-		 if(this.mimetype == null || this.mimetype.equals(""))
+		 if(this.mimetype == null || "".equals(this.mimetype))
 		 {
 			 return "";
 		 }
