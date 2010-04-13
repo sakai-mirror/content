@@ -2,13 +2,8 @@
 <!-- chef_resources_reorder.vm, use with org.sakaiproject.tool.content.ResourcesAction.java -->
 <!-- this is the reorder template -->
 <script type="text/javascript"
-  src="/sakai-content-tool/fluid/Fluid-all.js"></script>
-
-    <script type="text/javascript" src="/sakai-content-tool/js/content-reorder.js"></script>
-		<style type="text/css">
-			@import url("/sakai-content-tool/css/content.css");
-		</style>
-
+  src="/library/js/fluid-latest/InfusionAll.js"></script>
+<script type="text/javascript" src="/library/js/reorderer.js"></script>
 <div class="portletBody specialLink">
 	<form name="reorderForm" id="reorderForm" action="#toolForm("ResourcesAction")" method="post">
 		<input name="folderId" id="folderId" value="$folderId" type="hidden" />
@@ -56,7 +51,7 @@
 				#set($collectionMembers = $root.members)
 				#set($count = 1)
 				#foreach($member in $collectionMembers)
-					<li class="sortable"  id="content.orderable$count">
+					<li class="sortable"  id="listitem.orderable$count">
 						<span style="display:none" class="grabHandle">
 							<input type="text" size="3" value="$count" id="index$count"/>
 							<input type="hidden"  size="3" id="holder$count"  value="$count" tabindex="-2"/>
@@ -76,7 +71,7 @@
 							$member.ModifiedTime
 						</span>
 						<span headers="position" style="display:none">
-							<select name="position_$validator.escapeUrl("$member.id")" class="selectSet" style="display:none">
+							<select name="position_$validator.escapeUrl("$member.id")" class="selectSet" style="display:none" tabindex="-1">
 								#foreach($i in [1..$collectionMembers.size()])
 									<option value="$i"#if("$i" == "$count") selected="selected"#end>$i</option>
 								#end
@@ -88,8 +83,8 @@
 			#end
 		</ul>
 		<p class="act" style="margin:0;padding:.3em 0;">
-			<input id="save" value="$tlang.getString("sort.save")" type="button" class="active" onclick="submitThis('reorderForm','save');" /> 
-			<input id="cancel" value="$tlang.getString("sort.cancel")" type="button" onclick="submitThis('reorderForm','cancel');" />																			
+			<input id="save" value="$tlang.getString("sort.save")" type="button" class="active" onclick="submitThis('reorderForm','save');" accesskey="s"/> 
+			<input id="cancel" value="$tlang.getString("sort.cancel")" type="button" onclick="submitThis('reorderForm','cancel');"  accesskey="x"/>																			
 		</p>
 	</form>						
 
