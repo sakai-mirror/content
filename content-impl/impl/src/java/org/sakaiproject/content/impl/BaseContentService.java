@@ -126,6 +126,7 @@ import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.thread_local.api.ThreadBound;
 import org.sakaiproject.thread_local.cover.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
@@ -3983,6 +3984,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		if (resource == null) throw new InUseException(id);
 
 		resource.setEvent(EVENT_RESOURCE_WRITE);
+		
+		ThreadLocalManager.set(String.valueOf(resource), resource);
 
 		return resource;
 
@@ -4024,6 +4027,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		if (resource == null) throw new InUseException(id);
 
 		resource.setEvent(EVENT_RESOURCE_REMOVE);
+		
+		ThreadLocalManager.set(String.valueOf(resource), resource);
 
 		return resource;
 
@@ -4128,7 +4133,9 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		if (collection == null) throw new InUseException(id);
 	
 		collection.setEvent(EVENT_RESOURCE_WRITE);
-	
+		
+		ThreadLocalManager.set(String.valueOf(collection), collection);
+
 		return collection;
 	
 	} // editCollection
@@ -9172,7 +9179,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 * ContentEntity implementation
 	 *********************************************************************************************************************************************************************************************************************************************************/
 
-	public abstract class BasicGroupAwareEdit implements GroupAwareEdit
+	public abstract class BasicGroupAwareEdit implements GroupAwareEdit, ThreadBound
 	{
 		/** Store the resource id */
 		protected String m_id = null;
@@ -9648,6 +9655,7 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 	 *********************************************************************************************************************************************************************************************************************************************************/
 	public class BaseCollectionEdit extends BasicGroupAwareEdit implements ContentCollectionEdit, SessionBindingListener, SerializableEntity,  SerializableCollectionAccess
 	{
+		private boolean m_sessionBound = false;
 		/**
 		 * Construct with an id.
 		 * 
@@ -10393,10 +10401,12 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		public void valueBound(SessionBindingEvent event)
 		{
+			m_sessionBound = true;
 		}
 
 		public void valueUnbound(SessionBindingEvent event)
 		{
+			m_sessionBound  = false;
 			if (M_log.isDebugEnabled()) M_log.debug("valueUnbound()");
 
 			// catch the case where an edit was made but never resolved
@@ -10676,6 +10686,13 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 			m_retractDate = retractDate;
 		}
 
+		public void unbind() {
+			if ( !m_sessionBound && m_active ) {
+				M_log.warn("Edit Object not closed correctly, Cancelling "+this.getId());
+				cancelCollection(this);
+			}			
+		}
+
 
 
 
@@ -10703,6 +10720,8 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		protected String m_filePath = null;
 
 		protected InputStream m_contentStream;
+
+		private boolean m_sessionBound = true;
 
 		/**
 		 * Construct.
@@ -11511,10 +11530,12 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 
 		public void valueBound(SessionBindingEvent event)
 		{
+			m_sessionBound = true;
 		}
 
 		public void valueUnbound(SessionBindingEvent event)
 		{
+			m_sessionBound  = false;
 			if (M_log.isDebugEnabled()) M_log.debug("valueUnbound()");
 
 			// catch the case where an edit was made but never resolved
@@ -11829,6 +11850,14 @@ public abstract class BaseContentService implements ContentHostingService, Cache
 		public void setSerializableRetractDate(Time retractDate)
 		{
 			m_retractDate = retractDate;
+		}
+		
+		
+		public void unbind() {
+			if ( !m_sessionBound && m_active ) {
+				M_log.warn("Edit Object not closed correctly, Cancelling "+this.getId());
+				cancelResource(this);
+			}			
 		}
 
 	} // BaseResourceEdit
