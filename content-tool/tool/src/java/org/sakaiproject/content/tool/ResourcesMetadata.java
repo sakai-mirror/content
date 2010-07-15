@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.util.Validator;
 
 /**
  * The class represents metadata properties.
@@ -1093,6 +1094,7 @@ public class ResourcesMetadata
 			try
 			{
 				rv = m_currentValues.get(index);
+
 			}
 			catch(ArrayIndexOutOfBoundsException e)
 			{
