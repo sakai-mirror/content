@@ -36,6 +36,7 @@ import org.sakaiproject.content.api.ContentHostingHandler;
 import org.sakaiproject.content.api.ContentHostingHandlerResolver;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.util.Validator;
 
 /**
  * The class represents metadata properties.
@@ -1093,6 +1094,7 @@ public class ResourcesMetadata
 			try
 			{
 				rv = m_currentValues.get(index);
+
 			}
 			catch(ArrayIndexOutOfBoundsException e)
 			{
