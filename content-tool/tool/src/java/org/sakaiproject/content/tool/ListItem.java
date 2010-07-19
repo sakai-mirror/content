@@ -61,7 +61,6 @@ import org.sakaiproject.content.api.ServiceLevelAction;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.cover.ContentTypeImageService;
 import org.sakaiproject.content.tool.ResourcesAction.ContentPermissions;
-import org.sakaiproject.content.tool.ResourcesAction.MetadataGroup;
 import org.sakaiproject.entity.api.EntityPropertyNotDefinedException;
 import org.sakaiproject.entity.api.EntityPropertyTypeException;
 import org.sakaiproject.entity.api.Reference;
@@ -3242,7 +3241,7 @@ public class ListItem
 				metadataGroups =  new ArrayList<MetadataGroup>();
 			}
 			boolean optionalPropertiesDefined = false;
-			String opt_prop_name = rb.getString("opt_props");
+			String opt_prop_name = "opt_props";
 			
 			for(MetadataGroup group : this.metadataGroups)
 			{
@@ -3259,7 +3258,7 @@ public class ListItem
 			// define DublinCore
 			if( !optionalPropertiesDefined )
 			{
-				MetadataGroup dc = new MetadataGroup( rb.getString("opt_props") );
+				MetadataGroup dc = new MetadataGroup("opt_props");
 				// dc.add(new ResourcesMetadata(ResourcesMetadata.PROPERTY_DC_TITLE));
 				// dc.add(new ResourcesMetadata(ResourcesMetadata.PROPERTY_DC_DESCRIPTION));
 				dc.add(new ResourcesMetadata(ResourcesMetadata.PROPERTY_DC_ALTERNATIVE));
