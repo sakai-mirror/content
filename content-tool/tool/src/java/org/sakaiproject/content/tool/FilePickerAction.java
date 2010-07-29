@@ -953,7 +953,7 @@ public class FilePickerAction extends PagedResourceHelperAction
     protected void disableSecurityAdvisors()
     {
     	// remove all security advisors
-    	SecurityService.clearAdvisors();
+    	SecurityService.popAdvisor();
     }
 
     /**
