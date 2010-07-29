@@ -336,7 +336,7 @@ public class BaseEventDelayHandler implements EventDelayHandler, ScheduledInvoca
 				eventService.post(event);
 			} finally {
 				// Clear security advisor
-				SecurityService.clearAdvisors();
+				SecurityService.popAdvisor();
 			}
 		} else {
 			LOG.warn("Delayed event not found [" + opaqueContext + "]");
