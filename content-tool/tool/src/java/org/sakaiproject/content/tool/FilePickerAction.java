@@ -1313,7 +1313,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 				}
 				catch(OverQuotaException e)
 				{
-					addAlert(state, crb.getString("overquota"));
+					addAlert(state, crb.getString("overquota.site"));
 				}
 				catch(ServerOverloadException e)
 				{
@@ -1433,7 +1433,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 		}
 		catch(OverQuotaException e)
 		{
-			addAlert(state, crb.getString("overquota"));
+			addAlert(state, crb.getString("overquota.site"));
 		}
 		catch(ServerOverloadException e)
 		{
@@ -1724,7 +1724,7 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch(OverQuotaException e)
 			{
-				addAlert(state, crb.getString("overquota"));
+				addAlert(state, crb.getString("overquota.site"));
 			}
 			catch(ServerOverloadException e)
 			{
@@ -2142,7 +2142,15 @@ public class FilePickerAction extends PagedResourceHelperAction
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(state, crb.getString("overquota"));
+                int quota = 20;
+			    try {
+                    ContentCollection collection = contentService.getCollection(collectionId);
+                    long cq = contentService.getQuota(collection); // in kb
+                    quota = (int)(cq / 1024);
+                } catch (Exception e1) {
+                    // nothing helpful to do here
+                }
+				addAlert(state, crb.getFormattedMessage("overquota", new Object[] {quota}));
 			}
             catch (IdUniquenessException e)
             {

@@ -1611,7 +1611,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			}
 			catch (OverQuotaException e)
 			{
-				addAlert(state, rb.getString("overquota"));
+                int quota = 20;
+                try {
+                    ContentCollection collection = ContentHostingService.getCollection(collectionId);
+                    long cq = ContentHostingService.getQuota(collection); // in kb
+                    quota = (int)(cq / 1024);
+                } catch (Exception e1) {
+                    // nothing helpful to do here
+                }
+                addAlert(state, rb.getFormattedMessage("overquota", new Object[] {quota}));
 			}	// try-catch
 			catch(RuntimeException e)
 			{
@@ -1754,7 +1762,15 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		catch(OverQuotaException e)
 		{
-			addAlert(state, rb.getString("overquota"));
+            int quota = 20;
+            try {
+                ContentCollection collection = ContentHostingService.getCollection(collectionId);
+                long cq = ContentHostingService.getQuota(collection); // in kb
+                quota = (int)(cq / 1024);
+            } catch (Exception e1) {
+                // nothing helpful to do here
+            }
+            addAlert(state, rb.getFormattedMessage("overquota", new Object[] {quota}));
 		}
 		catch(ServerOverloadException e)
 		{
