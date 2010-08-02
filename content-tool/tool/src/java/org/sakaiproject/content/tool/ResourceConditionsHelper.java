@@ -81,11 +81,16 @@ public class ResourceConditionsHelper {
 		logger.debug("operatorValue: " + operatorValue);			
 		String submittedResourceFilter = params.get("selectResource" + ListItem.DOT + index);
 		// the number of grade points are tagging along for the ride. chop this off.
-		String assignmentPointsString = submittedResourceFilter.substring(submittedResourceFilter.lastIndexOf("/") + 1);
-		submittedResourceFilter = submittedResourceFilter.substring(0, submittedResourceFilter.lastIndexOf("/"));
+		String[] resourceTokens = submittedResourceFilter.split("/");
+		String assignmentPointsString = resourceTokens[4];
+		submittedResourceFilter = "/" + resourceTokens[1] + "/" + resourceTokens[2] + "/" + resourceTokens[3];
+		String additionalAssignmentInfo = "/" + resourceTokens[4] + "/" + resourceTokens[5] + "/" + resourceTokens[6] + "/" + resourceTokens[7];
 		logger.debug("submittedResourceFilter: " + submittedResourceFilter);
 		String eventDataClass = conditionService.getClassNameForEvent(submittedFunctionName);
 		Object argument = null;
+		if ((selectedIndex == 1) || ( selectedIndex == 2)) {
+			argument = "dateMillis:"+resourceTokens[5];
+		}
 		if ((selectedIndex == 9) || (selectedIndex == 10)) {
 			try {
 				argument = Double.valueOf(params.get("assignment_grade" + ListItem.DOT + index));
@@ -127,15 +132,17 @@ public class ResourceConditionsHelper {
 			NotificationEdit notification = NotificationService.addNotification();
 			notification.addFunction(submittedFunctionName);
 			notification.addFunction("cond+" + submittedFunctionName);
+			notification.setResourceFilter(submittedResourceFilter);
 			if (missingTermQuery.contains("Date")) {
 				notification.addFunction("datetime.update");
+				notification.setResourceFilter(null);
 			}
 			notification.setAction(resourceConditionRule);
-			notification.setResourceFilter(submittedResourceFilter);
 			notification.getProperties().addProperty(ConditionService.PROP_SUBMITTED_FUNCTION_NAME, submittedFunctionName);
 			notification.getProperties().addProperty(ConditionService.PROP_SUBMITTED_RESOURCE_FILTER, submittedResourceFilter);
 			notification.getProperties().addProperty(ConditionService.PROP_SELECTED_CONDITION_KEY, selectedConditionValue);
 			notification.getProperties().addProperty(ConditionService.PROP_CONDITIONAL_RELEASE_ARGUMENT, params.get("assignment_grade" + ListItem.DOT + index));
+			notification.getProperties().addProperty("SAKAI:conditionEventState", additionalAssignmentInfo);
 			NotificationService.commitEdit(notification);
 			
 			item.setUseConditionalRelease(true);
@@ -244,7 +251,12 @@ public class ResourceConditionsHelper {
 		}
 			
 		if (resourceNotification != null) {
-			EventTrackingService.post(EventTrackingService.newEvent("cond+" + resourceNotification.getFunction(), resourceNotification.getResourceFilter(), true));
+			String eventDataString = resourceNotification.getProperties().getProperty("SAKAI:conditionEventState");
+			
+			// event resource of the form: /gradebook/[gradebook id]/[assignment name]/[points possible]/[due date millis]/[isreleased]/[is included in course grade]/[has authz]
+			String resource = resourceNotification.getResourceFilter();
+			if (resource == null) resource = "/gradebook/null/null";
+			EventTrackingService.post(EventTrackingService.newEvent("cond+" + resourceNotification.getFunction(), resource + eventDataString, true));
 		}
 		
 	}
