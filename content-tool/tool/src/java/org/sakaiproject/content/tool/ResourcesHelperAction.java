@@ -1189,6 +1189,18 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			//alerts.addAll(newFile.checkRequiredProperties());
 							
 			pipe.setRevisedListItem(newFile);
+			
+			// capture properties
+			newFile.captureProperties(params, ListItem.DOT + i);
+			if (newFile.numberFieldIsInvalid) {
+				addAlert(state, contentResourceBundle.getString("conditions.invalid.condition.argument"));
+				return;
+			}
+			if (newFile.numberFieldIsOutOfRange) {
+				addAlert(state, contentResourceBundle.getString("conditions.condition.argument.outofrange") + " " + newFile.getConditionAssignmentPoints() + ".");
+				return;
+			}
+			ResourceConditionsHelper.saveCondition(newFile, params, state, i);
 				
 			actualCount++;
 			
@@ -1452,6 +1464,18 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 				// allAlerts.addAll(newFile.checkRequiredProperties());
 				
 				pipe.setRevisedListItem(newFile);
+				
+				// capture properties
+				newFile.captureProperties(params, ListItem.DOT + i);
+				if (newFile.numberFieldIsInvalid) {
+					addAlert(state, contentResourceBundle.getString("conditions.invalid.condition.argument"));
+					return;
+				}
+				if (newFile.numberFieldIsOutOfRange) {
+					addAlert(state, contentResourceBundle.getString("conditions.condition.argument.outofrange") + " " + newFile.getConditionAssignmentPoints() + ".");
+					return;
+				}
+				ResourceConditionsHelper.saveCondition(newFile, params, state, i);
 				
 				uploadCount++;
 				
