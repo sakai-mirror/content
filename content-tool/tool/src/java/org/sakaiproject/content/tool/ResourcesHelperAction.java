@@ -86,6 +86,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	 
 	/** Resource bundle using current language locale */
 	private static ResourceLoader rb = new ResourceLoader("types");
+	private static ResourceLoader contentResourceBundle = new ResourceLoader("content");
 	
 	protected  static final String ACCESS_HTML_TEMPLATE = "resources/sakai_access_html";
 
