@@ -5589,7 +5589,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				return;
 			}
 			if (item.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("conditions.condition.argument.outofrange") + " " + item.getConditionAssignmentPoints() + ".");
+			    addAlert(state, rb.getFormattedMessage("conditions.condition.argument.outofrange", new String[] { item.getConditionAssignmentPoints() }));
 				return;
 			}
 			String name = params.getString("name" + ListItem.DOT + "0");
@@ -6835,7 +6835,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				return;
 			}
 			if (item.numberFieldIsOutOfRange) {
-				addAlert(state, rb.getString("conditions.condition.argument.outofrange") + " " + item.getConditionAssignmentPoints() + ".");
+			    addAlert(state, rb.getFormattedMessage("conditions.condition.argument.outofrange", new String[] { item.getConditionAssignmentPoints() }));
 				return;
 			}
 			
