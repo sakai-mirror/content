@@ -3014,7 +3014,21 @@ public class ListItem
 		}
 	}
 	
+	private void setHtmlInlineOnEntity(ResourcePropertiesEdit props, ContentResourceEdit topFolder) 
+	{
+		logger.debug("setHtmlInlineOnEntity() with allowHtmlInline: " + allowHtmlInline);
+		if(SecurityService.isSuperUser())
+		{
+			if(allowHtmlInline != null)
+			{
+				props.addProperty(ResourceProperties.PROP_ALLOW_INLINE, this.allowHtmlInline.toString());
+				
+			}
+			
+		}
+	}
 
+	
 	/**
 	 * Set a property on a resource and all its children
 	 * @param resourceId
@@ -3182,6 +3196,7 @@ public class ListItem
 		setCopyrightOnEntity(props);
 		setAccessOnEntity(edit);
 		setAvailabilityOnEntity(edit);
+		setHtmlInlineOnEntity(props, edit);
 		
 		if(! isUrl() && ! isCollection() && this.mimetype != null)
 		{
@@ -3349,12 +3364,13 @@ public class ListItem
 		}
 		String context = m_reference.getContext();
 		// what happens if context is null??
-		String siteCollection = ContentHostingService.getSiteCollection(context);
-		if(m_reference.getId().equals(siteCollection))
-		{
-			site = true;
+		if (context!=null){
+			String siteCollection = ContentHostingService.getSiteCollection(context);
+			if(m_reference.getId().equals(siteCollection))
+			{
+				site = true;
+			}
 		}
-		
 		return site;
 	}
 

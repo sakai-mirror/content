@@ -7,14 +7,14 @@
     <version>2.8-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
-  <name>content-providers-impl</name>
+  <name>sakai-content-copyright-impl</name>
   <groupId>org.sakaiproject.content</groupId>
-  <artifactId>content-providers-impl</artifactId>
+  <artifactId>content-copyright-impl</artifactId>
   <organization>
-    <name>The Sakai Foundation</name>
+    <name>Sakai Spanish Universities</name>
     <url>http://sakaiproject.org/</url>
   </organization>
-  <inceptionYear>2003</inceptionYear>
+  <inceptionYear>2011</inceptionYear>
   <packaging>jar</packaging>
   <properties>
     <deploy.target/>
@@ -29,33 +29,18 @@
       <artifactId>sakai-component-manager</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.sakaiproject.edu-services.course-management</groupId>
-      <artifactId>coursemanagement-api</artifactId>
+      	<groupId>org.sakaiproject.content</groupId>
+      	<artifactId>content-copyright-api</artifactId>
+      	<version>${sakai.version}</version>
+      	<scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.sakaiproject.scheduler</groupId>
-      <artifactId>scheduler-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
     </dependency>
   </dependencies>
   <build>
     <resources>
-      <resource>
-        <directory>${basedir}/src/sql</directory>
-        <includes>
-          <include>**/*.sql</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>${basedir}/src/config</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.xml</include>
-        </includes>
-      </resource>
       <resource>
         <directory>${basedir}/src/bundle</directory>
         <includes>
