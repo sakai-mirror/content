@@ -3480,6 +3480,15 @@ public class ListItem
 			setNameIsMissing(true);
 			alerts.add(rb.getString("edit.missing"));
 		}
+		
+		Time release = getReleaseDate();
+		Time retract = getRetractDate();
+		if (retract != null && retract.before(release))
+		{
+			alerts.add(rb.getString("edit.retractBeforeRelease"));
+		}
+		
+		
 	    return alerts;
     }
 
