@@ -31,30 +31,44 @@ ul.makeMenu li {
 <![endif]><![endif]-->
 
 #**#
-<script type ="text/javascript" src ="/library/js/jquery.js">
-<!-- // -->
+<link rel="stylesheet" href="/sakai-content-tool/jqmenu/themes/base/jquery.ui.all.css" type="text/css" title="ui-theme" />
+	<script type="text/javascript" src="/sakai-content-tool/jqmenu/jquery-1.4.2.js"></script>
+	<script type="text/javascript" src="/sakai-content-tool/jqmenu/ui/jquery.ui.core.js"></script>
+	<script type="text/javascript" src="/sakai-content-tool/jqmenu/ui/jquery.ui.widget.js"></script>
+	<script type="text/javascript" src="/sakai-content-tool/jqmenu/ui/jquery.ui.position.js"></script>
+	<script type="text/javascript" src="/sakai-content-tool/jqmenu/ui/jquery.ui.button.js"></script> 
+    <script type="text/javascript" src="/sakai-content-tool/jqmenu/ui/jquery.ui.menu.js"></script>
+
+
+<script type="text/javascript">
+$(function() {
+$(document).ready(function() {	
+	$(".menubar").menu({isMenuBar : true});
+	
+});
+	
+});
+
 </script>
+<script type="text/javascript">
+$(function() {
+		   $(".menubarmenu").menu({
+							   select: function(event, ui) { 
+								//   if(event.which == $.ui.keyCode.Enter || event.keyCode == $.ui.keyCode.ENTER ){
+									    event.preventDefault();	
+										origselected=event.explicitOriginalTarget||event.srcElement||event.originalTarget;
+										$(origselected).trigger('click');
+										event.stopImmediatePropagation();
+										return false;
+							//		}
+									}
+							   })
+		   });
+</script>
+
+
 <script  type ="text/javascript">
 $(document).ready(function() {
-	jQuery('.portletBody').click(function(e) { 
-			
-		if ( e.target.className !='menuOpen' &&e.target.className !='dropdn'  ){
-			$('.makeMenuChild').hide();
-		}
-			else
-			{
-				if( e.target.className =='dropdn' ){
-			targetId=$(e.target).parent('li').attr('id');
-			$('.makeMenuChild').hide();
-			$('#menu-' + targetId).show();
-
-}
-				else{
-			targetId=e.target.id;
-			$('.makeMenuChild').hide();
-			$('#menu-' + targetId).show();
-			}}
-	});
 	$('.toggleDescription').click(function(e){
 	    e.preventDefault();
 	    $('.descPanel').css({
@@ -421,58 +435,44 @@ $(document).ready(function() {
 					#set ($actionCount=($actionCount - 1))
 				
 					
-					<td headers="actions2"   class="attach">
+					<td headers="actions2">
 
 					#if($item.addActions && !$item.addActions.isEmpty())
-							<a href="#" onfocus="document.getElementById('menu-$addCount').style.display='none';"></a>
-							<a href="#" onfocus="document.getElementById('menu-$addCount').style.display='block';" class="skip">$tlang.getString("button.startadd")</a>
-
-							<ul style="z-index:$addCount;margin:0;display:block" class="makeMenu">
-							<li  class="menuOpen" id="$addCount">
-									&nbsp;$tlang.getString("button.add") 
-								<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"  alt="$tlang.getString("button.add")"  class="dropdn"/> 
-									<ul  id="menu-$addCount" class="makeMenuChild">
+							<ul class="menubar" id="jqMenuAdd-$addCount">
+							<li>
+									<a href="#">&nbsp;$tlang.getString("button.add") 
+								</a>
+									<ul  id="jqMenuRefAdd-$addCount" class="menubarmenu" style="display:none">
 										#foreach($action in $item.addActions)
-											<li><a  href="javascript:document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a></li>
+											<li><a  onclick="document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');" href="javascript:document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a></li>
 										#end
-										<li style="height:1px;width:1px;display:inline;">
-											<a href="#"  class="skip" onfocus="document.getElementById('menu-$addCount').style.display='none';document.getElementById('last-$addCount').focus()" >$tlang.getString("button.endadd")</a>
-										</li>
 									</ul>
 
 									</li>
 
 								</ul>
 
-							<a href="#" id="last-$addCount" class="skip"></a>							
-
 							#end
 
 						</td>
-					<td headers="actions3"   class="attach">
+					<td headers="actions3">
 
 					#if($item.otherActions && !$item.otherActions.isEmpty())
-						<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';" class="skip"></a>
-						<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='block';" class="skip">$tlang.getString("button.startact")</a>
-							<ul style="z-index:$actionCount ;margin:0;display:block" class="makeMenu">
-								<li class="menuOpen" id="$actionCount">
-									&nbsp;$tlang.getString("button.actions")
-									<img src = "#imageLink("sakai/icon-dropdn.gif")" border="0"   alt="$tlang.getString("button.actions")" class="dropdn"/>									
-									<ul  id="menu-$actionCount"  class="makeMenuChild">
+							<ul class="menubar" id="jqMenuActions-$actionCount">
+								<li>
+									<a href="#">&nbsp;$tlang.getString("button.actions")
+									</a>
+									<ul  id="jqMenuRefActions-$actionCount"  class="menubarmenu" style="display:none">
 										#foreach($action in $item.otherActions)
 											<li>
-												<a  href="javascript:document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
+												<a  onclick="document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');" href="javascript:document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">
 													$labeler.getLabel($action)
 												</a>
 											</li>
 										#end
-										<li style="height:1px;width:1px;display:inline;">
-											<a href="#" onfocus="document.getElementById('menu-$actionCount').style.display='none';document.getElementById('last-$actionCount').focus()" style="height:1px;margin:0;padding:0"  class="skip">$tlang.getString("button.endact")</a>
-										</li>
 									</ul>
 								</li>
 							</ul>
-							<a href="#" id="last-$actionCount" class="skip"></a>		
 						#end
 
 						</td>
@@ -899,3 +899,4 @@ $(document).ready(function() {
 </script>
 
 	
+
