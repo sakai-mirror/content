@@ -30,6 +30,18 @@ ul.makeMenu li {
 </style>
 <![endif]><![endif]-->
 
+<style type="text/css">
+/*placefolder for minimal set of jQuery-UI css overrides
+ - still thinking that a "Sakai" theme will be better
+*/
+.ui-state-default {line-height:1.7em;}
+.ui-state-default > span {float:none !important;padding:1px 10px !important;font-size:12px !important}
+.ui-state-default span.ui-icon{padding:1px 10px !important;font-size:10px !important}
+.menubarmenu{width:auto !important}
+.ui-menu-item a{padding:5px !important}
+.ui-menu-item a span{font-size:12px !important}
+</style>
+
 #**#
 <link rel="stylesheet" href="/sakai-content-tool/jqmenu/themes/base/jquery.ui.all.css" type="text/css" title="ui-theme" />
 	<script type="text/javascript" src="/sakai-content-tool/jqmenu/jquery-1.4.2.js"></script>
@@ -435,13 +447,12 @@ $(document).ready(function() {
 					#set ($actionCount=($actionCount - 1))
 				
 					
-					<td headers="actions2">
+					<td headers="actions2" class="attach">
 
 					#if($item.addActions && !$item.addActions.isEmpty())
 							<ul class="menubar" id="jqMenuAdd-$addCount">
 							<li>
-									<a href="#">&nbsp;$tlang.getString("button.add") 
-								</a>
+									<a href="#">$tlang.getString("button.add")</a>
 									<ul  id="jqMenuRefAdd-$addCount" class="menubarmenu" style="display:none">
 										#foreach($action in $item.addActions)
 											<li><a  onclick="document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');" href="javascript:document.getElementById('selectedItemId').value='$qid';document.getElementById('rt_action').value='${action.typeId}${ACTION_DELIMITER}$action.id';document.getElementById('sakai_action').value='doDispatchAction';submitform('showForm');">$labeler.getLabel($action)</a></li>
@@ -455,13 +466,12 @@ $(document).ready(function() {
 							#end
 
 						</td>
-					<td headers="actions3">
+					<td headers="actions3" class="attach">
 
 					#if($item.otherActions && !$item.otherActions.isEmpty())
 							<ul class="menubar" id="jqMenuActions-$actionCount">
 								<li>
-									<a href="#">&nbsp;$tlang.getString("button.actions")
-									</a>
+									<a href="#">$tlang.getString("button.actions")</a>
 									<ul  id="jqMenuRefActions-$actionCount"  class="menubarmenu" style="display:none">
 										#foreach($action in $item.otherActions)
 											<li>
