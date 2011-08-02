@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.sakaiproject.content</groupId>
     <artifactId>content</artifactId>
-    <version>2.7-SNAPSHOT</version>
+    <version>2.7.2</version>
   </parent>
   <name>content-providers-pack</name>
   <groupId>org.sakaiproject.content</groupId>

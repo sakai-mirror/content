@@ -4,13 +4,13 @@
     <parent>
         <groupId>org.sakaiproject</groupId>
         <artifactId>base</artifactId>
-        <version>2.7-SNAPSHOT</version>
+        <version>2.7.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <name>Sakai Content Project</name>
     <groupId>org.sakaiproject.content</groupId>
     <artifactId>content</artifactId>
-    <version>2.7-SNAPSHOT</version>
+    <version>2.7.2</version>
     <packaging>pom</packaging>
     <scm>
         <connection>scm:svn:https://source.sakaiproject.org/svn/content/branches/sakai-2.7.x
@@ -66,17 +66,17 @@
             <dependency>
                 <groupId>org.sakaiproject.content</groupId>
                 <artifactId>content-bundles</artifactId>
-                <version>2.7-SNAPSHOT</version>
+                <version>2.7.2</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.content</groupId>
                 <artifactId>content-providers-impl</artifactId>
-                <version>2.7-SNAPSHOT</version>
+                <version>2.7.2</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject</groupId>
                 <artifactId>sakai-velocity-tool</artifactId>
-                <version>2.7-SNAPSHOT</version>
+                <version>2.7.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
