@@ -5135,14 +5135,13 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			
 			if (quota > 0)
 			{
-				long usagePercent = usage * 100 / quota;
-				context.put("usagePercent", usagePercent+"%");
+				long usagePrecent = usage * 100 / quota;
+				context.put("usagePercent", usagePrecent);
 				context.put("quota", ListItem.formatSize(quota * 1024));
 			}
 			else
 			{
 				context.put("quota", rb.get("quota.unlimited"));
-				context.put("usagePercent", "");
 			}
 		}
 		catch (IdUnusedException e)
