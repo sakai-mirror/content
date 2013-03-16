@@ -3981,11 +3981,14 @@ public class ListItem
 		if(this.isDropbox)
 		{
 			String dropboxId = null;
+			// When modifying an ListItem's properties the id contains the full path.
 			if(id != null && !id.trim().equals(""))
 			{
 				dropboxId = getIndividualDropboxId(id);
 			}
-			else if(containingCollectionId != null && ! containingCollectionId.trim().equals(""))
+			// When uploading a new item the ListItem's id just contains the filename and the containingCollectionId
+			// contains the dropbox into which it is going.
+			if(dropboxId == null && containingCollectionId != null && ! containingCollectionId.trim().equals(""))
 			{
 				dropboxId = getIndividualDropboxId(containingCollectionId);
 			}
