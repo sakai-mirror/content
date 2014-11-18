@@ -1347,6 +1347,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public static void doMoveitems ( RunData data)
 	{
 		logger.debug("ResourcesAction.doMoveItems()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -1458,6 +1463,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public static void doPasteitem ( RunData data)
 	{
 		logger.debug("ResourcesAction.doPasteItem()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -1477,6 +1487,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public static void doPasteitems ( RunData data)
 	{
 		logger.debug("ResourcesAction.doPasteItems()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		ParameterParser params = data.getParameters ();
 
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -4930,6 +4945,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doUpdateDropboxOptions(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -4956,6 +4975,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doCancelDropboxOptions(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -5757,6 +5780,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 
 	public void doColumns(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		logger.debug(this + ".doColumns()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		state.setAttribute(STATE_LIST_PREFERENCE, LIST_COLUMNS);
@@ -5786,6 +5813,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doCompleteCreateWizard(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		logger.debug(this + ".doCompleteCreateWizard()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
@@ -6095,6 +6126,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doCopy ( RunData data )
 	{
 		logger.debug(this + ".doCopy()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -6168,6 +6204,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doDeleteconfirm ( RunData data)
 	{
 		logger.debug(this + ".doDeleteconfirm()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		// cancel copy if there is one in progress
@@ -6207,6 +6248,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doDispatchAction(RunData data)
 	{
 		logger.debug(this + ".doDispatchAction()");
+
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		try
 		{
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -6417,6 +6463,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doSetHotDropbox(RunData data)
 	{
 		logger.debug(this + ".doSetHotDropbox()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		//get the ParameterParser from RunData
@@ -6428,6 +6479,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	}
 	public void doSetDropboxGroupIdFilter(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
 		//get the ParameterParser from RunData
@@ -6920,6 +6975,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doNavigate ( RunData data )
 	{
 		logger.debug(this + ".doNavigate()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		if (state.getAttribute (STATE_SELECT_ALL_FLAG)!=null && state.getAttribute (STATE_SELECT_ALL_FLAG).equals (Boolean.TRUE.toString()))
@@ -7046,6 +7106,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doPermissions(RunData data, Context context)
 	{
 		logger.debug(this + ".doPermissions()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState(((JetspeedRunData)data).getJs_peid());
 
 		// cancel copy if there is one in progress
@@ -7093,6 +7158,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doReorder ( RunData data)
 	{
 		logger.debug(this + ".doReorder()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -7132,6 +7202,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doReviseProperties(RunData data)
 	{
 		logger.debug(this + ".doReviseProperties()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
@@ -7290,6 +7365,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	*/
 	public void doRestore( RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -7340,6 +7419,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doSaveOrder ( RunData data)
 	{
 		logger.debug(this + ".doSaveOrder()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -7449,6 +7533,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doShow_webdav ( RunData data )
 	{
 		logger.debug(this + ".doShow_webdav()");
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
@@ -7475,6 +7560,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doShowQuota ( RunData data )
 	{
 		logger.debug(this + ".doShowQuota()");
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		state.setAttribute(STATE_LIST_SELECTIONS, new TreeSet());
@@ -7487,6 +7573,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doShowMembers(RunData data)
 	{
 		logger.debug(this + ".doShowMembers()");
+
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		
@@ -7508,6 +7599,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doShowOtherSites(RunData data)
 	{
 		logger.debug(this + ".doShowOtherSites()");
+
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -7531,6 +7627,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doSort ( RunData data)
 	{
 		logger.debug(this + ".doSort()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
 		//get the ParameterParser from RunData
@@ -7629,6 +7730,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doUnexpandall ( RunData data)
 	{
 		logger.debug(this + ".doUnexpandall()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -7661,6 +7767,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	public void doUpdateOptions(RunData data)
 	{
 		logger.debug(this + ".doUpdateOptions()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
@@ -7711,6 +7822,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 */
 	public void doCancelOptions(RunData data)
 	{
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 		logger.debug(this + ".doCancelOptions()");
 		// get the state object
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
@@ -9113,8 +9228,13 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 * SAK-5350
 	 * @param runData
 	 */
-	public void doDropboxMultipleFoldersUpload(RunData runData) {
-	    SessionState state = ((JetspeedRunData) runData).getPortletSessionState(((JetspeedRunData) runData).getJs_peid());
+	public void doDropboxMultipleFoldersUpload(RunData data) {
+	    
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
+		SessionState state = ((JetspeedRunData) data).getPortletSessionState(((JetspeedRunData) data).getJs_peid());
 	    // go into upload file in multiple folders
 	    state.setAttribute(STATE_MODE, MODE_DROPBOX_MULTIPLE_FOLDERS_UPLOAD);
 	} // doDropboxMultipleFoldersUpload
@@ -9125,6 +9245,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	 * @param data
 	 */
 	public void doMultipleFoldersUpload(RunData data) {
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+		
 	    logger.debug(this + ".doMultipleFoldersUpload()");
 	    SessionState state = ((JetspeedRunData) data).getPortletSessionState(((JetspeedRunData) data).getJs_peid());
 	    ParameterParser params = data.getParameters();
@@ -9289,6 +9414,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	{
 	    SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
+	    
 	    // cancel copy if there is one in progress
 	    if(! Boolean.FALSE.toString().equals(state.getAttribute (STATE_COPY_FLAG)))
 	    {
@@ -9877,6 +10006,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 	protected void printFile(SessionState state, RunData data, String selectedItemId)
 	{
 		logger.info(this + ".printFile()");
+		
+		if (!"POST".equals(data.getRequest().getMethod())) {
+			return;
+		}
 		
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
