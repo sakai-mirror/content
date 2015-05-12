@@ -3109,7 +3109,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				permissions.add(ContentPermissions.CREATE);
 			}
-			if((inheritedPermissions != null && inheritedPermissions.contains(ContentPermissions.DELETE)) || ContentHostingService.allowRemoveCollection(id))
+			if(ContentHostingService.allowRemoveCollection(id))
 			{
 				permissions.add(ContentPermissions.DELETE);
 			}
@@ -3117,7 +3117,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				permissions.add(ContentPermissions.READ);
 			}
-			if((inheritedPermissions != null && inheritedPermissions.contains(ContentPermissions.REVISE)) || ContentHostingService.allowUpdateCollection(id))
+			if(ContentHostingService.allowUpdateCollection(id))
 			{
 				permissions.add(ContentPermissions.REVISE);
 			}
@@ -3132,7 +3132,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				permissions.add(ContentPermissions.CREATE);
 			}
-			if((inheritedPermissions != null && inheritedPermissions.contains(ContentPermissions.DELETE)) || ContentHostingService.allowRemoveResource(id))
+			if(ContentHostingService.allowRemoveResource(id))
 			{
 				permissions.add(ContentPermissions.DELETE);
 			}
@@ -3140,7 +3140,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			{
 				permissions.add(ContentPermissions.READ);
 			}
-			if((inheritedPermissions != null && inheritedPermissions.contains(ContentPermissions.REVISE)) || ContentHostingService.allowUpdateResource(id))
+			if(ContentHostingService.allowUpdateResource(id))
 			{
 				permissions.add(ContentPermissions.REVISE);
 			}
